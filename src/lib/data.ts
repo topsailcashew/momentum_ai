@@ -144,3 +144,24 @@ export async function addProject(projectData: Omit<Project, 'id'>): Promise<Proj
     await writeData('projects.json', projects);
     return newProject;
 }
+
+export async function updateProject(projectId: string, updates: Partial<Project>): Promise<Project | undefined> {
+    const projects = await getProjects();
+    const projectIndex = projects.findIndex(p => p.id === projectId);
+    if (projectIndex === -1) return undefined;
+
+    projects[projectIndex] = { ...projects[projectIndex], ...updates };
+    await writeData('projects.json', projects);
+    return projects[projectIndex];
+}
+
+export async function deleteProject(projectId: string): Promise<void> {
+    const projects = await getProjects();
+    const updatedProjects = projects.filter(p => p.id !== projectId);
+    await writeData('projects.json', updatedProjects);
+
+    // Also delete tasks associated with the project
+    const tasks = await getTasks();
+    const updatedTasks = tasks.filter(t => t.projectId !== projectId);
+    await writeData('tasks.json', updatedTasks);
+}

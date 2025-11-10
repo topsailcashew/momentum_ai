@@ -13,8 +13,10 @@ import {
   getCategories,
   addProject,
   getProjects,
+  updateProject,
+  deleteProject,
 } from '@/lib/data';
-import type { EnergyLevel, Task } from '@/lib/types';
+import type { EnergyLevel, Project, Task } from '@/lib/types';
 import { scoreAndSuggestTasks, ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { calculateDailyMomentumScore } from '@/ai/flows/calculate-daily-momentum-score';
 import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
@@ -113,6 +115,18 @@ export async function getFlowAlignmentReport() {
 
 export async function createProjectAction(name: string) {
     await addProject({ name, priority: 'Medium' });
+    revalidatePath('/projects');
+    revalidatePath('/');
+}
+
+export async function updateProjectAction(projectId: string, updates: Partial<Project>) {
+    await updateProject(projectId, updates);
+    revalidatePath('/projects');
+    revalidatePath('/');
+}
+
+export async function deleteProjectAction(projectId: string) {
+    await deleteProject(projectId);
     revalidatePath('/projects');
     revalidatePath('/');
 }
