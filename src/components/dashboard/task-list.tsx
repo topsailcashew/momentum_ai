@@ -39,9 +39,11 @@ interface TaskListProps {
     projects: Project[];
     onFocusTask: (task: Task) => void;
     focusedTaskId: string | null;
+    onCreateTask: (data: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => void;
+    isCreatingTask: boolean;
 }
 
-export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask, focusedTaskId }: TaskListProps) {
+export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask, focusedTaskId, onCreateTask, isCreatingTask }: TaskListProps) {
   const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = React.useState<EnergyLevel | 'all'>('all');
 
@@ -89,7 +91,12 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                     <SelectItem value="High">High</SelectItem>
                   </SelectContent>
                 </Select>
-                <AddTaskDialog categories={categories} projects={projects} />
+                <AddTaskDialog 
+                    categories={categories} 
+                    projects={projects}
+                    onCreateTask={onCreateTask}
+                    isPending={isCreatingTask}
+                />
             </div>
         </div>
       </CardHeader>

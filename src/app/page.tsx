@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTransition } from 'react';
 import {
   getTasks,
   getTodayEnergy,
@@ -8,7 +9,7 @@ import {
   getCategories,
   getProjects,
 } from '@/lib/data';
-import { getSuggestedTasks } from '@/app/actions';
+import { createTaskAction, getSuggestedTasks } from '@/app/actions';
 import { EnergyInput } from '@/components/dashboard/energy-input';
 import { MomentumCard } from '@/components/dashboard/momentum-card';
 import { SuggestedTasks } from '@/components/dashboard/suggested-tasks';
@@ -17,6 +18,7 @@ import { Pomodoro } from '@/components/dashboard/pomodoro';
 import { ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { Task, EnergyLog, MomentumScore, Category, Project, EnergyLevel } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
   const [loading, setLoading] = React.useState(true);
@@ -30,6 +32,9 @@ export default function DashboardPage() {
     microSuggestions: [],
   });
   const [focusedTask, setFocusedTask] = React.useState<Task | null>(null);
+
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
 
   React.useEffect(() => {
     async function fetchData() {
@@ -62,6 +67,26 @@ export default function DashboardPage() {
     }
     fetchData();
   }, [todayEnergy?.level]);
+
+  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => {
+    startTransition(async () => {
+      try {
+        const newTask = await createTaskAction(taskData);
+        setTasks(prevTasks => [...prevTasks, newTask]);
+        toast({
+          title: 'Task created!',
+          description: 'Your new task has been added.',
+        });
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem creating your task.',
+        });
+      }
+    });
+  }
+
 
   if (loading) {
       return (
@@ -108,6 +133,8 @@ export default function DashboardPage() {
               projects={projects}
               onFocusTask={setFocusedTask}
               focusedTaskId={focusedTask?.id}
+              onCreateTask={handleCreateTask}
+              isCreatingTask={isPending}
             />
         </div>
       </div>

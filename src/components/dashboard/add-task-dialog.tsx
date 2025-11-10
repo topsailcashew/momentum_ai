@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -35,9 +34,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { useToast } from '@/hooks/use-toast';
-import { createTaskAction } from '@/app/actions';
-import type { Category, EnergyLevel, Project, Task, FocusType, EisenhowerMatrix } from '@/lib/types';
+import type { Category, Project, Task } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -53,11 +50,17 @@ const taskFormSchema = z.object({
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
+type TaskData = Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>;
 
-export function AddTaskDialog({ categories, projects }: { categories: Category[], projects: Project[] }) {
+interface AddTaskDialogProps {
+    categories: Category[];
+    projects: Project[];
+    onCreateTask: (data: TaskData) => void;
+    isPending: boolean;
+}
+
+export function AddTaskDialog({ categories, projects, onCreateTask, isPending }: AddTaskDialogProps) {
   const [open, setOpen] = React.useState(false);
-  const [isPending, startTransition] = useTransition();
-  const { toast } = useToast();
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -70,27 +73,13 @@ export function AddTaskDialog({ categories, projects }: { categories: Category[]
   });
 
   const onSubmit = (data: TaskFormValues) => {
-    startTransition(async () => {
-      try {
-        const taskData: Omit<Task, 'id'| 'completed' | 'completedAt' | 'createdAt'> = {
-            ...data,
-            deadline: data.deadline ? data.deadline.toISOString() : undefined,
-        };
-        await createTaskAction(taskData);
-        toast({
-          title: 'Task created!',
-          description: 'Your new task has been added.',
-        });
-        form.reset();
-        setOpen(false);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Uh oh! Something went wrong.',
-          description: 'There was a problem creating your task.',
-        });
-      }
-    });
+    const taskData: TaskData = {
+        ...data,
+        deadline: data.deadline ? data.deadline.toISOString() : undefined,
+    };
+    onCreateTask(taskData);
+    form.reset();
+    setOpen(false);
   };
 
   return (

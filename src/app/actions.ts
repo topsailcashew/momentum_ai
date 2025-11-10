@@ -26,9 +26,10 @@ export async function setEnergyLevelAction(level: EnergyLevel) {
 }
 
 export async function createTaskAction(data: Omit<Task, 'id'| 'completed' | 'completedAt' | 'createdAt'>) {
-  await addTask(data);
+  const newTask = await addTask(data);
   revalidatePath('/');
   revalidatePath('/projects');
+  return newTask;
 }
 
 async function calculateAndSaveMomentumScore() {
