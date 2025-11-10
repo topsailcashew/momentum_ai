@@ -10,7 +10,6 @@ import {
   getProjects,
 } from '@/lib/data';
 import { createTaskAction, getSuggestedTasks, completeTaskAction } from '@/app/actions';
-import { EnergyInput } from '@/components/dashboard/energy-input';
 import { MomentumCard } from '@/components/dashboard/momentum-card';
 import { TaskList } from '@/components/dashboard/task-list';
 import { Pomodoro } from '@/components/dashboard/pomodoro';
@@ -128,12 +127,11 @@ export default function DashboardPage() {
       return (
           <div className="flex flex-col gap-4">
               <Skeleton className="h-8 w-1/3" />
-              <div className="grid gap-4 lg:grid-cols-3">
-                  <Skeleton className="h-32 lg:col-span-1" />
-                  <Skeleton className="h-64 lg:col-span-2" />
+              <div className="grid gap-4 lg:grid-cols-2">
+                  <Skeleton className="h-64" />
+                  <Skeleton className="h-64" />
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                  <Skeleton className="h-48" />
+              <div className="grid gap-4 md:grid-cols-1">
                   <Skeleton className="h-48" />
               </div>
               <Skeleton className="h-48" />
@@ -162,13 +160,12 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <MomentumCard 
-            latestMomentum={latestMomentum} 
-            routineSuggestion={suggestions.routineSuggestion} 
-        />
-        <EnergyInput todayEnergy={todayEnergy} suggestions={suggestions} />
-      </div>
+       <MomentumCard 
+          latestMomentum={latestMomentum} 
+          routineSuggestion={suggestions.routineSuggestion} 
+          todayEnergy={todayEnergy}
+          suggestions={suggestions}
+      />
     </div>
   );
 }

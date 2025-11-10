@@ -1,6 +1,5 @@
-import { Lightbulb, CheckCircle, Sparkles } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import type { EnergyLevel, Task } from '@/lib/types';
+import { CheckCircle, Sparkles } from 'lucide-react';
+import type { EnergyLevel } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import type { ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
 
@@ -13,20 +12,7 @@ export function SuggestedTasks({ suggestions, energyLevel }: SuggestedTasksProps
     const hasSuggestions = suggestions.suggestedTasks.length > 0 || suggestions.microSuggestions.length > 0;
 
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl">
-            <Lightbulb className="text-accent"/>
-            Suggested for you
-        </CardTitle>
-        <CardDescription>
-            {energyLevel 
-                ? `AI suggestions for your ${energyLevel.toLowerCase()} energy.`
-                : 'Set energy to get suggestions.'
-            }
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+      <div>
         {hasSuggestions ? (
           <div className="space-y-4">
             {suggestions.suggestedTasks.length > 0 && (
@@ -75,7 +61,6 @@ export function SuggestedTasks({ suggestions, energyLevel }: SuggestedTasksProps
             <p>{energyLevel ? 'No specific tasks to suggest.' : 'Waiting for energy input...'}</p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
   );
 }

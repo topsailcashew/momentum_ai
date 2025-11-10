@@ -32,8 +32,8 @@
     "focusType": "Physical",
     "priority": "Not Urgent & Not Important",
     "id": "1762769291609",
-    "completed": false,
-    "completedAt": null,
+    "completed": true,
+    "completedAt": "2025-11-10T10:10:37.931Z",
     "createdAt": "2025-11-10T10:08:11.609Z"
   }
 ]
