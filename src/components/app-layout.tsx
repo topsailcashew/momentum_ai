@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, Gauge, PanelLeft, FolderKanban, Settings, Sun, Moon, Repeat } from 'lucide-react';
+import { Activity, Gauge, PanelLeft, FolderKanban, Settings, Sun, Moon, Repeat, CalendarDays } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -84,6 +84,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <Link href="/recurring">
                     <Repeat />
                     <span>Recurring</span>
+                  </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/weekly-planner'}
+                  tooltip="Weekly Planner"
+                >
+                  <Link href="/weekly-planner">
+                    <CalendarDays />
+                    <span>Weekly Planner</span>
                   </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
