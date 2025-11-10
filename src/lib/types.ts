@@ -8,6 +8,7 @@ export interface Task {
   completed: boolean;
   completedAt: string | null;
   createdAt: string;
+  projectId?: string;
 }
 
 export interface Category {
@@ -25,4 +26,9 @@ export interface MomentumScore {
   score: number;
   streak: number;
   summary: string;
+}
+
+export interface Project {
+    id: string;
+    name: string;
 }

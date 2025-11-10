@@ -10,32 +10,32 @@ export function MomentumCard({ latestMomentum }: { latestMomentum?: MomentumScor
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-xl">
             <TrendingUp className="text-primary" />
             Daily Momentum
         </CardTitle>
-        <CardDescription>Your task-energy alignment score for today.</CardDescription>
+        <CardDescription>Your task-energy alignment score.</CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="flex flex-col gap-2">
         <div className="flex items-center justify-around text-center">
             <div>
                 <p className="text-4xl font-bold text-primary">{score}</p>
-                <p className="text-sm text-muted-foreground">Points</p>
+                <p className="text-xs text-muted-foreground">Points</p>
             </div>
-            <Separator orientation="vertical" className="h-16" />
+            <Separator orientation="vertical" className="h-12" />
             <div>
                  <p className="text-4xl font-bold text-accent">{streak}</p>
-                <p className="text-sm text-muted-foreground">Day Streak</p>
+                <p className="text-xs text-muted-foreground">Day Streak</p>
             </div>
         </div>
         {latestMomentum?.summary && (
-            <div className="p-3 text-sm rounded-lg bg-muted text-muted-foreground">
+            <div className="p-2 text-xs rounded-lg bg-muted text-muted-foreground">
                 <p><span className="font-semibold text-foreground">AI Summary:</span> {latestMomentum.summary}</p>
             </div>
         )}
          {!latestMomentum && (
             <div className="p-3 text-sm text-center rounded-lg bg-muted text-muted-foreground">
-                <p>Complete some tasks to see your score!</p>
+                <p>Complete tasks to see your score!</p>
             </div>
         )}
       </CardContent>

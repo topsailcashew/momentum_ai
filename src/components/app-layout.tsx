@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, Gauge, PanelLeft } from 'lucide-react';
+import { Activity, Gauge, PanelLeft, FolderKanban } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -27,20 +27,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       setOpen(false);
     }
   }, [pathname, isMobile, setOpen]);
-
-  React.useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setOpen(true);
-      } else {
-        setOpen(false);
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [setOpen]);
-
+  
   return (
     <>
       <Sidebar>
@@ -53,28 +40,37 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/" passHref>
                 <SidebarMenuButton
-                  as="a"
+                  as={Link}
+                  href="/"
                   isActive={pathname === '/'}
                   tooltip="Dashboard"
                 >
                   <Gauge />
                   <span>Dashboard</span>
                 </SidebarMenuButton>
-              </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/analytics" passHref>
                 <SidebarMenuButton
-                  as="a"
+                  as={Link}
+                  href="/projects"
+                  isActive={pathname === '/projects'}
+                  tooltip="Projects"
+                >
+                  <FolderKanban />
+                  <span>Projects</span>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                  as={Link}
+                  href="/analytics"
                   isActive={pathname === '/analytics'}
                   tooltip="Analytics"
                 >
                   <Activity />
                   <span>Analytics</span>
                 </SidebarMenuButton>
-              </Link>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
@@ -86,9 +82,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <span className="font-semibold font-headline">Momentum AI</span>
           </Link>
           <SidebarTrigger>
-            <Button variant="ghost" size="icon">
-              <PanelLeft />
-            </Button>
+            <PanelLeft />
           </SidebarTrigger>
         </header>
         {children}

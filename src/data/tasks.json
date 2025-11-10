@@ -1,20 +1,12 @@
+
 [
   {
     "id": "1",
     "name": "Welcome to Momentum AI! Complete this task to get started.",
     "category": "personal",
     "energyLevel": "Low",
-    "completed": true,
-    "completedAt": "2025-11-10T07:45:39.408Z",
+    "completed": false,
+    "completedAt": null,
     "createdAt": "2024-01-01T12:00:00Z"
-  },
-  {
-    "name": "Upload sermon to website",
-    "category": "work",
-    "energyLevel": "High",
-    "id": "1762760732192",
-    "completed": true,
-    "completedAt": "2025-11-10T07:45:45.211Z",
-    "createdAt": "2025-11-10T07:45:32.192Z"
   }
 ]

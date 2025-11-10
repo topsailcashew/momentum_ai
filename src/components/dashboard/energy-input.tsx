@@ -9,9 +9,9 @@ import { Button } from '@/components/ui/button';
 import type { EnergyLevel, EnergyLog } from '@/lib/types';
 
 const energyLevels: { level: EnergyLevel; icon: React.ElementType; description: string }[] = [
-  { level: 'Low', icon: ZapOff, description: 'Lazy day? Gentle tasks only.' },
-  { level: 'Medium', icon: BatteryMedium, description: 'Feeling steady. Time to be productive.' },
-  { level: 'High', icon: Zap, description: 'Full power! Tackle the big stuff.' },
+  { level: 'Low', icon: ZapOff, description: 'Gentle tasks' },
+  { level: 'Medium', icon: BatteryMedium, description: 'Steady pace' },
+  { level: 'High', icon: Zap, description: 'Full power' },
 ];
 
 export function EnergyInput({ todayEnergy }: { todayEnergy?: EnergyLog }) {
@@ -26,20 +26,19 @@ export function EnergyInput({ todayEnergy }: { todayEnergy?: EnergyLog }) {
   if (todayEnergy) {
     const currentLevel = energyLevels.find(e => e.level === todayEnergy.level);
     return (
-       <Card className="bg-secondary border-primary/20">
+       <Card className="bg-secondary/50 border-primary/20">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-xl">
             <Sparkles className="text-primary"/>
             Today's Vibe
           </CardTitle>
-           <CardDescription>You're feeling {todayEnergy.level.toLowerCase()} today.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 p-4 rounded-lg bg-background">
-             {currentLevel?.icon && <currentLevel.icon className="size-8 text-primary" />}
+          <div className="flex items-center gap-4 p-3 rounded-lg bg-background">
+             {currentLevel?.icon && <currentLevel.icon className="size-6 text-primary" />}
             <div>
               <p className="font-semibold">{currentLevel?.level}</p>
-              <p className="text-sm text-muted-foreground">{currentLevel?.description}</p>
+              <p className="text-xs text-muted-foreground">{currentLevel?.description}</p>
             </div>
           </div>
         </CardContent>
@@ -50,21 +49,22 @@ export function EnergyInput({ todayEnergy }: { todayEnergy?: EnergyLog }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>How are you feeling?</CardTitle>
-        <CardDescription>Select your energy level to get task suggestions.</CardDescription>
+        <CardTitle className="text-xl">How are you feeling?</CardTitle>
+        <CardDescription>Select your energy level for task suggestions.</CardDescription>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {energyLevels.map(({ level, icon: Icon }) => (
+      <CardContent className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {energyLevels.map(({ level, icon: Icon, description }) => (
           <Button
             key={level}
             variant="outline"
-            className="h-auto p-4 flex flex-col gap-2 items-center justify-center text-center"
+            className="h-auto p-3 flex flex-col gap-1 items-center justify-center text-center"
             onClick={() => handleSetEnergy(level)}
             disabled={isPending}
             aria-label={`Set energy to ${level}`}
           >
-            <Icon className="w-8 h-8 text-primary" />
+            <Icon className="w-6 h-6 text-primary" />
             <span className="font-semibold">{level}</span>
+            <span className="text-xs text-muted-foreground">{description}</span>
           </Button>
         ))}
       </CardContent>

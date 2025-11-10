@@ -35,17 +35,18 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { createTaskAction } from '@/app/actions';
-import type { Category, EnergyLevel } from '@/lib/types';
+import type { Category, EnergyLevel, Project } from '@/lib/types';
 
 const taskFormSchema = z.object({
   name: z.string().min(3, 'Task name must be at least 3 characters.'),
   category: z.string().min(1, 'Please select a category.'),
   energyLevel: z.enum(['Low', 'Medium', 'High']),
+  projectId: z.string().optional(),
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
 
-export function AddTaskDialog({ categories }: { categories: Category[] }) {
+export function AddTaskDialog({ categories, projects }: { categories: Category[], projects: Project[] }) {
   const [open, setOpen] = React.useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -56,6 +57,7 @@ export function AddTaskDialog({ categories }: { categories: Category[] }) {
       name: '',
       category: '',
       energyLevel: 'Medium',
+      projectId: '',
     },
   });
 
@@ -82,8 +84,8 @@ export function AddTaskDialog({ categories }: { categories: Category[] }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusCircle />
+        <Button size="sm">
+          <PlusCircle className="mr-2 h-4 w-4" />
           Add Task
         </Button>
       </DialogTrigger>
@@ -105,6 +107,31 @@ export function AddTaskDialog({ categories }: { categories: Category[] }) {
                   <FormControl>
                     <Input placeholder="e.g., Write proposal draft" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="projectId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Project</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a project" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {projects.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

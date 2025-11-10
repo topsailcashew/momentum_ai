@@ -2,7 +2,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel } from './types';
+import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project } from './types';
 import { format } from 'date-fns';
 
 const dataDir = path.join(process.cwd(), 'src', 'data');
@@ -124,4 +124,20 @@ export async function saveMomentumScore(scoreData: Omit<MomentumScore, 'date'>):
     
     await writeData('momentum.json', history);
     return newScore;
+}
+
+// Project Functions
+export async function getProjects(): Promise<Project[]> {
+    return readData<Project[]>('projects.json');
+}
+
+export async function addProject(projectData: Omit<Project, 'id'>): Promise<Project> {
+    const projects = await getProjects();
+    const newProject: Project = {
+        ...projectData,
+        id: Date.now().toString(),
+    };
+    projects.push(newProject);
+    await writeData('projects.json', projects);
+    return newProject;
 }

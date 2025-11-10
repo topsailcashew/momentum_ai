@@ -11,6 +11,7 @@ import {
   getLatestMomentum,
   saveMomentumScore,
   getCategories,
+  addProject,
 } from '@/lib/data';
 import type { EnergyLevel, Task } from '@/lib/types';
 import { suggestTasksBasedOnEnergy } from '@/ai/flows/suggest-tasks-based-on-energy';
@@ -27,9 +28,11 @@ export async function createTaskAction(data: {
   name: string;
   category: string;
   energyLevel: EnergyLevel;
+  projectId?: string;
 }) {
   await addTask(data);
   revalidatePath('/');
+  revalidatePath('/projects');
 }
 
 async function calculateAndSaveMomentumScore() {
@@ -80,6 +83,7 @@ export async function completeTaskAction(taskId: string, completed: boolean) {
 
   revalidatePath('/');
   revalidatePath('/analytics');
+  revalidatePath('/projects');
 }
 
 export async function getSuggestedTasks(energyLevel: EnergyLevel) {
@@ -108,4 +112,10 @@ export async function getFlowAlignmentReport() {
     });
 
     return result;
+}
+
+export async function createProjectAction(name: string) {
+    await addProject({ name });
+    revalidatePath('/projects');
+    revalidatePath('/');
 }
