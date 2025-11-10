@@ -18,8 +18,8 @@
     "focusType": "Physical",
     "priority": "Important & Not Urgent",
     "id": "1762764152914",
-    "completed": true,
-    "completedAt": "2025-11-10T08:49:56.015Z",
+    "completed": false,
+    "completedAt": null,
     "createdAt": "2025-11-10T08:42:32.914Z"
   },
   {

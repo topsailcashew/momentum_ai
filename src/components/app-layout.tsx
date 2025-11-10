@@ -111,7 +111,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="flex flex-col">
+      <SidebarInset>
         <header className="flex items-center justify-between md:hidden p-4">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="size-7 text-primary" />
@@ -122,7 +122,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </SidebarTrigger>
         </header>
         <Header />
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <div className="p-4 md:p-6 lg:p-8">
             {children}
         </div>
       </SidebarInset>
