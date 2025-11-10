@@ -18,8 +18,9 @@ import {
   deleteProject,
   addRecurringTask,
   updateRecurringTask,
+  updateTodaysReport,
 } from '@/lib/data';
-import type { EnergyLevel, Project, RecurringTask, Task } from '@/lib/types';
+import type { DailyReport, EnergyLevel, Project, RecurringTask, Task } from '@/lib/types';
 import { scoreAndSuggestTasks, ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { calculateDailyMomentumScore } from '@/ai/flows/calculate-daily-momentum-score';
 import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
@@ -34,6 +35,7 @@ export async function createTaskAction(data: Omit<Task, 'id'| 'completed' | 'com
   const newTask = await addTask(data);
   revalidatePath('/');
   revalidatePath('/projects');
+  revalidatePath('/reports');
   return newTask;
 }
 
@@ -41,6 +43,7 @@ export async function updateTaskAction(taskId: string, data: Partial<Omit<Task, 
   const updatedTask = await updateTask(taskId, data);
   revalidatePath('/');
   revalidatePath('/projects');
+  revalidatePath('/reports');
   return updatedTask;
 }
 
@@ -48,6 +51,7 @@ export async function deleteTaskAction(taskId: string) {
     await deleteTask(taskId);
     revalidatePath('/');
     revalidatePath('/projects');
+    revalidatePath('/reports');
 }
 
 
@@ -100,6 +104,7 @@ export async function completeTaskAction(taskId: string, completed: boolean) {
   revalidatePath('/');
   revalidatePath('/analytics');
   revalidatePath('/projects');
+  revalidatePath('/reports');
 }
 
 export async function getSuggestedTasks(energyLevel: EnergyLevel): Promise<ScoreAndSuggestTasksOutput> {
@@ -156,4 +161,11 @@ export async function createRecurringTaskAction(data: Omit<RecurringTask, 'id' |
 export async function completeRecurringTaskAction(taskId: string) {
     await updateRecurringTask(taskId, { lastCompleted: new Date().toISOString() });
     revalidatePath('/recurring');
+}
+
+export async function updateReportAction(updates: Partial<DailyReport>) {
+  const report = await updateTodaysReport(updates);
+  revalidatePath('/');
+  revalidatePath('/reports');
+  return report;
 }

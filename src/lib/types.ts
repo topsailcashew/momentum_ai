@@ -48,3 +48,13 @@ export interface RecurringTask {
   frequency: 'Weekly' | 'Monthly';
   lastCompleted: string | null;
 }
+
+export interface DailyReport {
+  date: string; // YYYY-MM-DD
+  startTime: string | null;
+  endTime: string | null;
+  generatedReport: string | null;
+  goals: number;
+  completed: number;
+  inProgress: number;
+}

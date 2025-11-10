@@ -2,7 +2,7 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, RecurringTask } from './types';
+import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, RecurringTask, DailyReport } from './types';
 import { format } from 'date-fns';
 
 const dataDir = path.join(process.cwd(), 'data');
@@ -16,8 +16,9 @@ async function readData<T>(filename: string): Promise<T> {
     return JSON.parse(data) as T;
   } catch (error) {
     if (isNodeError(error) && error.code === 'ENOENT') {
-      await fs.writeFile(filePath, '[]', 'utf-8');
-      return [] as T;
+      const defaultData = filename === 'reports.json' ? {} : [];
+      await fs.writeFile(filePath, JSON.stringify(defaultData, null, 2), 'utf-8');
+      return defaultData as T;
     }
     console.error(`Error reading or creating ${filename}:`, error);
     throw error;
@@ -197,4 +198,46 @@ export async function updateRecurringTask(taskId: string, updates: Partial<Recur
   tasks[taskIndex] = { ...tasks[taskIndex], ...updates };
   await writeData('recurring-tasks.json', tasks);
   return tasks[taskIndex];
+}
+
+// Report Functions
+export async function getReports(): Promise<Record<string, DailyReport>> {
+    return readData<Record<string, DailyReport>>('reports.json');
+}
+
+export async function getTodaysReport(): Promise<DailyReport> {
+    const reports = await getReports();
+    const today = getToday();
+    if (!reports[today]) {
+        const tasks = await getTasks();
+        const todaysTasks = tasks.filter(t => t.createdAt && format(new Date(t.createdAt), 'yyyy-MM-dd') === today);
+        reports[today] = {
+            date: today,
+            startTime: null,
+            endTime: null,
+            generatedReport: null,
+            goals: todaysTasks.length,
+            completed: todaysTasks.filter(t => t.completed).length,
+            inProgress: todaysTasks.filter(t => !t.completed).length,
+        };
+        await writeData('reports.json', reports);
+    } else {
+        // Recalculate stats in case tasks were added/completed
+        const tasks = await getTasks();
+        const todaysTasks = tasks.filter(t => t.createdAt && format(new Date(t.createdAt), 'yyyy-MM-dd') === today);
+        reports[today].goals = todaysTasks.length;
+        reports[today].completed = todaysTasks.filter(t => t.completed).length;
+        reports[today].inProgress = todaysTasks.filter(t => !t.completed).length;
+    }
+    return reports[today];
+}
+
+export async function updateTodaysReport(updates: Partial<DailyReport>): Promise<DailyReport> {
+    const reports = await getReports();
+    const today = getToday();
+    const todaysReport = await getTodaysReport();
+
+    reports[today] = { ...todaysReport, ...updates };
+    await writeData('reports.json', reports);
+    return reports[today];
 }

@@ -8,17 +8,19 @@ import {
   getLatestMomentum,
   getCategories,
   getProjects,
+  getTodaysReport,
 } from '@/lib/data';
 import { createTaskAction, getSuggestedTasks, completeTaskAction, updateTaskAction, deleteTaskAction } from '@/app/actions';
 import { MomentumCard } from '@/components/dashboard/momentum-card';
 import { TaskList } from '@/components/dashboard/task-list';
 import { Pomodoro } from '@/components/dashboard/pomodoro';
 import { ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
-import { Task, EnergyLog, MomentumScore, Category, Project, EnergyLevel } from '@/lib/types';
+import { Task, EnergyLog, MomentumScore, Category, Project, DailyReport } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { ProjectOverview } from '@/components/dashboard/project-overview';
 import { EditTaskDialog } from '@/components/dashboard/edit-task-dialog';
+import { DailyReportCard } from '@/components/dashboard/daily-report-card';
 
 export default function DashboardPage() {
   const [loading, setLoading] = React.useState(true);
@@ -27,6 +29,7 @@ export default function DashboardPage() {
   const [latestMomentum, setLatestMomentum] = React.useState<MomentumScore | undefined>();
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [projects, setProjects] = React.useState<Project[]>([]);
+  const [dailyReport, setDailyReport] = React.useState<DailyReport | null>(null);
   const [suggestions, setSuggestions] = React.useState<ScoreAndSuggestTasksOutput>({
     suggestedTasks: [],
     microSuggestions: [],
@@ -51,12 +54,14 @@ export default function DashboardPage() {
         latestMomentumData,
         categoriesData,
         projectsData,
+        reportData,
       ] = await Promise.all([
         getTasks(),
         getTodayEnergy(),
         getLatestMomentum(),
         getCategories(),
         getProjects(),
+        getTodaysReport(),
       ]);
 
       setTasks(tasksData);
@@ -64,6 +69,7 @@ export default function DashboardPage() {
       setLatestMomentum(latestMomentumData);
       setCategories(categoriesData);
       setProjects(projectsData);
+      setDailyReport(reportData);
       
       if (todayEnergyData) {
         startTransition(async () => {
@@ -157,8 +163,12 @@ export default function DashboardPage() {
         await completeTaskAction(taskId, completed);
         // Re-fetch momentum score after completion
         if (completed) {
-            const latestMomentumData = await getLatestMomentum();
+            const [latestMomentumData, reportData] = await Promise.all([
+              getLatestMomentum(),
+              getTodaysReport()
+            ]);
             setLatestMomentum(latestMomentumData);
+            setDailyReport(reportData);
         }
       } catch (error) {
         // Revert the optimistic update if there was an error
@@ -210,6 +220,8 @@ export default function DashboardPage() {
       </div>
       
       <ProjectOverview projects={projects} tasks={tasks} />
+
+      {dailyReport && <DailyReportCard report={dailyReport} />}
 
        <MomentumCard 
           latestMomentum={latestMomentum} 
