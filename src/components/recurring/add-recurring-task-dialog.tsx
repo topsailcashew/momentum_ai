@@ -4,9 +4,6 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useTransition } from 'react';
-import { PlusCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -33,8 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { createRecurringTaskAction } from '@/app/actions';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 import type { RecurringTask } from '@/lib/types';
 
 const taskFormSchema = z.object({
@@ -43,12 +39,16 @@ const taskFormSchema = z.object({
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
+type RecurringTaskData = Omit<RecurringTask, 'id' | 'lastCompleted'>;
 
-export function AddRecurringTaskDialog() {
+interface AddRecurringTaskDialogProps {
+  onSave: (data: RecurringTaskData) => void;
+  isPending: boolean;
+  children: React.ReactNode;
+}
+
+export function AddRecurringTaskDialog({ onSave, isPending, children }: AddRecurringTaskDialogProps) {
   const [open, setOpen] = React.useState(false);
-  const [isPending, startTransition] = useTransition();
-  const { toast } = useToast();
-
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -58,30 +58,16 @@ export function AddRecurringTaskDialog() {
   });
 
   const onSubmit = (data: TaskFormValues) => {
-    startTransition(async () => {
-      try {
-        await createRecurringTaskAction(data);
-        toast({ title: 'Recurring task created!' });
+    onSave(data);
+    if (!isPending) {
         form.reset();
         setOpen(false);
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Uh oh! Something went wrong.',
-          description: 'There was a problem creating your task.',
-        });
-      }
-    });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Recurring Task
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add a recurring task</DialogTitle>

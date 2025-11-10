@@ -14,10 +14,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Check, X } from 'lucide-react';
+import { Check, X, PlusCircle } from 'lucide-react';
 import { isThisWeek, isThisMonth, parseISO, format } from 'date-fns';
 import { AddRecurringTaskDialog } from '@/components/recurring/add-recurring-task-dialog';
-import { completeRecurringTaskAction } from '@/app/actions';
+import { completeRecurringTaskAction, createRecurringTaskAction } from '@/app/actions';
 import type { RecurringTask } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -29,6 +29,10 @@ export function RecurringTasksClientPage({ tasks: initialTasks }: RecurringTasks
   const [tasks, setTasks] = React.useState(initialTasks);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    setTasks(initialTasks);
+  }, [initialTasks]);
 
   const handleCompleteTask = (taskId: string) => {
     startTransition(async () => {
@@ -50,6 +54,22 @@ export function RecurringTasksClientPage({ tasks: initialTasks }: RecurringTasks
         }
     });
   }
+
+  const handleCreateRecurringTask = (taskData: Omit<RecurringTask, 'id' | 'lastCompleted'>) => {
+    startTransition(async () => {
+      try {
+        await createRecurringTaskAction(taskData);
+        // The page will be revalidated by the server action, so we don't need to update state here.
+        toast({ title: 'Recurring task created!' });
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem creating your task.',
+        });
+      }
+    });
+  };
 
   const weeklyTasks = tasks.filter(t => t.frequency === 'Weekly');
   const monthlyTasks = tasks.filter(t => t.frequency === 'Monthly');
@@ -117,7 +137,12 @@ export function RecurringTasksClientPage({ tasks: initialTasks }: RecurringTasks
             <CardTitle>Recurring Tasks</CardTitle>
             <CardDescription>Manage your weekly and monthly tasks.</CardDescription>
         </div>
-        <AddRecurringTaskDialog />
+        <AddRecurringTaskDialog onSave={handleCreateRecurringTask} isPending={isPending}>
+            <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Recurring Task
+            </Button>
+        </AddRecurringTaskDialog>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="weekly">

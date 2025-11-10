@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -5,7 +6,7 @@ import { startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, parseISO 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DayColumn } from '@/components/weekly-planner/day-column';
 import type { Task, Project, Category } from '@/lib/types';
-import { AddTaskDialog } from '@/components/dashboard/add-task-dialog';
+import { TaskFormDialog } from '@/components/dashboard/task-form-dialog';
 import { createTaskAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 
@@ -64,10 +65,10 @@ export function WeeklyPlannerClientPage({
                     Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
                 </CardDescription>
             </div>
-            <AddTaskDialog 
+            <TaskFormDialog 
                 categories={categories}
                 projects={projects}
-                onCreateTask={handleCreateTask}
+                onSave={handleCreateTask}
                 isPending={isPending}
             />
         </CardHeader>
