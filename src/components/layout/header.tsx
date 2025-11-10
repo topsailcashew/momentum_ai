@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 
 export function Header() {
-  const [currentTime, setCurrentTime] = React.useState(new Date());
+  const [currentTime, setCurrentTime] = React.useState<Date | null>(null);
 
   React.useEffect(() => {
+    setCurrentTime(new Date()); // Set initial time on client
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -23,7 +24,9 @@ export function Header() {
       </div>
       <div className="flex items-center gap-3 text-sm text-muted-foreground">
         <CalendarDays className="h-5 w-5" />
-        <span>{format(currentTime, 'eeee, MMMM d, yyyy h:mm:ss a')}</span>
+        <span>
+            {currentTime ? format(currentTime, 'eeee, MMMM d, yyyy h:mm:ss a') : 'Loading...'}
+        </span>
       </div>
     </header>
   );
