@@ -57,16 +57,18 @@ export function Pomodoro({ task }: { task: Task | null }) {
             ) : "Select a task to focus on."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex items-center justify-between">
-        <div className="text-5xl font-bold font-mono text-primary">
+      <CardContent className="flex flex-col items-center justify-center gap-4">
+        <div className="text-7xl font-bold font-mono text-primary">
           {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
         </div>
         <div className="flex gap-2">
-          <Button onClick={toggle} size="icon" variant={isActive ? 'secondary' : 'default'} disabled={!task}>
+          <Button onClick={toggle} size="lg" variant={isActive ? 'secondary' : 'default'} disabled={!task}>
             {isActive ? <Pause /> : <Play />}
+            {isActive ? 'Pause' : 'Start'}
           </Button>
-          <Button onClick={reset} size="icon" variant="outline">
+          <Button onClick={reset} size="lg" variant="outline">
             <RotateCcw />
+            Reset
           </Button>
         </div>
       </CardContent>
