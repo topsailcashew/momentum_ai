@@ -1,4 +1,4 @@
-import { Lightbulb, CheckCircle, Sparkles, BrainCircuit } from 'lucide-react';
+import { Lightbulb, CheckCircle, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import type { EnergyLevel, Task } from '@/lib/types';
 import { Badge } from '../ui/badge';
@@ -10,7 +10,7 @@ interface SuggestedTasksProps {
 }
 
 export function SuggestedTasks({ suggestions, energyLevel }: SuggestedTasksProps) {
-    const hasSuggestions = suggestions.suggestedTasks.length > 0 || suggestions.microSuggestions.length > 0 || suggestions.routineSuggestion;
+    const hasSuggestions = suggestions.suggestedTasks.length > 0 || suggestions.microSuggestions.length > 0;
 
   return (
     <Card className="h-full">
@@ -66,16 +66,6 @@ export function SuggestedTasks({ suggestions, energyLevel }: SuggestedTasksProps
                             </li>
                         ))}
                     </ul>
-                </div>
-            )}
-            
-            {suggestions.routineSuggestion && (
-                 <div>
-                    <h3 className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pattern Detected</h3>
-                     <div className="flex items-start gap-3 p-2 text-sm rounded-md bg-secondary/30 border border-primary/20">
-                        <BrainCircuit className="size-4 shrink-0 mt-1 text-primary" />
-                        <span>{suggestions.routineSuggestion}</span>
-                    </div>
                 </div>
             )}
 

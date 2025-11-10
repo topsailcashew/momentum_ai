@@ -166,7 +166,10 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <MomentumCard latestMomentum={latestMomentum} />
+        <MomentumCard 
+            latestMomentum={latestMomentum} 
+            routineSuggestion={suggestions.routineSuggestion} 
+        />
         <EnergyInput todayEnergy={todayEnergy} suggestions={suggestions} />
       </div>
     </div>

@@ -1,9 +1,14 @@
-import { TrendingUp, Award } from 'lucide-react';
+import { TrendingUp, BrainCircuit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import type { MomentumScore } from '@/lib/types';
 
-export function MomentumCard({ latestMomentum }: { latestMomentum?: MomentumScore }) {
+interface MomentumCardProps {
+    latestMomentum?: MomentumScore;
+    routineSuggestion?: string;
+}
+
+export function MomentumCard({ latestMomentum, routineSuggestion }: MomentumCardProps) {
   const score = latestMomentum?.score ?? 0;
   const streak = latestMomentum?.streak ?? 0;
   
@@ -28,12 +33,22 @@ export function MomentumCard({ latestMomentum }: { latestMomentum?: MomentumScor
                 <p className="text-xs text-muted-foreground">Day Streak</p>
             </div>
         </div>
+        
+        {routineSuggestion && (
+            <div className="p-2 text-xs rounded-lg bg-muted text-muted-foreground border border-primary/20">
+                <div className="flex items-start gap-2">
+                    <BrainCircuit className="size-4 shrink-0 mt-0.5 text-primary" />
+                    <p><span className="font-semibold text-foreground">Pattern Detected:</span> {routineSuggestion}</p>
+                </div>
+            </div>
+        )}
+
         {latestMomentum?.summary && (
             <div className="p-2 text-xs rounded-lg bg-muted text-muted-foreground">
                 <p><span className="font-semibold text-foreground">AI Summary:</span> {latestMomentum.summary}</p>
             </div>
         )}
-         {!latestMomentum && (
+         {!latestMomentum && !routineSuggestion && (
             <div className="p-3 text-sm text-center rounded-lg bg-muted text-muted-foreground">
                 <p>Complete tasks to see your score!</p>
             </div>
