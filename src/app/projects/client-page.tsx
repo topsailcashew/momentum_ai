@@ -69,8 +69,6 @@ export function ProjectClientPage({ projects, tasks }: { projects: Project[]; ta
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold tracking-tight font-headline">Projects</h1>
-      
       <Card>
           <CardHeader>
               <CardTitle>Add New Project</CardTitle>
