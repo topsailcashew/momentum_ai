@@ -138,7 +138,6 @@ export function EditTaskDialog({ task, categories, projects, open, onOpenChange,
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                           <SelectItem value="">None</SelectItem>
                           {projects.map((project) => (
                             <SelectItem key={project.id} value={project.id}>
                               {project.name}
