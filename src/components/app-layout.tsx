@@ -24,7 +24,7 @@ import { Logo } from '@/components/logo';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { open, setOpen } = useSidebar();
+  const { setOpen } = useSidebar();
   
   React.useEffect(() => {
     // Close sidebar on navigation on mobile
@@ -53,10 +53,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 tooltip="Dashboard"
               >
                 <Link href="/">
-                  <>
+                  <React.Fragment>
                     <Gauge />
                     <span>Dashboard</span>
-                  </>
+                  </React.Fragment>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -67,10 +67,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 tooltip="Analytics"
               >
                 <Link href="/analytics">
-                  <>
+                  <React.Fragment>
                     <Activity />
                     <span>Analytics</span>
-                  </>
+                  </React.Fragment>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
