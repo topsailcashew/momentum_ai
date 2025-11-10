@@ -5,70 +5,70 @@
 @layer base {
   :root {
     --radius: 1rem;
-    --background: 240 10% 98%; /* Light Gray */
-    --foreground: 240 10% 3.9%; /* Dark Gray */
+    --background: 0 0% 95%; /* White Smoke */
+    --foreground: 216 93% 14%; /* Oxford Blue */
     --card: 0 0% 100%; /* White */
-    --card-foreground: 240 10% 3.9%; /* Dark Gray */
+    --card-foreground: 216 93% 14%; /* Oxford Blue */
     --popover: 0 0% 100%; /* White */
-    --popover-foreground: 240 10% 3.9%; /* Dark Gray */
-    --primary: 262 82% 56%; /* Bright Purple */
+    --popover-foreground: 216 93% 14%; /* Oxford Blue */
+    --primary: 23 90% 55%; /* Pumpkin */
     --primary-foreground: 0 0% 100%;
     --secondary: 240 5% 90%; /* Lighter Gray */
     --secondary-foreground: 240 5% 20%;
     --muted: 240 5% 94%;
     --muted-foreground: 240 4% 46%;
-    --accent: 262 82% 56%; /* Bright Purple */
+    --accent: 23 90% 55%; /* Pumpkin */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 262 82% 56%; /* Bright Purple */
-    --chart-1: 262 82% 56%;
-    --chart-2: 262 82% 70%;
-    --chart-3: 262 82% 80%;
-    --chart-4: 262 82% 90%;
-    --chart-5: 262 82% 95%;
-    --sidebar-background: 240 10% 98%;
-    --sidebar-foreground: 240 10% 3.9%;
-    --sidebar-primary: 262 82% 56%;
+    --ring: 23 90% 55%; /* Pumpkin */
+    --chart-1: 23 90% 55%;
+    --chart-2: 23 90% 65%;
+    --chart-3: 23 90% 75%;
+    --chart-4: 23 90% 85%;
+    --chart-5: 23 90% 95%;
+    --sidebar-background: 0 0% 95%;
+    --sidebar-foreground: 216 93% 14%;
+    --sidebar-primary: 23 90% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 5% 92%;
-    --sidebar-accent-foreground: 240 10% 3.9%;
+    --sidebar-accent-foreground: 216 93% 14%;
     --sidebar-border: 240 5.9% 90%;
-    --sidebar-ring: 262 82% 56%;
+    --sidebar-ring: 23 90% 55%;
     --glow: 0 0 10px hsl(var(--primary) / 0.5), 0 0 20px hsl(var(--primary) / 0.2);
     --shadow: 0 10px 30px -15px hsl(var(--primary) / 0.2);
   }
 
   .dark {
-    --background: 240 10% 3.9%; /* Dark Gray */
-    --foreground: 0 0% 98%;
-    --card: 240 4% 10% / 0.7;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 262 82% 56%; /* Bright Purple */
+    --background: 216 93% 14%; /* Oxford Blue */
+    --foreground: 0 0% 95%; /* White Smoke */
+    --card: 205 93% 19% / 0.7; /* Prussian Blue with transparency */
+    --card-foreground: 0 0% 95%;
+    --popover: 216 93% 14%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 23 90% 55%; /* Pumpkin */
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 4% 15%;
+    --secondary: 205 93% 19%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 240 4% 12% / 0.7;
-    --muted-foreground: 240 4% 60%;
-    --accent: 262 82% 56%; /* Bright Purple */
+    --muted: 205 93% 22% / 0.7;
+    --muted-foreground: 0 0% 70%;
+    --accent: 23 90% 55%; /* Pumpkin */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 4% 15%;
-    --input: 240 4% 15%;
-    --ring: 262 82% 56%; /* Bright Purple */
-    --sidebar-background: 240 4% 7% / 0.7;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 262 82% 56%;
+    --border: 205 93% 25%;
+    --input: 205 93% 25%;
+    --ring: 23 90% 55%; /* Pumpkin */
+    --sidebar-background: 216 93% 10% / 0.7;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 23 90% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 4% 15%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 240 4% 15%;
-    --sidebar-ring: 262 82% 56%;
+    --sidebar-accent: 205 93% 19%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 205 93% 25%;
+    --sidebar-ring: 23 90% 55%;
   }
 }
 
