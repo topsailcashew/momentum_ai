@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -17,7 +18,18 @@ interface ReportsClientPageProps {
 
 export function ReportsClientPage({ reports }: ReportsClientPageProps) {
   const [selectedReport, setSelectedReport] = React.useState<DailyReport | null>(reports[0] || null);
+  const [clientFormattedTimes, setClientFormattedTimes] = React.useState({ startTime: 'N/A', endTime: 'N/A' });
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (selectedReport) {
+      setClientFormattedTimes({
+        startTime: selectedReport.startTime ? format(parseISO(selectedReport.startTime), 'h:mm a') : 'N/A',
+        endTime: selectedReport.endTime ? format(parseISO(selectedReport.endTime), 'h:mm a') : 'N/A',
+      });
+    }
+  }, [selectedReport]);
+
 
   const handleCopyToClipboard = (text: string | null) => {
     if (text) {
@@ -40,6 +52,8 @@ export function ReportsClientPage({ reports }: ReportsClientPageProps) {
   
   const formatTime = (time: string | null) => {
     if (!time) return 'N/A';
+    // This will run on server and initial client render, so we show a placeholder
+    if (typeof window === 'undefined') return '...'; 
     return format(parseISO(time), 'h:mm a');
   };
 
@@ -88,7 +102,7 @@ export function ReportsClientPage({ reports }: ReportsClientPageProps) {
               {selectedReport ? `Report for ${format(parseISO(selectedReport.date), 'eeee, MMM d')}` : 'No Report Selected'}
             </CardTitle>
             <CardDescription>
-                {selectedReport ? `Started: ${formatTime(selectedReport.startTime)} | Ended: ${formatTime(selectedReport.endTime)}` : "Select a report to view details."}
+                {selectedReport ? `Started: ${clientFormattedTimes.startTime} | Ended: ${clientFormattedTimes.endTime}` : "Select a report to view details."}
             </CardDescription>
           </CardHeader>
           <CardContent>

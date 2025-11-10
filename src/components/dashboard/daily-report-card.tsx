@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -16,12 +17,20 @@ interface DailyReportCardProps {
 
 export function DailyReportCard({ report: initialReport }: DailyReportCardProps) {
   const [report, setReport] = React.useState(initialReport);
+  const [clientFormattedTimes, setClientFormattedTimes] = React.useState({ startTime: 'Not set', endTime: 'Not set' });
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
   React.useEffect(() => {
     setReport(initialReport);
   }, [initialReport]);
+
+  React.useEffect(() => {
+    setClientFormattedTimes({
+      startTime: initialReport.startTime ? format(parseISO(initialReport.startTime), 'h:mm a') : 'Not set',
+      endTime: initialReport.endTime ? format(parseISO(initialReport.endTime), 'h:mm a') : 'Not set',
+    });
+  }, [initialReport.startTime, initialReport.endTime]);
 
   const handleTimeTracking = (action: 'start' | 'end') => {
     startTransition(async () => {
@@ -45,11 +54,6 @@ export function DailyReportCard({ report: initialReport }: DailyReportCardProps)
       // Placeholder for future AI generation
       toast({ title: 'Report generated and copied!' });
     }
-  };
-
-  const formatTime = (time: string | null) => {
-    if (!time) return 'Not set';
-    return format(parseISO(time), 'h:mm a');
   };
 
   return (
@@ -84,8 +88,8 @@ export function DailyReportCard({ report: initialReport }: DailyReportCardProps)
               </Button>
             </div>
             <div className="text-xs text-muted-foreground">
-              <p>Start: {formatTime(report.startTime)}</p>
-              <p>End: {formatTime(report.endTime)}</p>
+              <p>Start: {clientFormattedTimes.startTime}</p>
+              <p>End: {clientFormattedTimes.endTime}</p>
             </div>
           </div>
           <div className="flex flex-col gap-2">
