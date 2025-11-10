@@ -84,11 +84,13 @@ export async function completeTaskAction(taskId: string, completed: boolean) {
 
 export async function getSuggestedTasks(energyLevel: EnergyLevel) {
   const [tasks, projects] = await Promise.all([getTasks(), getProjects()]);
+  const completedTasks = tasks.filter(t => t.completed);
 
   const suggestions = await scoreAndSuggestTasks({
     energyLevel,
     tasks: tasks,
     projects: projects,
+    completedTasks: completedTasks,
   });
 
   return suggestions;
