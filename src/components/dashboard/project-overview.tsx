@@ -112,9 +112,9 @@ export function ProjectOverview({ projects, tasks }: { projects: Project[]; task
                         )
                     })}
                   </CarouselContent>
-                  <div className="flex justify-center items-center gap-2 mt-4">
-                    <CarouselPrevious />
-                    <CarouselNext />
+                   <div className="flex justify-center items-center gap-2 mt-4">
+                    <CarouselPrevious className="static translate-y-0" />
+                    <CarouselNext className="static translate-y-0" />
                   </div>
                 </Carousel>
               ) : (
