@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { Header } from '@/components/layout/header';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -108,8 +109,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarTrigger className="hidden md:flex" />
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="p-4 md:p-6 lg:p-8">
-        <header className="flex items-center justify-between md:hidden mb-4">
+      <SidebarInset className="p-4 md:p-6 lg:p-8 flex flex-col gap-4">
+        <header className="flex items-center justify-between md:hidden">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="size-7 text-primary" />
             <span className="font-semibold font-headline">Momentum AI</span>
@@ -118,6 +119,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <PanelLeft />
           </SidebarTrigger>
         </header>
+        <Header />
         {children}
       </SidebarInset>
     </>
