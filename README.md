@@ -1,47 +1,89 @@
 # Momentum AI
 
-Momentum AI is a smart productivity application designed to help you align your daily tasks with your energy levels. By leveraging AI, the app provides intelligent task suggestions, tracks your progress, and helps you build momentum to achieve your goals more effectively. The core idea is to work smarter, not just harder, by tackling tasks that are best suited for your current state of mind and body.
+Momentum AI is an intelligent productivity application designed to help you achieve a state of "flow" by aligning your daily tasks with your self-reported energy levels. The core philosophy is to work smarter, not just harder. By tackling tasks that are best suited for your current mental and physical state, the app helps you build momentum, maintain motivation, and achieve your goals more effectively.
 
-## UI/UX Layout
+## Key Features
 
-The application is designed with a clean, modern, and futuristic aesthetic, featuring a dark theme with vibrant accents to keep the interface engaging and easy on the eyes. The layout is organized into a simple and intuitive structure.
+The application is built around a central dashboard and several key modules that provide a holistic and AI-enhanced productivity experience.
 
-### Main Layout
+### 1. Dashboard: Your Daily Command Center
 
-The main layout consists of a collapsible sidebar for navigation and a main content area where the different sections of the app are displayed.
+This is the main screen where you interact with the core features of the app.
 
-- **Sidebar Navigation**: Provides quick access to the main sections of the app:
-  - **Dashboard**: The central hub of the application.
-  - **Projects**: For managing different work or personal projects.
-  - **Analytics**: To visualize your progress and alignment over time.
+-   **Energy Input**: Report your current energy level (Low, Medium, or High). This single input is the primary driver for the app's AI-powered recommendations.
+-   **AI-Powered Task Suggestions**: Based on your energy input, the AI analyzes your task list and intelligently suggests the tasks that are most appropriate for you to work on right now.
+-   **Task Management**: A complete to-do list where you can create, edit, and complete tasks. Each task can be assigned a category, project, deadline, effort level, and priority.
+-   **Pomodoro Timer**: An integrated timer to help you use the Pomodoro Technique. You can select a task to focus on, and the timer will track your work sessions.
+-   **Momentum Card**: Displays your **Daily Momentum Score**, which is calculated by an AI based on how well your completed tasks aligned with your reported energy. It also tracks your **streak** of productive days.
+-   **Projects Overview**: A quick, at-a-glance carousel view of all your projects, each showing its completion percentage.
+-   **Daily Work Report Card**: A simple interface to log your workday start and end times and see a summary of the day's goals, completed tasks, and in-progress items.
 
-### Core Sections
+### 2. Projects Page
 
-1.  **Dashboard**: This is the primary screen you see upon entering the app. It's composed of several widgets designed to give you a complete overview of your day.
-    - **Momentum Card**: Displays your "Daily Momentum" score, which is calculated by an AI based on how well your completed tasks align with your reported energy level. It also tracks your daily streak to keep you motivated.
-    - **Energy Input**: A simple interface for you to report your current energy level for the day (Low, Medium, or High). This is the key input for the AI to generate relevant suggestions.
-    - **Pomodoro Timer**: A built-in timer to help you use the Pomodoro Technique for focused work sessions.
-    - **Suggested Tasks**: An AI-powered card that recommends tasks from your list that are best suited for your current energy level.
-    - **Task List**: The main area for managing your to-dos. You can add new tasks, assign them a category and energy level, link them to a project, and mark them as complete.
+A dedicated section for high-level organization of your work.
 
-2.  **Projects Page**: This section allows for better organization of your tasks.
-    - You can create new projects to group related tasks together (e.g., "Q3 Marketing Campaign," "Personal Health Goals").
-    - Each project card displays the number of pending tasks, giving you a quick overview of what's outstanding.
+-   **Create & Manage Projects**: Group related tasks together under different projects (e.g., "Q3 Marketing Campaign," "Personal Health Goals").
+-   **Track Progress**: Each project is displayed as a card showing its overall progress with a radial chart, giving you an immediate sense of what's outstanding.
 
-3.  **Analytics Page**: This page helps you understand your productivity patterns over time.
-    - **Flow Visualizer**: The AI generates a visual chart and a summary report that shows your task-energy alignment, helping you identify patterns and gain insights into your workflow.
+### 3. Recurring Tasks Page
 
-## Current Features
+Manage tasks that happen on a regular basis without having to create them manually each time.
 
-- **AI-Powered Task Suggestions**: Based on your self-reported energy level, the AI intelligently filters and suggests tasks that you're in the best state to accomplish.
-- **Daily Momentum Score & Streaks**: An AI model analyzes your completed tasks and daily energy to calculate a "momentum score," providing positive reinforcement and a summary of your day's alignment. It also includes a streak bonus for consistency.
-- **Task Management**:
-  - Create, view, and mark tasks as complete.
-  - Assign an energy level (Low, Medium, High) and a category (e.g., Work, Personal) to each task.
-  - Filter your task list by energy level to focus on what's most relevant.
-- **Project Management**:
-  - Create distinct projects.
-  - Assign tasks to projects for better organization and tracking.
-- **Pomodoro Timer**: A simple, integrated timer to help you manage focused work intervals and breaks directly from the dashboard.
-- **AI-Generated Analytics**: Visualize your task-energy alignment over time with an AI-generated chart and receive a textual report summarizing your patterns and insights.
-- **Modern & Responsive UI**: A sleek, futuristic dark-mode interface that is compact and easy to use on both desktop and mobile devices.
+-   **Weekly & Monthly Tabs**: Organize tasks based on their frequency.
+-   **Status Tracking**: The system automatically tracks whether a recurring task has been completed for the current period (week or month).
+-   **Auto-Reset**: Completion status resets automatically at the start of a new week or month.
+
+### 4. Weekly Planner Page
+
+Visualize and organize your tasks across a 7-day grid, providing a clear overview of your week.
+
+-   **7-Day Grid View**: Each day of the current week is displayed as a column, showing all tasks with a deadline on that day.
+-   **At-a-Glance Overview**: Quickly see which days are busy and which are lighter, helping you to balance your workload.
+
+### 5. Reports Page
+
+Log your work hours and generate summaries for your records or for sharing with a team.
+
+-   **Daily Report Generation**: Log start/end times and get a summary of tasks completed.
+-   **Report History**: View a history of all past daily reports, select any day to see its details, and copy the report to your clipboard or export it as a `.txt` file.
+
+### 6. AI-Powered Analytics Page
+
+Understand your productivity patterns over time with AI-driven insights.
+
+-   **Flow Visualizer**: The AI analyzes your historical task and energy data to generate a visual chart that shows your task-energy alignment.
+-   **AI Report**: Alongside the chart, the AI provides a textual report that summarizes your patterns and offers insights to help you improve your workflow.
+
+## Technical Stack
+
+-   **Framework**: [Next.js](https://nextjs.org/) (with App Router)
+-   **Language**: [TypeScript](https://www.typescriptlang.org/)
+-   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+-   **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
+-   **Generative AI**: [Google's Gemini models](https://ai.google.dev/) via [Genkit](https://firebase.google.com/docs/genkit)
+-   **Data Storage**: Local JSON files (simulating a database for prototype stage)
+
+## Getting Started
+
+To run the project locally, follow these steps:
+
+1.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+
+2.  **Run the development server**:
+    The application requires two separate processes to run concurrently: the Next.js web app and the Genkit AI flows.
+
+    -   In your first terminal, start the Next.js development server:
+        ```bash
+        npm run dev
+        ```
+
+    -   In a second terminal, start the Genkit server:
+        ```bash
+        npm run genkit:start
+        ```
+
+3.  **Open the app**:
+    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
