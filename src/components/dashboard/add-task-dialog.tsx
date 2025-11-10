@@ -137,7 +137,6 @@ export function AddTaskDialog({ categories, projects }: { categories: Category[]
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
                           {projects.map((project) => (
                             <SelectItem key={project.id} value={project.id}>
                               {project.name}
