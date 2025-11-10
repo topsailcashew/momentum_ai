@@ -1,12 +1,11 @@
-
 [
   {
     "id": "1",
     "name": "Welcome to Momentum AI! Complete this task to get started.",
     "category": "personal",
     "energyLevel": "Low",
-    "completed": false,
-    "completedAt": null,
+    "completed": true,
+    "completedAt": "2025-11-10T08:36:18.895Z",
     "createdAt": "2024-01-01T12:00:00Z"
   }
 ]
