@@ -5,6 +5,7 @@ import {
   getTasks,
   addTask,
   updateTask,
+  deleteTask,
   setTodayEnergy,
   getEnergyLog,
   getTodayEnergy,
@@ -33,6 +34,20 @@ export async function createTaskAction(data: Omit<Task, 'id'| 'completed' | 'com
   revalidatePath('/projects');
   return newTask;
 }
+
+export async function updateTaskAction(taskId: string, data: Partial<Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>>) {
+  const updatedTask = await updateTask(taskId, data);
+  revalidatePath('/');
+  revalidatePath('/projects');
+  return updatedTask;
+}
+
+export async function deleteTaskAction(taskId: string) {
+    await deleteTask(taskId);
+    revalidatePath('/');
+    revalidatePath('/projects');
+}
+
 
 async function calculateAndSaveMomentumScore() {
     const today = format(new Date(), 'yyyy-MM-dd');

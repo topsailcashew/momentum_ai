@@ -9,7 +9,7 @@ import {
   getCategories,
   getProjects,
 } from '@/lib/data';
-import { createTaskAction, getSuggestedTasks, completeTaskAction, setEnergyLevelAction } from '@/app/actions';
+import { createTaskAction, getSuggestedTasks, completeTaskAction, updateTaskAction, deleteTaskAction } from '@/app/actions';
 import { MomentumCard } from '@/components/dashboard/momentum-card';
 import { TaskList } from '@/components/dashboard/task-list';
 import { Pomodoro } from '@/components/dashboard/pomodoro';
@@ -18,6 +18,7 @@ import { Task, EnergyLog, MomentumScore, Category, Project, EnergyLevel } from '
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { ProjectOverview } from '@/components/dashboard/project-overview';
+import { EditTaskDialog } from '@/components/dashboard/edit-task-dialog';
 
 export default function DashboardPage() {
   const [loading, setLoading] = React.useState(true);
@@ -32,6 +33,7 @@ export default function DashboardPage() {
     routineSuggestion: undefined,
   });
   const [focusedTask, setFocusedTask] = React.useState<Task | null>(null);
+  const [editingTask, setEditingTask] = React.useState<Task | null>(null);
 
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -102,8 +104,46 @@ export default function DashboardPage() {
     });
   }
 
+  const handleUpdateTask = (taskId: string, taskData: Partial<Omit<Task, 'id'>>) => {
+    startTransition(async () => {
+        try {
+            const updatedTask = await updateTaskAction(taskId, taskData);
+            if (updatedTask) {
+                setTasks(prev => prev.map(t => t.id === taskId ? updatedTask : t));
+                toast({ title: "Task updated!" });
+                setEditingTask(null);
+            }
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: 'Uh oh! Something went wrong.',
+                description: 'There was a problem updating your task.',
+            });
+        }
+    });
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    startTransition(async () => {
+        try {
+            await deleteTaskAction(taskId);
+            setTasks(prev => prev.filter(t => t.id !== taskId));
+            toast({ title: "Task deleted!" });
+            setEditingTask(null);
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: 'Uh oh! Something went wrong.',
+                description: 'There was a problem deleting your task.',
+            });
+        }
+    });
+  };
+
+
   const handleCompleteTask = (taskId: string, completed: boolean) => {
     // Optimistically update the UI
+    const originalTasks = tasks;
     setTasks(prevTasks =>
       prevTasks.map(task =>
         task.id === taskId
@@ -122,13 +162,7 @@ export default function DashboardPage() {
         }
       } catch (error) {
         // Revert the optimistic update if there was an error
-        setTasks(prevTasks =>
-          prevTasks.map(task =>
-            task.id === taskId
-              ? { ...task, completed: !completed, completedAt: !completed ? new Date().toISOString() : null }
-              : task
-          )
-        );
+        setTasks(originalTasks);
         toast({
           variant: 'destructive',
           title: 'Uh oh! Something went wrong.',
@@ -153,6 +187,7 @@ export default function DashboardPage() {
   }
 
   return (
+    <>
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-2">
         <div>
@@ -165,7 +200,8 @@ export default function DashboardPage() {
               todayEnergy={todayEnergy} 
               projects={projects}
               onFocusTask={setFocusedTask}
-              focusedTaskId={focusedTask?.id}
+              onEditTask={setEditingTask}
+              focusedTaskId={focusedTask?.id ?? null}
               onCreateTask={handleCreateTask}
               onCompleteTask={handleCompleteTask}
               isCreatingTask={isPending}
@@ -183,5 +219,18 @@ export default function DashboardPage() {
           suggestions={suggestions}
       />
     </div>
+     {editingTask && (
+        <EditTaskDialog
+            task={editingTask}
+            categories={categories}
+            projects={projects}
+            open={!!editingTask}
+            onOpenChange={(isOpen) => !isOpen && setEditingTask(null)}
+            onUpdateTask={handleUpdateTask}
+            onDeleteTask={handleDeleteTask}
+            isPending={isPending}
+        />
+    )}
+    </>
   );
 }

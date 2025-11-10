@@ -65,6 +65,12 @@ export async function updateTask(taskId: string, updates: Partial<Task>): Promis
   return tasks[taskIndex];
 }
 
+export async function deleteTask(taskId: string): Promise<void> {
+    const tasks = await getTasks();
+    const updatedTasks = tasks.filter(t => t.id !== taskId);
+    await writeData('tasks.json', updatedTasks);
+}
+
 // Category Functions
 export async function getCategories(): Promise<Category[]> {
   return readData<Category[]>('categories.json');

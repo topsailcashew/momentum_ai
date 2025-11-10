@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { AddTaskDialog } from './add-task-dialog';
 import type { Task, Category, EnergyLevel, EnergyLog, Project } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { Zap, ZapOff, BatteryMedium, Target, ListTodo, Folder, PlayCircle, Shield } from 'lucide-react';
+import { Zap, ZapOff, BatteryMedium, Target, ListTodo, Folder, PlayCircle, Shield, Edit } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -37,13 +37,14 @@ interface TaskListProps {
     todayEnergy?: EnergyLog;
     projects: Project[];
     onFocusTask: (task: Task) => void;
+    onEditTask: (task: Task) => void;
     focusedTaskId: string | null;
     onCreateTask: (data: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => void;
     onCompleteTask: (taskId: string, completed: boolean) => void;
     isCreatingTask: boolean;
 }
 
-export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask, focusedTaskId, onCreateTask, onCompleteTask, isCreatingTask }: TaskListProps) {
+export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask, onEditTask, focusedTaskId, onCreateTask, onCompleteTask, isCreatingTask }: TaskListProps) {
   const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = React.useState<EnergyLevel | 'all'>('all');
 
@@ -109,7 +110,7 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                     const isFocused = focusedTaskId === task.id;
                     return (
                         <div key={task.id} className={cn(
-                            "flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors relative",
+                            "flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors relative group",
                             isAligned && !isFocused && "bg-primary/10 border border-primary/30",
                             isFocused && "bg-accent/20 border border-accent"
                         )}>
@@ -153,21 +154,38 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                                      </div>
                                  )}
                             </div>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="absolute top-1/2 right-2 -translate-y-1/2 h-8 w-8"
-                                        onClick={() => onFocusTask(task)}
-                                    >
-                                        <PlayCircle className="size-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Focus on this task</p>
-                                </TooltipContent>
-                            </Tooltip>
+                            <div className="absolute top-1/2 right-2 -translate-y-1/2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            onClick={() => onFocusTask(task)}
+                                        >
+                                            <PlayCircle className="size-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Focus on this task</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            onClick={() => onEditTask(task)}
+                                        >
+                                            <Edit className="size-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Edit task</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </div>
                         </div>
                     );
                 })}
