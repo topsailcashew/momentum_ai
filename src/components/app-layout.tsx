@@ -45,7 +45,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarHeader className="pt-6">
           <div className="flex items-center gap-2">
             <Logo className="size-8 text-primary" />
-            <h1 className="text-xl font-semibold font-headline">Momentum AI</h1>
+            <h1 className="text-xl font-semibold font-headline group-data-[collapsible=icon]:hidden">Momentum AI</h1>
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -88,7 +88,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="mt-auto flex items-center justify-between gap-2">
+        <SidebarFooter className="mt-auto flex items-center gap-2">
              <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
