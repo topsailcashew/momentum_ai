@@ -167,7 +167,7 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                        <p>Focus on this task</p>
+                                        <p>Start Pomodoro session</p>
                                     </TooltipContent>
                                 </Tooltip>
                                 <Tooltip>

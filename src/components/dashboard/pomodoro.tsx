@@ -10,6 +10,7 @@ export function Pomodoro({ task }: { task: Task | null }) {
   const [minutes, setMinutes] = React.useState(25);
   const [seconds, setSeconds] = React.useState(0);
   const [isActive, setIsActive] = React.useState(false);
+  const [sessionType, setSessionType] = React.useState<'Focus' | 'Break'>('Focus');
 
   React.useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -23,6 +24,14 @@ export function Pomodoro({ task }: { task: Task | null }) {
             clearInterval(interval!);
             // TODO: Add sound notification and feedback prompt
             setIsActive(false);
+            // Basic logic to switch between focus and break
+            if(sessionType === 'Focus') {
+                setSessionType('Break');
+                setMinutes(5);
+            } else {
+                setSessionType('Focus');
+                setMinutes(25);
+            }
           } else {
             setMinutes((minutes) => minutes - 1);
             setSeconds(59);
@@ -33,7 +42,7 @@ export function Pomodoro({ task }: { task: Task | null }) {
       clearInterval(interval!);
     }
     return () => clearInterval(interval!);
-  }, [isActive, seconds, minutes]);
+  }, [isActive, seconds, minutes, sessionType]);
 
   const toggle = () => {
     setIsActive(!isActive);
@@ -41,6 +50,7 @@ export function Pomodoro({ task }: { task: Task | null }) {
 
   const reset = () => {
     setIsActive(false);
+    setSessionType('Focus');
     setMinutes(25);
     setSeconds(0);
   };
@@ -58,8 +68,11 @@ export function Pomodoro({ task }: { task: Task | null }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col flex-grow items-center justify-center gap-4">
-        <div className="text-9xl font-bold font-mono text-primary">
-          {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+        <div className="text-center">
+            <p className="text-muted-foreground text-sm mb-2">{sessionType} Session</p>
+            <div className="text-9xl font-bold font-mono text-primary">
+            {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+            </div>
         </div>
         <div className="flex gap-2">
           <Button onClick={toggle} size="lg" variant={isActive ? 'secondary' : 'default'} disabled={!task}>
