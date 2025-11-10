@@ -46,15 +46,15 @@ export function FlowVisualizer() {
         </div>
         <Button onClick={handleGenerateReport} disabled={isPending}>
           {isPending ? (
-            <>
+            <React.Fragment>
               <Loader2 className="animate-spin" />
               Generating...
-            </>
+            </React.Fragment>
           ) : (
-            <>
+            <React.Fragment>
               <Wand2 />
               Generate Report
-            </>
+            </React.Fragment>
           )}
         </Button>
       </CardHeader>

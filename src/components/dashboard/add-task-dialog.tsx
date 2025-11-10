@@ -83,8 +83,10 @@ export function AddTaskDialog({ categories }: { categories: Category[] }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
-          <PlusCircle />
-          Add Task
+          <>
+            <PlusCircle />
+            Add Task
+          </>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

@@ -53,8 +53,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 tooltip="Dashboard"
               >
                 <Link href="/">
-                  <Gauge />
-                  <span>Dashboard</span>
+                  <>
+                    <Gauge />
+                    <span>Dashboard</span>
+                  </>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -65,8 +67,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 tooltip="Analytics"
               >
                 <Link href="/analytics">
-                  <Activity />
-                  <span>Analytics</span>
+                  <>
+                    <Activity />
+                    <span>Analytics</span>
+                  </>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
