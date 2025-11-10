@@ -112,8 +112,10 @@ export function ProjectOverview({ projects, tasks }: { projects: Project[]; task
                         )
                     })}
                   </CarouselContent>
-                  <CarouselPrevious />
-                  <CarouselNext />
+                  <div className="flex justify-center items-center gap-2 mt-4">
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </div>
                 </Carousel>
               ) : (
                   <div className="col-span-full text-center text-muted-foreground py-8">
