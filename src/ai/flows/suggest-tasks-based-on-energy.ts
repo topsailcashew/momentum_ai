@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { Project, Task } from '@/lib/types';
+import { isSameDay, parseISO, getDay } from 'date-fns';
 
 const ScoreAndSuggestTasksInputSchema = z.object({
   energyLevel: z
@@ -25,7 +26,14 @@ export type ScoreAndSuggestTasksInput = z.infer<typeof ScoreAndSuggestTasksInput
 const ScoreAndSuggestTasksOutputSchema = z.object({
   suggestedTasks: z
     .array(z.custom<Task>())
-    .describe('An array of task objects that are most appropriate for the given energy level and other factors, sorted by score.'),
+    .describe('An array of task objects from the user\'s list that are most appropriate for the given energy level and other factors, sorted by score.'),
+  microSuggestions: z
+    .array(z.string())
+    .describe('A list of small, actionable suggestions not from the user\'s task list, tailored to their energy level.'),
+  routineSuggestion: z
+    .string()
+    .optional()
+    .describe('A suggestion for a new recurring task based on detected user patterns.'),
 });
 export type ScoreAndSuggestTasksOutput = z.infer<typeof ScoreAndSuggestTasksOutputSchema>;
 
@@ -34,6 +42,14 @@ export async function scoreAndSuggestTasks(
 ): Promise<ScoreAndSuggestTasksOutput> {
   return scoreAndSuggestTasksFlow(input);
 }
+
+const microSuggestionsPrompt = ai.definePrompt({
+    name: 'microSuggestionsPrompt',
+    input: { schema: z.object({ energyLevel: z.enum(['Low', 'Medium', 'High']) }) },
+    output: { schema: z.object({ suggestions: z.array(z.string()) }) },
+    prompt: `Based on the user's energy level of {{{energyLevel}}}, generate 2-3 short, actionable "micro-suggestions" that are not typical tasks. For low energy, suggest restorative activities (e.g., 'Take a short walk', 'Stretch for 5 minutes'). For medium energy, suggest preparatory tasks (e.g., 'Review tomorrow\'s calendar', 'Tidy up your workspace'). For high energy, suggest something to leverage that momentum (e.g., 'Brainstorm one big idea', 'Set a goal for the week').`,
+});
+
 
 const scoreAndSuggestTasksFlow = ai.defineFlow(
   {
@@ -101,8 +117,26 @@ const scoreAndSuggestTasksFlow = ai.defineFlow(
 
     const sortedTasks = scoredTasks.sort((a, b) => (b.score || 0) - (a.score || 0));
 
+    // Generate micro-suggestions
+    const microSuggestionsResult = await microSuggestionsPrompt({ energyLevel });
+    const microSuggestions = microSuggestionsResult.output?.suggestions || [];
+
+    // Check for routine patterns
+    let routineSuggestion: string | undefined = undefined;
+    const today = new Date();
+    const dayOfWeek = getDay(today); // Sunday = 0, Monday = 1, etc.
+    if (dayOfWeek === 1) { // It's Monday
+        const planningTasks = tasks.filter(t => t.name.toLowerCase().includes('plan') && t.name.toLowerCase().includes('week'));
+        if (planningTasks.length === 0) {
+            routineSuggestion = "It's the start of the week. How about adding a 'Weekly Planning' task to set your goals?";
+        }
+    }
+
+
     return {
-        suggestedTasks: sortedTasks.slice(0, 5) // Return top 5 suggestions
+        suggestedTasks: sortedTasks.slice(0, 3), // Return top 3 suggestions
+        microSuggestions,
+        routineSuggestion
     }
   }
 );

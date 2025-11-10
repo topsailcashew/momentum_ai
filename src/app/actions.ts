@@ -15,7 +15,7 @@ import {
   getProjects,
 } from '@/lib/data';
 import type { EnergyLevel, Task } from '@/lib/types';
-import { scoreAndSuggestTasks } from '@/ai/flows/suggest-tasks-based-on-energy';
+import { scoreAndSuggestTasks, ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { calculateDailyMomentumScore } from '@/ai/flows/calculate-daily-momentum-score';
 import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
 import { subDays, format, isSameDay, parseISO } from 'date-fns';
@@ -82,7 +82,7 @@ export async function completeTaskAction(taskId: string, completed: boolean) {
   revalidatePath('/projects');
 }
 
-export async function getSuggestedTasks(energyLevel: EnergyLevel) {
+export async function getSuggestedTasks(energyLevel: EnergyLevel): Promise<ScoreAndSuggestTasksOutput> {
   const [tasks, projects] = await Promise.all([getTasks(), getProjects()]);
   const completedTasks = tasks.filter(t => t.completed);
 

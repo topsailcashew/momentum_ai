@@ -11,7 +11,7 @@ import { MomentumCard } from '@/components/dashboard/momentum-card';
 import { SuggestedTasks } from '@/components/dashboard/suggested-tasks';
 import { TaskList } from '@/components/dashboard/task-list';
 import { Pomodoro } from '@/components/dashboard/pomodoro';
-import { Task } from '@/lib/types';
+import { ScoreAndSuggestTasksOutput } from '@/ai/flows/suggest-tasks-based-on-energy';
 
 export default async function DashboardPage() {
   const [tasks, todayEnergy, latestMomentum, categories, projects] = await Promise.all([
@@ -22,10 +22,12 @@ export default async function DashboardPage() {
     getProjects(),
   ]);
 
-  let suggestedTasks: Task[] = [];
+  let suggestions: ScoreAndSuggestTasksOutput = {
+    suggestedTasks: [],
+    microSuggestions: [],
+  };
   if (todayEnergy) {
-    const suggestedTasksData = await getSuggestedTasks(todayEnergy.level);
-    suggestedTasks = suggestedTasksData.suggestedTasks;
+    suggestions = await getSuggestedTasks(todayEnergy.level);
   }
 
   return (
@@ -45,7 +47,7 @@ export default async function DashboardPage() {
       <div className="grid gap-4 xl:grid-cols-3">
         <div className="xl:col-span-1">
           <SuggestedTasks
-            suggestedTasks={suggestedTasks}
+            suggestions={suggestions}
             energyLevel={todayEnergy?.level}
           />
         </div>
