@@ -15,7 +15,6 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -41,35 +40,38 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <SidebarMenu>
             <SidebarMenuItem>
                 <SidebarMenuButton
-                  as={Link}
-                  href="/"
+                  asChild
                   isActive={pathname === '/'}
                   tooltip="Dashboard"
                 >
-                  <Gauge />
-                  <span>Dashboard</span>
+                  <Link href="/">
+                    <Gauge />
+                    <span>Dashboard</span>
+                  </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
                 <SidebarMenuButton
-                  as={Link}
-                  href="/projects"
+                  asChild
                   isActive={pathname === '/projects'}
                   tooltip="Projects"
                 >
-                  <FolderKanban />
-                  <span>Projects</span>
+                  <Link href="/projects">
+                    <FolderKanban />
+                    <span>Projects</span>
+                  </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
                 <SidebarMenuButton
-                  as={Link}
-                  href="/analytics"
+                  asChild
                   isActive={pathname === '/analytics'}
                   tooltip="Analytics"
                 >
-                  <Activity />
-                  <span>Analytics</span>
+                  <Link href="/analytics">
+                    <Activity />
+                    <span>Analytics</span>
+                  </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
