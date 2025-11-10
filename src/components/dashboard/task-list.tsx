@@ -129,7 +129,7 @@ export function TaskList({ tasks, categories, todayEnergy, projects, onFocusTask
                                 <label htmlFor={`task-${task.id}`} className={cn("font-medium text-sm", task.completed && "line-through text-muted-foreground")}>
                                     {task.name}
                                 </label>
-                                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
+                                <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-1">
                                     <Badge variant="secondary" className="capitalize">{getCategoryName(task.category)}</Badge>
                                     <div className="flex items-center gap-1">
                                         <Icon className="size-3" />
