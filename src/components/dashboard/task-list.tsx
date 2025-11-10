@@ -86,7 +86,10 @@ export function TaskList({ tasks, categories, todayEnergy, projects }: { tasks: 
                     const isAligned = todayEnergy?.level === task.energyLevel;
                     const projectName = task.projectId ? getProjectName(task.projectId) : null;
                     return (
-                        <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors">
+                        <div key={task.id} className={cn(
+                            "flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors",
+                            isAligned && "bg-primary/10 border border-primary/30"
+                        )}>
                             <Checkbox
                                 id={`task-${task.id}`}
                                 checked={task.completed}
@@ -98,7 +101,7 @@ export function TaskList({ tasks, categories, todayEnergy, projects }: { tasks: 
                                 <label htmlFor={`task-${task.id}`} className={cn("font-medium text-sm", task.completed && "line-through text-muted-foreground")}>
                                     {task.name}
                                 </label>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
                                     <Badge variant="secondary" className="capitalize">{getCategoryName(task.category)}</Badge>
                                     <div className="flex items-center gap-1">
                                         <Icon className="size-3" />

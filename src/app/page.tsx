@@ -35,24 +35,26 @@ export default async function DashboardPage() {
       <h1 className="text-2xl font-bold tracking-tight font-headline">
         Dashboard
       </h1>
+      
+      {/* Tier 1: Emotional State & Motivation */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <MomentumCard latestMomentum={latestMomentum} />
+        <EnergyInput todayEnergy={todayEnergy} />
+      </div>
+
+      {/* Tier 2: Action Zone */}
+      <SuggestedTasks
+        suggestions={suggestions}
+        energyLevel={todayEnergy?.level}
+      />
+
+      {/* Tier 3: Deep Work Tools */}
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-1">
-          <MomentumCard latestMomentum={latestMomentum} />
-        </div>
-        <div className="lg:col-span-2 grid gap-4">
-            <EnergyInput todayEnergy={todayEnergy} />
             <Pomodoro />
         </div>
-      </div>
-      <div className="grid gap-4 xl:grid-cols-3">
-        <div className="xl:col-span-1">
-          <SuggestedTasks
-            suggestions={suggestions}
-            energyLevel={todayEnergy?.level}
-          />
-        </div>
-        <div className="xl:col-span-2">
-          <TaskList tasks={tasks} categories={categories} todayEnergy={todayEnergy} projects={projects} />
+        <div className="lg:col-span-2">
+            <TaskList tasks={tasks} categories={categories} todayEnergy={todayEnergy} projects={projects} />
         </div>
       </div>
     </div>
