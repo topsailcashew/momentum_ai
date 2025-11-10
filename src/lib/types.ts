@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export type EnergyLevel = 'Low' | 'Medium' | 'High';
 export type FocusType = 'Creative' | 'Analytical' | 'Physical' | 'Administrative';
 export type ProjectPriority = 'Low' | 'Medium' | 'High';
@@ -58,3 +60,13 @@ export interface DailyReport {
   completed: number;
   inProgress: number;
 }
+
+export const ScoreAndSuggestTasksInputSchema = z.object({
+  energyLevel: z
+    .enum(['Low', 'Medium', 'High'])
+    .describe("The user's selected energy level (Low, Medium, or High)."),
+  tasks: z.array(z.custom<Task>()).describe('The list of available tasks.'),
+  projects: z.array(z.custom<Project>()).describe('The list of available projects.'),
+  completedTasks: z.array(z.custom<Task>()).describe('A list of recently completed tasks to learn from.'),
+});
+export type ScoreAndSuggestTasksInput = z.infer<typeof ScoreAndSuggestTasksInputSchema>;

@@ -19,8 +19,8 @@ import {
   updateRecurringTask,
   updateTodaysReport,
 } from '@/lib/data';
-import type { DailyReport, EnergyLevel, Project, RecurringTask, Task } from '@/lib/types';
-import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow, ScoreAndSuggestTasksInput } from '@/ai/flows/suggest-tasks-based-on-energy';
+import type { DailyReport, EnergyLevel, Project, RecurringTask, Task, ScoreAndSuggestTasksInput } from '@/lib/types';
+import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { calculateDailyMomentumScore } from '@/ai/flows/calculate-daily-momentum-score';
 import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
 import { subDays, format, isSameDay, parseISO } from 'date-fns';

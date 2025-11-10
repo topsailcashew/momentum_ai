@@ -4,23 +4,10 @@
  *
  * It exports:
  * - `scoreAndSuggestTasks`: An async function to generate task suggestions based on energy level and other factors.
- * - `ScoreAndSuggestTasksInput`: The TypeScript type for the input schema.
  */
 
-import { z } from 'zod';
-import { Project, Task } from '@/lib/types';
+import { Project, Task, ScoreAndSuggestTasksInput } from '@/lib/types';
 import { getDay } from 'date-fns';
-
-export const ScoreAndSuggestTasksInputSchema = z.object({
-  energyLevel: z
-    .enum(['Low', 'Medium', 'High'])
-    .describe("The user's selected energy level (Low, Medium, or High)."),
-  tasks: z.array(z.custom<Task>()).describe('The list of available tasks.'),
-  projects: z.array(z.custom<Project>()).describe('The list of available projects.'),
-  completedTasks: z.array(z.custom<Task>()).describe('A list of recently completed tasks to learn from.'),
-});
-export type ScoreAndSuggestTasksInput = z.infer<typeof ScoreAndSuggestTasksInputSchema>;
-
 
 export async function scoreAndSuggestTasks(
   {tasks, projects, energyLevel, completedTasks}: ScoreAndSuggestTasksInput
