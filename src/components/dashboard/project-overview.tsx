@@ -71,16 +71,16 @@ export function ProjectOverview({ projects, tasks }: { projects: Project[]; task
                     {projects.map(project => {
                         const progress = getProjectProgress(project.id);
                         return (
-                           <CarouselItem key={project.id} className="md:basis-1/2 lg:basis-1/3">
-                             <div className="p-1">
+                           <CarouselItem key={project.id} className="md:basis-1/2 lg:basis-1/3 flex flex-col">
+                             <div className="p-1 flex-1 flex flex-col">
                                 <Card 
-                                  className="bg-secondary/30 cursor-pointer hover:border-primary/50 transition-colors"
+                                  className="bg-secondary/30 cursor-pointer hover:border-primary/50 transition-colors flex-1 flex flex-col"
                                   onClick={() => setSelectedProject(project)}
                                 >
                                     <CardHeader className="pb-2">
                                         <CardTitle className="text-base font-semibold">{project.name}</CardTitle>
                                     </CardHeader>
-                                    <CardContent className="flex flex-col items-center justify-center gap-2">
+                                    <CardContent className="flex flex-col items-center justify-center gap-2 flex-1">
                                         <div className="flex items-center justify-between w-full">
                                             <p className="text-sm text-muted-foreground">{progress.text} completed</p>
                                             <ChartContainer
