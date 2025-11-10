@@ -88,12 +88,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter className="mt-auto">
-            <DropdownMenu>
+        <SidebarFooter className="mt-auto flex items-center justify-between gap-2">
+             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start"
                   size="icon"
                 >
                   <Settings />
@@ -106,6 +105,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <SidebarTrigger className="hidden md:flex" />
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="p-4 md:p-6 lg:p-8">
