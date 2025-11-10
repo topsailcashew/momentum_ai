@@ -46,7 +46,7 @@ export function Pomodoro({ task }: { task: Task | null }) {
   };
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle className="text-xl">Pomodoro Timer</CardTitle>
         <CardDescription className="h-5">
@@ -57,8 +57,8 @@ export function Pomodoro({ task }: { task: Task | null }) {
             ) : "Select a task to focus on."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center gap-4">
-        <div className="text-8xl font-bold font-mono text-primary">
+      <CardContent className="flex flex-col flex-grow items-center justify-center gap-4">
+        <div className="text-9xl font-bold font-mono text-primary">
           {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
         </div>
         <div className="flex gap-2">
