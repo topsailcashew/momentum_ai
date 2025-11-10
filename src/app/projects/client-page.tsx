@@ -20,6 +20,8 @@ import { useToast } from '@/hooks/use-toast';
 import { createProjectAction } from '@/app/actions';
 import type { Project, Task } from '@/lib/types';
 import Link from 'next/link';
+import { RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 const projectFormSchema = z.object({
   name: z.string().min(2, 'Project name must be at least 2 characters.'),
@@ -52,8 +54,17 @@ export function ProjectClientPage({ projects, tasks }: { projects: Project[]; ta
     });
   };
 
-  const getTaskCount = (projectId: string) => {
-    return tasks.filter(t => t.projectId === projectId && !t.completed).length;
+  const getProjectProgress = (projectId: string) => {
+    const projectTasks = tasks.filter(t => t.projectId === projectId);
+    if (projectTasks.length === 0) return { percentage: 0, text: "No tasks" };
+    const completedTasks = projectTasks.filter(t => t.completed).length;
+    const totalTasks = projectTasks.length;
+    const percentage = Math.round((completedTasks / totalTasks) * 100);
+    return {
+      percentage,
+      text: `${completedTasks} / ${totalTasks} done`,
+      data: [{ name: projectTasks[0].name, value: percentage, fill: "hsl(var(--primary))" }]
+    };
   }
 
   return (
@@ -89,7 +100,9 @@ export function ProjectClientPage({ projects, tasks }: { projects: Project[]; ta
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {projects.map(project => (
+        {projects.map(project => {
+            const progress = getProjectProgress(project.id);
+            return (
             <Card key={project.id}>
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
@@ -97,18 +110,57 @@ export function ProjectClientPage({ projects, tasks }: { projects: Project[]; ta
                             <Folder className="text-primary"/>
                             {project.name}
                         </div>
-                        {/* <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Trash2 className="h-4 w-4" />
-                        </Button> */}
                     </CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                        {getTaskCount(project.id)} pending tasks
-                    </p>
+                <CardContent className="flex items-center justify-between">
+                    <div>
+                        <p className="text-sm text-muted-foreground">
+                            {progress.text}
+                        </p>
+                    </div>
+                     <ChartContainer
+                        config={{
+                            value: {
+                                label: "Progress",
+                                color: "hsl(var(--primary))",
+                            }
+                        }}
+                        className="mx-auto aspect-square h-20 w-20"
+                    >
+                        <RadialBarChart
+                            data={progress.data}
+                            startAngle={90}
+                            endAngle={-270}
+                            innerRadius="70%"
+                            outerRadius="100%"
+                            barSize={8}
+                        >
+                            <PolarAngleAxis
+                                type="number"
+                                domain={[0, 100]}
+                                dataKey="value"
+                                tick={false}
+                            />
+                            <RadialBar
+                                dataKey="value"
+                                background
+                                cornerRadius={10}
+                                className="fill-primary"
+                            />
+                             <text
+                                x="50%"
+                                y="50%"
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                                className="fill-foreground text-sm font-medium"
+                            >
+                                {progress.percentage}%
+                            </text>
+                        </RadialBarChart>
+                    </ChartContainer>
                 </CardContent>
             </Card>
-        ))}
+        )})}
       </div>
     </div>
   );
