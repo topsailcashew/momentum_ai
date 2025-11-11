@@ -10,7 +10,7 @@ import Link from 'next/link';
 import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
 } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import {
@@ -83,9 +83,9 @@ export default function LoginPage() {
     startTransition(async () => {
       try {
         const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
-        toast({ title: 'Login successful!' });
-        router.push('/');
+        await signInWithRedirect(auth, provider);
+        // Note: This will redirect the user to Google. The redirect result
+        // is handled in the root layout or a redirect handler page.
       } catch (error: any) {
         toast({
           variant: 'destructive',
@@ -98,32 +98,35 @@ export default function LoginPage() {
   
   if (userLoading || !auth) {
       return (
-          <Card className="w-full max-w-sm">
-              <CardHeader className="text-center">
-                  <Skeleton className="mx-auto h-10 w-10 text-primary" />
-                  <Skeleton className="h-6 w-3/4 mx-auto mt-2" />
-                  <Skeleton className="h-4 w-full mx-auto" />
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-              </CardContent>
-                <CardFooter className="justify-center">
-                  <Skeleton className="h-4 w-1/2" />
-              </CardFooter>
-          </Card>
+          <div className="flex min-h-screen items-center justify-center p-4">
+            <Card className="w-full max-w-sm">
+                <CardHeader className="text-center">
+                    <Skeleton className="mx-auto h-10 w-10 text-primary" />
+                    <Skeleton className="h-6 w-3/4 mx-auto mt-2" />
+                    <Skeleton className="h-4 w-full mx-auto" />
+                </CardHeader>
+                <CardContent className="grid gap-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </CardContent>
+                  <CardFooter className="justify-center">
+                    <Skeleton className="h-4 w-1/2" />
+                </CardFooter>
+            </Card>
+          </div>
       );
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader className="text-center">
-        <Logo className="mx-auto h-10 w-10 text-primary" />
-        <CardTitle className="mt-2">Welcome Back</CardTitle>
-        <CardDescription>Sign in to access your Momentum AI dashboard.</CardDescription>
-      </CardHeader>
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+          <Logo className="mx-auto h-10 w-10 text-primary" />
+          <CardTitle className="mt-2">Welcome Back</CardTitle>
+          <CardDescription>Sign in to access your Momentum AI dashboard.</CardDescription>
+        </CardHeader>
       <CardContent className="grid gap-4">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
@@ -180,6 +183,7 @@ export default function LoginPage() {
           </Link>
         </p>
       </CardFooter>
-    </Card>
+      </Card>
+    </div>
   );
 }

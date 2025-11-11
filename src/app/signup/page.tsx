@@ -11,7 +11,7 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
   User as FirebaseUser,
 } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
@@ -163,11 +163,9 @@ export default function SignupPage() {
     startTransition(async () => {
       try {
         const provider = new GoogleAuthProvider();
-        const result = await signInWithPopup(auth, provider);
-        await handleUserCreation(result.user, null);
-
-        toast({ title: 'Account created successfully!' });
-        router.push('/');
+        await signInWithRedirect(auth, provider);
+        // Note: This will redirect the user to Google. The redirect result
+        // is handled in the root layout, where we'll also create sample data.
       } catch (error: any) {
         toast({
           variant: 'destructive',
@@ -180,34 +178,37 @@ export default function SignupPage() {
 
   if (userLoading || !auth || !firestore) {
       return (
-          <Card className="w-full max-w-sm">
-              <CardHeader className="text-center">
-                  <Skeleton className="mx-auto h-10 w-10 rounded-full" />
-                  <Skeleton className="h-6 w-3/4 mx-auto mt-2" />
-                  <Skeleton className="h-4 w-full mx-auto" />
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-              </CardContent>
-                <CardFooter className="justify-center">
-                  <Skeleton className="h-4 w-1/2" />
-              </CardFooter>
-          </Card>
+          <div className="flex min-h-screen items-center justify-center p-4">
+            <Card className="w-full max-w-sm">
+                <CardHeader className="text-center">
+                    <Skeleton className="mx-auto h-10 w-10 rounded-full" />
+                    <Skeleton className="h-6 w-3/4 mx-auto mt-2" />
+                    <Skeleton className="h-4 w-full mx-auto" />
+                </CardHeader>
+                <CardContent className="grid gap-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </CardContent>
+                  <CardFooter className="justify-center">
+                    <Skeleton className="h-4 w-1/2" />
+                </CardFooter>
+            </Card>
+          </div>
       );
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader className="text-center">
-        <Logo className="mx-auto h-10 w-10 text-primary" />
-        <CardTitle className="mt-2">Create an Account</CardTitle>
-        <CardDescription>Join Momentum AI to start aligning your energy with your tasks.</CardDescription>
-      </CardHeader>
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center">
+          <Logo className="mx-auto h-10 w-10 text-primary" />
+          <CardTitle className="mt-2">Create an Account</CardTitle>
+          <CardDescription>Join Momentum AI to start aligning your energy with your tasks.</CardDescription>
+        </CardHeader>
       <CardContent className="grid gap-4">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
@@ -290,6 +291,7 @@ export default function SignupPage() {
           </Link>
         </p>
       </CardFooter>
-    </Card>
+      </Card>
+    </div>
   );
 }

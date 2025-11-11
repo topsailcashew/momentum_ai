@@ -58,11 +58,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const isAuthPage = pathname === '/login' || pathname === '/signup';
 
   if (isAuthPage) {
-    return (
-       <div className="flex min-h-screen items-center justify-center p-4">
-        {children}
-      </div>
-    )
+    return <>{children}</>;
   }
 
   return (

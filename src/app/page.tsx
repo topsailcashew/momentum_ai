@@ -18,19 +18,52 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useFirestore } from '@/firebase';
+import { useEffect, useState } from 'react';
+import type { Task, Category, Project, DailyReport, EnergyLog, MomentumScore } from '@/lib/types';
+
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
 
-  React.useEffect(() => {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [todayEnergy, setTodayEnergy] = useState<EnergyLog | undefined>(undefined);
+  const [latestMomentum, setLatestMomentum] = useState<MomentumScore | undefined>(undefined);
+  const [todaysReport, setTodaysReport] = useState<DailyReport | null>(null);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
     if (!userLoading && !user) {
       router.push('/login');
     }
   }, [user, userLoading, router]);
 
-  if (userLoading || !user || !firestore) {
+  useEffect(() => {
+    if (user && firestore) {
+      setDataLoading(true);
+      Promise.all([
+        getTasks(firestore, user.uid),
+        getProjects(firestore, user.uid),
+        getCategories(),
+        getTodayEnergy(firestore, user.uid),
+        getLatestMomentum(firestore, user.uid),
+        getTodaysReport(firestore, user.uid),
+      ]).then(([tasks, projects, categories, todayEnergy, latestMomentum, report]) => {
+        setTasks(tasks);
+        setProjects(projects);
+        setCategories(categories);
+        setTodayEnergy(todayEnergy);
+        setLatestMomentum(latestMomentum);
+        setTodaysReport(report);
+        setDataLoading(false);
+      });
+    }
+  }, [user, firestore]);
+
+  if (userLoading || dataLoading || !user || !firestore) {
     return (
       <div className="flex flex-col gap-4">
         <div className="grid gap-4 lg:grid-cols-2">
@@ -44,135 +77,40 @@ export default function DashboardPage() {
     );
   }
 
-  const tasksData = getTasks(firestore, user.uid);
-  const todayEnergyData = getTodayEnergy(firestore, user.uid);
-  const latestMomentumData = getLatestMomentum(firestore, user.uid);
-  const categoriesData = getCategories();
-  const projectsData = getProjects(firestore, user.uid);
-  const reportData = getTodaysReport(firestore, user.uid);
-
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-2">
         <Suspense fallback={<Skeleton className="h-64" />}>
-          <PomodoroWrapper />
+          <Pomodoro />
         </Suspense>
         <Suspense fallback={<Skeleton className="h-96" />}>
-          <TaskListWrapper
-            tasksPromise={tasksData}
-            categoriesPromise={categoriesData}
-            projectsPromise={projectsData}
-            todayEnergyPromise={todayEnergyData}
+          <TaskList
+            initialTasks={tasks}
+            categories={categories}
+            projects={projects}
+            todayEnergy={todayEnergy}
             userId={user.uid}
           />
         </Suspense>
       </div>
       
       <Suspense fallback={<Skeleton className="h-48" />}>
-        <ProjectOverviewWrapper userId={user.uid} tasksPromise={tasksData} projectsPromise={projectsData} />
+        <ProjectOverview projects={projects} tasks={tasks} userId={user.uid} />
       </Suspense>
       
       <Suspense fallback={<Skeleton className="h-48" />}>
-        <DailyReportCardWrapper userId={user.uid} reportPromise={reportData} />
+        <DailyReportCard initialReport={todaysReport as DailyReport} userId={user.uid} />
       </Suspense>
       
       <Suspense fallback={<Skeleton className="h-64" />}>
-        <MomentumCardWrapper
+        <MomentumCard
+          initialLatestMomentum={latestMomentum}
+          initialTodayEnergy={todayEnergy}
+          tasks={tasks}
+          projects={projects}
           userId={user.uid}
-          latestMomentumPromise={latestMomentumData}
-          todayEnergyPromise={todayEnergyData}
-          tasksPromise={tasksData}
-          projectsPromise={projectsData}
         />
       </Suspense>
     </div>
-  );
-}
-
-async function PomodoroWrapper() {
-  return <Pomodoro />;
-}
-
-async function TaskListWrapper({
-  tasksPromise,
-  categoriesPromise,
-  projectsPromise,
-  todayEnergyPromise,
-  userId,
-}: {
-  tasksPromise: ReturnType<typeof getTasks>;
-  categoriesPromise: ReturnType<typeof getCategories>;
-  projectsPromise: ReturnType<typeof getProjects>;
-  todayEnergyPromise: ReturnType<typeof getTodayEnergy>;
-  userId: string;
-}) {
-  const [tasks, categories, projects, todayEnergy] = await Promise.all([
-    tasksPromise,
-    categoriesPromise,
-    projectsPromise,
-    todayEnergyPromise,
-  ]);
-  return (
-    <TaskList
-      initialTasks={tasks}
-      categories={categories}
-      projects={projects}
-      todayEnergy={todayEnergy}
-      userId={userId}
-    />
-  );
-}
-
-async function ProjectOverviewWrapper({
-  tasksPromise,
-  projectsPromise,
-  userId,
-}: {
-  tasksPromise: ReturnType<typeof getTasks>;
-  projectsPromise: ReturnType<typeof getProjects>;
-  userId: string;
-}) {
-  const [tasks, projects] = await Promise.all([tasksPromise, projectsPromise]);
-  return <ProjectOverview projects={projects} tasks={tasks} userId={userId} />;
-}
-
-async function DailyReportCardWrapper({
-  reportPromise,
-  userId,
-}: {
-  reportPromise: ReturnType<typeof getTodaysReport>;
-  userId: string;
-}) {
-  const report = await reportPromise;
-  return <DailyReportCard initialReport={report} userId={userId} />;
-}
-
-async function MomentumCardWrapper({
-  latestMomentumPromise,
-  todayEnergyPromise,
-  tasksPromise,
-  projectsPromise,
-  userId,
-}: {
-  latestMomentumPromise: ReturnType<typeof getLatestMomentum>;
-  todayEnergyPromise: ReturnType<typeof getTodayEnergy>;
-  tasksPromise: ReturnType<typeof getTasks>;
-  projectsPromise: ReturnType<typeof getProjects>;
-  userId: string;
-}) {
-  const [latestMomentum, todayEnergy, tasks, projects] = await Promise.all([
-    latestMomentumPromise,
-    todayEnergyPromise,
-    tasksPromise,
-    projectsPromise,
-  ]);
-  return (
-    <MomentumCard
-      initialLatestMomentum={latestMomentum}
-      initialTodayEnergy={todayEnergy}
-      tasks={tasks}
-      projects={projects}
-      userId={userId}
-    />
   );
 }
