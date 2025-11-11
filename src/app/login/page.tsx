@@ -32,6 +32,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/logo';
 import { useAuth } from '@/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -40,7 +41,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function LoginPage() {
+function LoginClientPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
@@ -149,4 +150,30 @@ export default function LoginPage() {
       </CardFooter>
     </Card>
   );
+}
+
+export default function LoginPage() {
+    const auth = useAuth();
+
+    if (!auth) {
+        return (
+            <Card className="w-full max-w-sm">
+                <CardHeader className="text-center">
+                    <Skeleton className="mx-auto h-10 w-10 rounded-full" />
+                    <Skeleton className="h-6 w-3/4 mx-auto mt-2" />
+                    <Skeleton className="h-4 w-full mx-auto" />
+                </CardHeader>
+                <CardContent className="grid gap-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </CardContent>
+                 <CardFooter className="justify-center">
+                    <Skeleton className="h-4 w-1/2" />
+                </CardFooter>
+            </Card>
+        );
+    }
+
+    return <LoginClientPage />;
 }
