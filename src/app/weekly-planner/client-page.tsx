@@ -1,8 +1,7 @@
-
 'use client';
 
 import * as React from 'react';
-import { startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, parseISO } from 'date-fns';
+import { startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, parseISO, addWeeks, subWeeks } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DayColumn } from '@/components/weekly-planner/day-column';
 import type { Task, Project, Category } from '@/lib/types';
@@ -10,7 +9,7 @@ import { TaskFormDialog } from '@/components/dashboard/task-form-dialog';
 import { createTaskAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface WeeklyPlannerClientPageProps {
   tasks: Task[];
@@ -24,12 +23,12 @@ export function WeeklyPlannerClientPage({
   categories,
 }: WeeklyPlannerClientPageProps) {
   const [tasks, setTasks] = React.useState(initialTasks);
+  const [currentDate, setCurrentDate] = React.useState(new Date());
   const [isPending, startTransition] = React.useTransition();
   const { toast } = useToast();
 
-  const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   const getTasksForDay = (day: Date) => {
@@ -66,27 +65,44 @@ export function WeeklyPlannerClientPage({
       energyLevel: 'Medium' // Default energy level
     });
   };
+  
+  const goToPreviousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
+  const goToNextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
+  const goToToday = () => setCurrentDate(new Date());
 
   return (
     <Card>
-        <CardHeader className="flex-row items-center justify-between">
-            <div>
-                <CardTitle>Weekly Planner</CardTitle>
-                <CardDescription>
-                    Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
-                </CardDescription>
+        <CardHeader>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                    <CardTitle>Weekly Planner</CardTitle>
+                    <CardDescription>
+                        Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
+                    </CardDescription>
+                </div>
+                 <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={goToPreviousWeek} size="icon" className="h-9 w-9">
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="sr-only">Previous week</span>
+                    </Button>
+                     <Button variant="outline" onClick={goToToday}>Today</Button>
+                    <Button variant="outline" onClick={goToNextWeek} size="icon" className="h-9 w-9">
+                        <ChevronRight className="h-4 w-4" />
+                        <span className="sr-only">Next week</span>
+                    </Button>
+                </div>
+                 <TaskFormDialog 
+                    categories={categories}
+                    projects={projects}
+                    onSave={handleCreateTask}
+                    isPending={isPending}
+                >
+                    <Button>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Detailed Task
+                    </Button>
+                </TaskFormDialog>
             </div>
-            <TaskFormDialog 
-                categories={categories}
-                projects={projects}
-                onSave={handleCreateTask}
-                isPending={isPending}
-            >
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Detailed Task
-                </Button>
-            </TaskFormDialog>
         </CardHeader>
         <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
