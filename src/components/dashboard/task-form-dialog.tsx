@@ -63,9 +63,10 @@ interface TaskFormDialogProps {
     onSave: (data: TaskData | Partial<Omit<Task, 'id'>>, taskId?: string) => void;
     onDelete?: (taskId: string) => void;
     isPending: boolean;
+    children?: React.ReactNode;
 }
 
-export function TaskFormDialog({ task, categories, projects, open: externalOpen, onOpenChange: externalOnOpenChange, onSave, onDelete, isPending }: TaskFormDialogProps) {
+export function TaskFormDialog({ task, categories, projects, open: externalOpen, onOpenChange: externalOnOpenChange, onSave, onDelete, isPending, children }: TaskFormDialogProps) {
   const [internalOpen, setInternalOpen] = React.useState(false);
 
   const isEditing = !!task;
@@ -126,12 +127,12 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
     }
   };
 
-  const triggerButton = isEditing ? null : (
+  const triggerButton = children ? children : (isEditing ? null : (
      <Button size="sm">
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Task
         </Button>
-  );
+  ));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -345,7 +346,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                 )}
               />
             <DialogFooter className={isEditing ? "justify-between" : "justify-end"}>
-                {isEditing && (
+                {isEditing && onDelete && (
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button type="button" variant="destructive" size="sm">

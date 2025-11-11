@@ -9,6 +9,8 @@ import type { Task, Project, Category } from '@/lib/types';
 import { TaskFormDialog } from '@/components/dashboard/task-form-dialog';
 import { createTaskAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
 
 interface WeeklyPlannerClientPageProps {
   tasks: Task[];
@@ -70,7 +72,12 @@ export function WeeklyPlannerClientPage({
                 projects={projects}
                 onSave={handleCreateTask}
                 isPending={isPending}
-            />
+            >
+                <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Task
+                </Button>
+            </TaskFormDialog>
         </CardHeader>
         <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
