@@ -145,10 +145,11 @@ export async function getRecurringTasks(db: Firestore, userId: string): Promise<
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RecurringTask));
 }
 
-export async function addRecurringTask(db: Firestore, userId: string, taskData: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>): Promise<void> {
+export async function addRecurringTask(db: Firestore, userId: string, taskData: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>): Promise<RecurringTask> {
     const tasksCol = db.collection('users').doc(userId).collection('recurring-tasks');
     const newTaskData = { ...taskData, lastCompleted: null, userId };
-    await tasksCol.add(newTaskData);
+    const docRef = await tasksCol.add(newTaskData);
+    return { id: docRef.id, ...newTaskData };
 }
 
 export async function updateRecurringTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<RecurringTask, 'id'>>): Promise<void> {
@@ -157,14 +158,10 @@ export async function updateRecurringTask(db: Firestore, userId: string, taskId:
 }
 
 // Report Functions
-export async function getReports(db: Firestore, userId: string): Promise<Record<string, DailyReport>> {
+export async function getReports(db: Firestore, userId: string): Promise<DailyReport[]> {
     const reportsCol = db.collection('users').doc(userId).collection('reports');
-    const snapshot = await reportsCol.get();
-    const reports: Record<string, DailyReport> = {};
-    snapshot.forEach(doc => {
-        reports[doc.id] = doc.data() as DailyReport;
-    });
-    return reports;
+    const snapshot = await reportsCol.orderBy('date', 'desc').get();
+    return snapshot.docs.map(doc => doc.data() as DailyReport);
 }
 
 export async function getTodaysReport(db: Firestore, userId: string): Promise<DailyReport> {

@@ -21,6 +21,7 @@ import {
   getRecurringTasks,
   updateTodaysReport,
   updateUserProfile,
+  getTodaysReport,
 } from '@/lib/data-firestore-server';
 import type { DailyReport, EnergyLevel, Project, RecurringTask, Task, ScoreAndSuggestTasksInput } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
@@ -84,7 +85,7 @@ async function calculateAndSaveMomentumScore(userId: string) {
         const lastScoreDate = parseISO(latestMomentum.date);
         const yesterday = subDays(new Date(), 1);
         if (isSameDay(lastScoreDate, yesterday)) {
-            streak = latestMomentum.streak + 1;
+            streak = (latestMomentum.streak || 1) + 1;
         }
     }
     streakBonus = streak > 1 ? streak * 10 : 0;
@@ -111,6 +112,9 @@ export async function completeTaskAction(userId: string, taskId: string, complet
   if (completed) {
       await calculateAndSaveMomentumScore(userId);
   }
+
+  // Update report after completing a task
+  await getTodaysReport(getDb(), userId);
 
   revalidatePath('/');
   revalidatePath('/analytics');
@@ -160,13 +164,11 @@ export async function deleteProjectAction(userId: string, projectId: string) {
     revalidatePath('/');
 }
 
-export async function createRecurringTaskAction(userId: string, data: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>): Promise<RecurringTask[]> {
+export async function createRecurringTaskAction(userId: string, data: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>): Promise<RecurringTask> {
     const db = getDb();
-    await addRecurringTask(db, userId, data);
+    const newTask = await addRecurringTask(db, userId, data);
     revalidatePath('/recurring');
-    // Refetch tasks to return the updated list
-    const tasks = await getRecurringTasks(db, userId);
-    return tasks;
+    return newTask;
 }
 
 export async function completeRecurringTaskAction(userId: string, taskId: string) {

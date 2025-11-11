@@ -60,6 +60,7 @@ export function TaskList() {
   }, [initialTasks]);
 
   const handleComplete = (id: string, completed: boolean) => {
+    const originalTasks = tasks;
     const optimisticUpdate = (prevTasks: Task[]) =>
       prevTasks.map(task =>
         task.id === id
@@ -71,16 +72,17 @@ export function TaskList() {
     setAllTasks(optimisticUpdate);
 
     startTransition(async () => {
-        completeTaskAction(userId, id, completed)
-            .catch((error) => {
-                 toast({
-                    variant: 'destructive',
-                    title: 'Uh oh! Something went wrong.',
-                    description: 'There was a problem updating your task. Reverting changes.',
-                });
-                setTasks(initialTasks); // Revert from original state
-                setAllTasks(initialTasks);
+        try {
+            await completeTaskAction(userId, id, completed);
+        } catch(error) {
+            toast({
+                variant: 'destructive',
+                title: 'Uh oh! Something went wrong.',
+                description: 'There was a problem updating your task. Reverting changes.',
             });
+            setTasks(originalTasks); // Revert from original state
+            setAllTasks(originalTasks);
+        }
     });
   };
 
@@ -109,7 +111,7 @@ export function TaskList() {
     startTransition(async () => {
         try {
             await updateTaskAction(userId, taskId, taskData);
-            const optimisticUpdate = (prev: Task[]) => prev.map(t => t.id === taskId ? {...t, ...taskData} : t);
+            const optimisticUpdate = (prev: Task[]) => prev.map(t => t.id === taskId ? {...t, ...taskData} as Task : t);
             setTasks(optimisticUpdate);
             setAllTasks(optimisticUpdate);
             toast({ title: "Task updated!" });
@@ -312,7 +314,3 @@ export function TaskList() {
     </>
   );
 }
-
-    
-
-    
