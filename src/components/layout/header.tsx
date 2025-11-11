@@ -24,9 +24,14 @@ export function Header() {
       </div>
       <div className="flex items-center gap-3 text-sm text-muted-foreground">
         <CalendarDays className="h-5 w-5" />
-        <span>
-            {currentTime ? format(currentTime, 'eeee, MMMM d, yyyy h:mm:ss a') : 'Loading...'}
-        </span>
+        <div className="flex items-center gap-2">
+            <span>
+                {currentTime ? format(currentTime, 'eeee, MMMM d') : 'Loading date...'}
+            </span>
+            <span className="font-mono bg-muted/50 px-2 py-1 rounded-md text-foreground">
+                {currentTime ? format(currentTime, 'h:mm:ss a') : '...'}
+            </span>
+        </div>
       </div>
     </header>
   );

@@ -87,5 +87,15 @@
     "completed": true,
     "completedAt": "2025-11-10T11:48:24.099Z",
     "createdAt": "2025-11-10T11:36:34.007Z"
+  },
+  {
+    "name": "Lalola",
+    "deadline": "2025-11-18T21:00:00.000Z",
+    "category": "personal",
+    "energyLevel": "Medium",
+    "id": "1762851971269",
+    "completed": false,
+    "completedAt": null,
+    "createdAt": "2025-11-11T09:06:11.269Z"
   }
 ]
