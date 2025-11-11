@@ -19,9 +19,10 @@ import { updateUserProfileAction } from '../actions';
 import { updateProfile } from 'firebase/auth';
 import type { Task, Category } from '@/lib/types';
 import { getTasks, getCategories } from '@/lib/data-firestore';
-import { TrendingUp, Zap, Tag, Calendar, CheckCircle } from 'lucide-react';
+import { TrendingUp, Zap, Tag, Calendar, CheckCircle, Clock } from 'lucide-react';
 import { getDay, parseISO, format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -45,8 +46,7 @@ const StatCard = ({ icon, title, value }: { icon: React.ElementType, title: stri
 };
 
 export function ProfileClientPage() {
-  const { user, loading: userLoading } = useUser();
-  const firestore = useFirestore();
+  const { user, loading: userLoading, firestore } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -96,7 +96,9 @@ export function ProfileClientPage() {
 
     startTransition(async () => {
       try {
-        await updateProfile(user, { displayName: data.displayName });
+        if(user && user.displayName !== data.displayName) {
+          await updateProfile(user, { displayName: data.displayName });
+        }
         await updateUserProfileAction(user.uid, { displayName: data.displayName });
         toast({
           title: 'Profile updated!',
@@ -115,8 +117,14 @@ export function ProfileClientPage() {
 
   const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || 'N/A';
 
-  const completedTasks = tasks.filter(task => task.completed);
+  const completedTasks = tasks.filter(task => task.completed && task.completedAt);
   const recentTasks = completedTasks.sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime()).slice(0, 5);
+
+  const upcomingTasks = tasks
+    .filter(task => !task.completed && task.deadline)
+    .sort((a, b) => new Date(a.deadline!).getTime() - new Date(b.deadline!).getTime())
+    .slice(0, 5);
+
 
   const stats = React.useMemo(() => {
     if (completedTasks.length === 0) {
@@ -145,9 +153,21 @@ export function ProfileClientPage() {
     const energySweetSpot = Object.keys(energyCounts).reduce((a, b) => energyCounts[a] > energyCounts[b] ? a : b);
 
     const categoryCounts = completedTasks.reduce((acc, task) => {
-        acc[task.category] = (acc[task.category] || 0) + 1;
+        if (task.category) {
+            acc[task.category] = (acc[task.category] || 0) + 1;
+        }
         return acc;
     }, {} as Record<string, number>);
+
+    if (Object.keys(categoryCounts).length === 0) {
+        return {
+          totalCompleted: completedTasks.length,
+          productiveDay: daysOfWeek[mostProductiveDayIndex],
+          energySweetSpot,
+          topCategory: 'N/A',
+        };
+    }
+
     const topCategory = Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b);
 
     return {
@@ -159,7 +179,7 @@ export function ProfileClientPage() {
   }, [completedTasks, categories]);
 
 
-  if (userLoading || !user || dataLoading) {
+  if (userLoading || dataLoading || !user) {
     return (
         <div className="grid gap-6 md:grid-cols-3">
             <div className="md:col-span-1 space-y-6">
@@ -231,20 +251,27 @@ export function ProfileClientPage() {
         </div>
 
         <div className="md:col-span-2">
-            <Card>
+           <Tabs defaultValue="upcoming" className="w-full">
+              <Card>
                 <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
-                    <CardDescription>Your last 5 completed tasks.</CardDescription>
+                  <CardTitle>Activity Overview</CardTitle>
+                  <CardDescription>Your recent accomplishments and what's coming up next.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                   {recentTasks.length > 0 ? (
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                    <TabsTrigger value="recent">Recent</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="upcoming" className="mt-4">
+                     {upcomingTasks.length > 0 ? (
                         <ul className="space-y-3">
-                            {recentTasks.map(task => (
+                            {upcomingTasks.map(task => (
                                 <li key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                                     <div>
                                         <p className="font-medium text-sm">{task.name}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            Completed on {format(parseISO(task.completedAt!), 'MMM d, yyyy')}
+                                        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                            <Clock className="size-3" />
+                                            Due on {format(parseISO(task.deadline!), 'MMM d, yyyy')}
                                         </p>
                                     </div>
                                     <Badge variant="secondary">{getCategoryName(task.category)}</Badge>
@@ -253,12 +280,37 @@ export function ProfileClientPage() {
                         </ul>
                    ) : (
                        <div className="text-center text-muted-foreground py-12">
-                           <p>No completed tasks yet. Go get something done!</p>
+                           <p>No upcoming tasks with deadlines. Enjoy the calm!</p>
                        </div>
                    )}
+                  </TabsContent>
+                  <TabsContent value="recent" className="mt-4">
+                     {recentTasks.length > 0 ? (
+                          <ul className="space-y-3">
+                              {recentTasks.map(task => (
+                                  <li key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
+                                      <div>
+                                          <p className="font-medium text-sm">{task.name}</p>
+                                          <p className="text-xs text-muted-foreground">
+                                              Completed on {format(parseISO(task.completedAt!), 'MMM d, yyyy')}
+                                          </p>
+                                      </div>
+                                      <Badge variant="secondary">{getCategoryName(task.category)}</Badge>
+                                  </li>
+                              ))}
+                          </ul>
+                    ) : (
+                        <div className="text-center text-muted-foreground py-12">
+                            <p>No completed tasks yet. Go get something done!</p>
+                        </div>
+                    )}
+                  </TabsContent>
                 </CardContent>
-            </Card>
+              </Card>
+            </Tabs>
         </div>
     </div>
   );
 }
+
+    
