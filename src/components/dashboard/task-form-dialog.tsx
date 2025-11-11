@@ -124,7 +124,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
         onDelete(task.id);
         onOpenChange(false);
     }
-  }
+  };
 
   const triggerButton = isEditing ? null : (
      <Button size="sm">
