@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, Gauge, PanelLeft, FolderKanban, Settings, Sun, Moon, Repeat, CalendarDays, FileText } from 'lucide-react';
+import { Activity, Gauge, PanelLeft, FolderKanban, Settings, Sun, Moon, Repeat, CalendarDays, FileText, Calendar } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -123,6 +123,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <Link href="/analytics">
                     <Activity />
                     <span>Analytics</span>
+                  </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === '/calendar'}
+                  tooltip="Calendar"
+                >
+                  <Link href="/calendar">
+                    <Calendar />
+                    <span>Calendar</span>
                   </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
