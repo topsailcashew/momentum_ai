@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -99,6 +100,10 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
           category: '',
           energyLevel: 'Medium',
           projectId: 'none',
+          deadline: undefined,
+          effort: undefined,
+          focusType: undefined,
+          priority: undefined,
         });
     }
   }, [open, task, form]);
