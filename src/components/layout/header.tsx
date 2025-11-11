@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -24,11 +25,11 @@ export function Header() {
       </div>
       <div className="flex items-center gap-3 text-sm text-muted-foreground">
         <CalendarDays className="h-5 w-5" />
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-end">
             <span>
                 {currentTime ? format(currentTime, 'eeee, MMMM d') : 'Loading date...'}
             </span>
-            <span className="font-mono bg-muted/50 px-2 py-1 rounded-md text-foreground">
+            <span className="font-mono bg-muted/50 px-2 py-1 rounded-md text-foreground text-xs">
                 {currentTime ? format(currentTime, 'h:mm:ss a') : '...'}
             </span>
         </div>
