@@ -1,38 +1,154 @@
+/**
+ * @fileOverview Firestore Security Rules for the Momentum AI application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model. Each user has complete control
+ * over their own data, and no access to other users' data. All data is nested under
+ * the /users/{userId} path, ensuring clear ownership.
+ *
+ * Data Structure:
+ * All personal data (tasks, categories, energy ratings, momentum scores, and streaks)
+ * is stored in subcollections under /users/{userId}.
+ *
+ * Key Security Decisions:
+ * - Users can only access their own data.
+ * - There are no admin roles.
+ * - Listing all users is disallowed.
+ *
+ * Denormalization for Authorization:
+ * - The userId is denormalized into each document within the /users/{userId} subcollections
+ *   to allow direct authorization checks without additional reads.
+ */
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+    /**
+     * @description Ensures that the user is signed in.
+     * @returns {boolean} True if the user is signed in, false otherwise.
+     */
+    function isSignedIn() {
+      return request.auth != null;
     }
 
+    /**
+     * @description Checks if the request is made by the owner of the resource.
+     * @param {string} userId - The user ID to compare with the request's auth UID.
+     * @returns {boolean} True if the user ID matches the request's auth UID, false otherwise.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the request is made by the owner of an existing resource.
+     * @param {string} userId - The user ID to compare with the request's auth UID.
+     * @returns {boolean} True if the user ID matches the request's auth UID and the resource exists, false otherwise.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Rules for the /users/{userId} collection.
+     * @path /users/{userId}
+     * @allow (create) - A user can create their own user document if the userId matches their auth UID.
+     * @allow (get, update, delete) - A user can read, update, or delete their own user document.
+     * @deny (create) - A user cannot create a user document with a userId that does not match their auth UID.
+     * @deny (get, update, delete) - A user cannot read, update, or delete another user's document.
+     * @principle Enforces document ownership for all operations on user documents.
+     */
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if false; // Listing all users is not permitted.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
 
-      match /tasks/{taskId} {
-        allow read, write, delete: if isOwner(userId);
-      }
+    /**
+     * @description Rules for the /users/{userId}/tasks/{taskId} collection.
+     * @path /users/{userId}/tasks/{taskId}
+     * @allow (create) - A user can create a task if the userId matches their auth UID.
+     * @allow (get, list, update, delete) - A user can read, list, update, or delete their own tasks.
+     * @deny (create) - A user cannot create a task with a userId that does not match their auth UID.
+     * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's tasks.
+     * @principle Enforces document ownership for all operations on task documents.
+     */
+    match /users/{userId}/tasks/{taskId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
 
-      match /projects/{projectId} {
-        allow read, write, delete: if isOwner(userId);
-      }
+    /**
+     * @description Rules for the /users/{userId}/categories/{categoryId} collection.
+     * @path /users/{userId}/categories/{categoryId}
+     * @allow (create) - A user can create a category if the userId matches their auth UID.
+     * @allow (get, list, update, delete) - A user can read, list, update, or delete their own categories.
+     * @deny (create) - A user cannot create a category with a userId that does not match their auth UID.
+     * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's categories.
+     * @principle Enforces document ownership for all operations on category documents.
+     */
+    match /users/{userId}/categories/{categoryId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
 
-      match /recurring-tasks/{recurringTaskId} {
-        allow read, write: if isOwner(userId);
-      }
+    /**
+     * @description Rules for the /users/{userId}/energyRatings/{energyRatingId} collection.
+     * @path /users/{userId}/energyRatings/{energyRatingId}
+     * @allow (create) - A user can create an energy rating if the userId matches their auth UID.
+     * @allow (get, list, update, delete) - A user can read, list, update, or delete their own energy ratings.
+     * @deny (create) - A user cannot create an energy rating with a userId that does not match their auth UID.
+     * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's energy ratings.
+     * @principle Enforces document ownership for all operations on energy rating documents.
+     */
+    match /users/{userId}/energyRatings/{energyRatingId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
 
-      match /energy-log/{energyLogId} {
-        allow read, write: if isOwner(userId);
-      }
+    /**
+     * @description Rules for the /users/{userId}/momentumScores/{momentumScoreId} collection.
+     * @path /users/{userId}/momentumScores/{momentumScoreId}
+     * @allow (create) - A user can create a momentum score if the userId matches their auth UID.
+     * @allow (get, list, update, delete) - A user can read, list, update, or delete their own momentum scores.
+     * @deny (create) - A user cannot create a momentum score with a userId that does not match their auth UID.
+     * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's momentum scores.
+     * @principle Enforces document ownership for all operations on momentum score documents.
+     */
+    match /users/{userId}/momentumScores/{momentumScoreId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
 
-      match /momentum/{momentumId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      match /reports/{reportId} {
-        allow read, write: if isOwner(userId);
-      }
+    /**
+     * @description Rules for the /users/{userId}/streaks/{streakId} collection.
+     * @path /users/{userId}/streaks/{streakId}
+     * @allow (create) - A user can create a streak if the userId matches their auth UID.
+     * @allow (get, list, update, delete) - A user can read, list, update, or delete their own streaks.
+     * @deny (create) - A user cannot create a streak with a userId that does not match their auth UID.
+     * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's streaks.
+     * @principle Enforces document ownership for all operations on streak documents.
+     */
+    match /users/{userId}/streaks/{streakId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
     }
   }
 }

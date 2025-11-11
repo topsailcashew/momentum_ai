@@ -1,136 +1,334 @@
 {
   "entities": {
-    "UserProfile": {
-      "title": "User Profile",
-      "description": "Represents a user's profile information.",
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
       "type": "object",
+      "description": "Represents a user of the Momentum AI application.",
       "properties": {
-        "displayName": {
+        "id": {
           "type": "string",
-          "description": "The user's display name."
+          "description": "Unique identifier for the User entity."
         },
         "email": {
           "type": "string",
-          "format": "email",
-          "description": "The user's email address."
-        },
-        "photoURL": {
-          "type": "string",
-          "format": "uri",
-          "description": "URL of the user's profile picture."
+          "description": "User's email address.",
+          "format": "email"
         }
       },
-      "required": ["displayName", "email"]
+      "required": [
+        "id",
+        "email"
+      ]
     },
     "Task": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Task",
-      "description": "A single to-do item.",
       "type": "object",
+      "description": "Represents a task created by a user.",
       "properties": {
-        "name": { "type": "string" },
-        "category": { "type": "string" },
-        "energyLevel": { "enum": ["Low", "Medium", "High"] },
-        "completed": { "type": "boolean" },
-        "completedAt": { "type": "string", "format": "date-time" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "projectId": { "type": "string" },
-        "deadline": { "type": "string", "format": "date-time" },
-        "effort": { "type": "number" },
-        "focusType": { "enum": ["Creative", "Analytical", "Physical", "Administrative"] },
-        "priority": { "enum": ["Urgent & Important", "Important & Not Urgent", "Urgent & Not Important", "Not Urgent & Not Important"] }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Task entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Task)"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the task."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the task."
+        },
+        "energyLevel": {
+          "type": "string",
+          "description": "The energy level associated with the task (Low, Medium, High)."
+        },
+        "priority": {
+          "type": "string",
+          "description": "The priority of the task."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Indicates whether the task is completed or not."
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to Category. (Relationship: Category 1:N Task)"
+        }
       },
-      "required": ["name", "energyLevel", "completed", "createdAt"]
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "energyLevel",
+        "priority",
+        "completed",
+        "categoryId"
+      ]
     },
-    "Project": {
-      "title": "Project",
-      "description": "A collection of tasks.",
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
       "type": "object",
+      "description": "Represents a category for tasks.",
       "properties": {
-        "name": { "type": "string" },
-        "priority": { "enum": ["Low", "Medium", "High"] }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Category entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Category)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the category."
+        }
       },
-      "required": ["name"]
+      "required": [
+        "id",
+        "userId",
+        "name"
+      ]
     },
-    "RecurringTask": {
-        "title": "Recurring Task",
-        "description": "A task that repeats on a schedule.",
-        "type": "object",
-        "properties": {
-            "name": { "type": "string" },
-            "frequency": { "enum": ["Weekly", "Monthly"] },
-            "lastCompleted": { "type": "string", "format": "date-time" }
+    "EnergyRating": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "EnergyRating",
+      "type": "object",
+      "description": "Represents a user's self-reported energy level at a specific time.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the EnergyRating entity."
         },
-        "required": ["name", "frequency"]
-    },
-    "EnergyLog": {
-        "title": "Energy Log",
-        "description": "A daily log of a user's energy level.",
-        "type": "object",
-        "properties": {
-            "date": { "type": "string", "format": "date" },
-            "level": { "enum": ["Low", "Medium", "High"] }
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N EnergyRating)"
         },
-        "required": ["date", "level"]
+        "energyLevel": {
+          "type": "string",
+          "description": "The user's reported energy level (Low, Medium, High)."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the energy level was reported.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "energyLevel",
+        "timestamp"
+      ]
     },
     "MomentumScore": {
-        "title": "Momentum Score",
-        "description": "A user's daily momentum score.",
-        "type": "object",
-        "properties": {
-            "date": { "type": "string", "format": "date" },
-            "score": { "type": "number" },
-            "streak": { "type": "number" },
-            "summary": { "type": "string" }
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MomentumScore",
+      "type": "object",
+      "description": "Represents a user's daily momentum score.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the MomentumScore entity."
         },
-        "required": ["date", "score", "streak", "summary"]
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N MomentumScore)"
+        },
+        "date": {
+          "type": "string",
+          "description": "The date for which the momentum score is calculated.",
+          "format": "date-time"
+        },
+        "score": {
+          "type": "number",
+          "description": "The calculated momentum score for the day."
+        },
+        "streakBonus": {
+          "type": "number",
+          "description": "The streak bonus applied to the score."
+        },
+        "momentumPoints": {
+          "type": "number",
+          "description": "The total momentum points earned for the day."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "date",
+        "score",
+        "streakBonus",
+        "momentumPoints"
+      ]
     },
-    "DailyReport": {
-        "title": "Daily Report",
-        "description": "A daily summary of work.",
-        "type": "object",
-        "properties": {
-            "date": { "type": "string", "format": "date" },
-            "startTime": { "type": "string", "format": "date-time" },
-            "endTime": { "type": "string", "format": "date-time" },
-            "generatedReport": { "type": "string" },
-            "goals": { "type": "number" },
-            "completed": { "type": "number" },
-            "inProgress": { "type": "number" }
+    "Streak": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Streak",
+      "type": "object",
+      "description": "Represents a user's streak of consecutive days of completing tasks that match their energy level.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Streak entity."
         },
-        "required": ["date", "goals", "completed", "inProgress"]
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Streak)"
+        },
+        "startDate": {
+          "type": "string",
+          "description": "The date the streak started.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "The date the streak ended, if applicable. Null if the streak is still active.",
+          "format": "date-time"
+        },
+        "length": {
+          "type": "number",
+          "description": "The length of the streak in days."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "startDate",
+        "length"
+      ]
     }
   },
   "auth": {
-    "providers": ["google.com", "password"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": { "$ref": "#/entities/UserProfile" },
-      "description": "Stores user profile information."
-    },
-    "/users/{userId}/tasks/{taskId}": {
-      "schema": { "$ref": "#/entities/Task" },
-      "description": "Stores individual tasks for a user."
-    },
-    "/users/{userId}/projects/{projectId}": {
-      "schema": { "$ref": "#/entities/Project" },
-      "description": "Stores projects for a user."
-    },
-    "/users/{userId}/recurring-tasks/{recurringTaskId}": {
-      "schema": { "$ref": "#/entities/RecurringTask" },
-      "description": "Stores recurring tasks for a user."
-    },
-    "/users/{userId}/energy-log/{energyLogId}": {
-      "schema": { "$ref": "#/entities/EnergyLog" },
-      "description": "Stores daily energy logs for a user."
-    },
-    "/users/{userId}/momentum/{momentumId}": {
-      "schema": { "$ref": "#/entities/MomentumScore" },
-      "description": "Stores daily momentum scores for a user."
-    },
-    "/users/{userId}/reports/{reportId}": {
-        "schema": { "$ref": "#/entities/DailyReport" },
-        "description": "Stores daily work reports for a user."
-    }
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Collection of user profiles.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/tasks/{taskId}",
+        "definition": {
+          "entityName": "Task",
+          "schema": {
+            "$ref": "#/backend/entities/Task"
+          },
+          "description": "Collection of tasks owned by a specific user. Denormalized userId for Authorization Independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "taskId",
+              "description": "The unique identifier for the task."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Collection of categories owned by a specific user. Denormalized userId for Authorization Independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "categoryId",
+              "description": "The unique identifier for the category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/energyRatings/{energyRatingId}",
+        "definition": {
+          "entityName": "EnergyRating",
+          "schema": {
+            "$ref": "#/backend/entities/EnergyRating"
+          },
+          "description": "Collection of energy ratings reported by a specific user. Denormalized userId for Authorization Independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "energyRatingId",
+              "description": "The unique identifier for the energy rating."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/momentumScores/{momentumScoreId}",
+        "definition": {
+          "entityName": "MomentumScore",
+          "schema": {
+            "$ref": "#/backend/entities/MomentumScore"
+          },
+          "description": "Collection of momentum scores calculated for a specific user. Denormalized userId for Authorization Independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "momentumScoreId",
+              "description": "The unique identifier for the momentum score."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/streaks/{streakId}",
+        "definition": {
+          "entityName": "Streak",
+          "schema": {
+            "$ref": "#/backend/entities/Streak"
+          },
+          "description": "Collection of streaks tracked for a specific user. Denormalized userId for Authorization Independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "streakId",
+              "description": "The unique identifier for the streak."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to follow the principles of Authorization Independence and Structural Segregation. Path-based ownership is used for private user data (Tasks, Categories, EnergyRatings, MomentumScores, and Streaks). Each user has their own collection for these entities, enforcing that only the user has access to their respective data. There are no global roles. Each entity follows a `users/{userId}/<entityName>` pattern, where `<entityName>` will be tasks, categories, energyRatings, momentumScores, streaks.\n\n*   **Authorization Independence:** By using path-based ownership (`/users/{userId}/tasks/{taskId}`), the security rules can directly verify that the `userId` matches the `request.auth.uid`, without needing to read any parent documents. This ensures that authorization checks are atomic and independent.\n*   **Structural Segregation:** Each collection under `/users/{userId}` (e.g., `/users/{userId}/tasks`) only contains documents related to that specific user. This simplifies security rules, as all documents in a collection share the same security posture (i.e., only the owner can read/write).\n*   **QAPs Support:** The path-based ownership structure inherently supports secure `list` operations. Rules can easily enforce that a user can only list documents within their own `/users/{userId}` path, preventing unauthorized access to other users' data. By storing roles directly in the database and relying solely on `request.auth.uid`, the design avoids complex custom claims, enabling simple and robust security rules."
   }
 }
