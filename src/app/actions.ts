@@ -3,25 +3,22 @@
 import { revalidatePath } from 'next/cache';
 import {
   getTasks,
-  addTask,
-  deleteTask,
-  setTodayEnergy,
-  getEnergyLog,
-  getTodayEnergy,
-  getLatestMomentum,
-  saveMomentumScore,
   addProject,
   getProjects,
   updateProject,
   deleteProject,
   addRecurringTask,
-  updateRecurringTask,
   getRecurringTasks,
   updateTodaysReport,
   updateUserProfile,
   getTodaysReport,
+  getEnergyLog,
+  getLatestMomentum,
+  setTodayEnergy,
+  saveMomentumScore,
+  deleteTask,
 } from '@/lib/data-firestore-server';
-import type { DailyReport, EnergyLevel, Project, RecurringTask, Task, ScoreAndSuggestTasksInput } from '@/lib/types';
+import type { EnergyLevel, Project, RecurringTask, Task, ScoreAndSuggestTasksInput, DailyReport } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { calculateDailyMomentumScore } from '@/ai/flows/calculate-daily-momentum-score';
 import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
@@ -30,40 +27,6 @@ import { getDb } from '@/firebase/server-init';
 
 // Note: Using data-firestore-server.ts which is compatible with Firebase Admin SDK
 // This is required because Next.js server actions cannot use client-side Firebase
-
-
-export async function setEnergyLevelAction(userId: string, level: EnergyLevel) {
-  await setTodayEnergy(getDb(), userId, level);
-  revalidatePath('/');
-}
-
-export async function createTaskAction(userId: string, data: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>): Promise<Task> {
-  const db = getDb();
-  const newTask = await addTask(db, userId, data);
-  revalidatePath('/');
-  revalidatePath('/projects');
-  revalidatePath('/reports');
-  revalidatePath('/weekly-planner');
-  return newTask;
-}
-
-export async function updateTaskAction(userId: string, taskId: string, data: Partial<Omit<Task, 'id'>>) {
-    const db = getDb();
-    const taskRef = db.collection('users').doc(userId).collection('tasks').doc(taskId);
-    await taskRef.update(data);
-    revalidatePath('/');
-    revalidatePath('/projects');
-    revalidatePath('/reports');
-    revalidatePath('/weekly-planner');
-}
-
-export async function deleteTaskAction(userId: string, taskId: string) {
-    await deleteTask(getDb(), userId, taskId);
-    revalidatePath('/');
-    revalidatePath('/projects');
-    revalidatePath('/reports');
-    revalidatePath('/weekly-planner');
-}
 
 
 async function calculateAndSaveMomentumScore(userId: string) {
@@ -105,25 +68,18 @@ async function calculateAndSaveMomentumScore(userId: string) {
     });
 }
 
-export async function completeTaskAction(userId: string, taskId: string, completed: boolean) {
-  const db = getDb();
-  const completedAt = completed ? new Date().toISOString() : null;
-  const taskRef = db.collection('users').doc(userId).collection('tasks').doc(taskId);
-  await taskRef.update({ completed, completedAt });
+// This function is called from a client-side data mutation, so it needs to revalidate paths
+// and perform any server-side logic after a task is completed.
+export async function onTaskCompleted(userId: string) {
+    await calculateAndSaveMomentumScore(userId);
+    // Update report after completing a task
+    await getTodaysReport(getDb(), userId);
 
-
-  if (completed) {
-      await calculateAndSaveMomentumScore(userId);
-  }
-
-  // Update report after completing a task
-  await getTodaysReport(db, userId);
-
-  revalidatePath('/');
-  revalidatePath('/analytics');
-  revalidatePath('/projects');
-  revalidatePath('/reports');
-  revalidatePath('/weekly-planner');
+    revalidatePath('/');
+    revalidatePath('/analytics');
+    revalidatePath('/projects');
+    revalidatePath('/reports');
+    revalidatePath('/weekly-planner');
 }
 
 export type ScoreAndSuggestTasksOutput = Awaited<ReturnType<typeof getSuggestedTasks>>;
@@ -147,38 +103,13 @@ export async function getFlowAlignmentReport(userId: string) {
     return result;
 }
 
-export async function createProjectAction(userId: string, name: string): Promise<Project> {
-    const db = getDb();
-    const newProject = await addProject(db, userId, { name, priority: 'Medium' });
-    revalidatePath('/projects');
-    revalidatePath('/');
-    return newProject;
-}
 
-export async function updateProjectAction(userId: string, projectId: string, updates: Partial<Project>) {
-    await updateProject(getDb(), userId, projectId, updates);
-    revalidatePath('/projects');
+export async function onClientWrite() {
     revalidatePath('/');
-}
-
-export async function deleteProjectAction(userId: string, projectId: string) {
-    await deleteProject(getDb(), userId, projectId);
     revalidatePath('/projects');
-    revalidatePath('/');
-}
-
-export async function createRecurringTaskAction(userId: string, data: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>): Promise<RecurringTask[]> {
-    const db = getDb();
-    await addRecurringTask(db, userId, data);
     revalidatePath('/recurring');
-    // refetch all recurring tasks to return the new list
-    const tasks = await getRecurringTasks(db, userId);
-    return tasks;
-}
-
-export async function completeRecurringTaskAction(userId: string, taskId: string) {
-    await updateRecurringTask(getDb(), userId, taskId, { lastCompleted: new Date().toISOString() });
-    revalidatePath('/recurring');
+    revalidatePath('/reports');
+    revalidatePath('/weekly-planner');
 }
 
 export async function updateReportAction(userId: string, updates: Partial<DailyReport>) {

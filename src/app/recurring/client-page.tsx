@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -17,20 +16,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Check, X, PlusCircle } from 'lucide-react';
 import { isThisWeek, isThisMonth, parseISO, format } from 'date-fns';
 import { AddRecurringTaskDialog } from '@/components/recurring/add-recurring-task-dialog';
-import { completeRecurringTaskAction, createRecurringTaskAction } from '@/app/actions';
 import type { RecurringTask } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { addRecurringTask, updateRecurringTask } from '@/lib/data-firestore';
+import { onClientWrite } from '@/app/actions';
 
 export function RecurringTasksClientPage() {
   const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
   const { recurringTasks: initialTasks, setRecurringTasks, loading: dataLoading } = useDashboardData();
 
-  const [tasks, setTasks] = React.useState<RecurringTask[]>(initialTasks);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
@@ -40,22 +40,18 @@ export function RecurringTasksClientPage() {
     }
   }, [user, userLoading, router]);
 
-  React.useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
-
   const handleCompleteTask = (taskId: string) => {
     if (!user) return;
     const optimisticUpdate = (currentTasks: RecurringTask[]) => currentTasks.map(task => 
         task.id === taskId ? { ...task, lastCompleted: new Date().toISOString() } : task
     );
-    setTasks(optimisticUpdate);
     setRecurringTasks(optimisticUpdate);
 
     startTransition(async () => {
         try {
-            await completeRecurringTaskAction(user.uid, taskId);
+            await updateRecurringTask(firestore, user.uid, taskId, { lastCompleted: new Date().toISOString() });
             toast({ title: 'Task marked as complete!' });
+            await onClientWrite();
         } catch (error) {
             toast({
                 variant: 'destructive',
@@ -63,7 +59,7 @@ export function RecurringTasksClientPage() {
                 description: 'There was a problem completing the task. Reverting changes.',
             });
             // Revert optimistic update by refetching from global state
-            setTasks(initialTasks); 
+            setRecurringTasks(initialTasks); 
         }
     });
   }
@@ -72,10 +68,10 @@ export function RecurringTasksClientPage() {
     if (!user) return;
     startTransition(async () => {
       try {
-        const updatedTasks = await createRecurringTaskAction(user.uid, taskData);
-        setTasks(updatedTasks);
-        setRecurringTasks(updatedTasks);
+        const newTask = await addRecurringTask(firestore, user.uid, taskData);
+        setRecurringTasks(prev => [...prev, newTask]);
         toast({ title: 'Recurring task created!' });
+        await onClientWrite();
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -86,8 +82,8 @@ export function RecurringTasksClientPage() {
     });
   };
 
-  const weeklyTasks = tasks.filter(t => t.frequency === 'Weekly');
-  const monthlyTasks = tasks.filter(t => t.frequency === 'Monthly');
+  const weeklyTasks = initialTasks.filter(t => t.frequency === 'Weekly');
+  const monthlyTasks = initialTasks.filter(t => t.frequency === 'Monthly');
 
   const renderTaskTable = (taskArray: RecurringTask[], period: 'Weekly' | 'Monthly') => {
     const checkCompletion = (lastCompleted: string | null) => {

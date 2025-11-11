@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -25,10 +24,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useToast } from '@/hooks/use-toast';
-import { completeTaskAction, createTaskAction, deleteTaskAction, updateTaskAction } from '@/app/actions';
 import { PomodoroContext } from './pomodoro-provider';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
+import { addTask, deleteTask, updateTask } from '@/lib/data-firestore';
+import { onClientWrite, onTaskCompleted } from '@/app/actions';
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
   Low: ZapOff,
@@ -45,22 +45,18 @@ const priorityColors: Record<EisenhowerMatrix, string> = {
 
 export function TaskList() {
   const { user } = useUser();
+  const firestore = useFirestore();
   const { tasks: initialTasks, categories, projects, todayEnergy, setTasks: setAllTasks } = useDashboardData();
   const userId = user!.uid;
 
-  const [tasks, setTasks] = React.useState(initialTasks);
   const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = React.useState<EnergyLevel | 'all'>('all');
   const [editingTask, setEditingTask] = React.useState<Task | null>(null);
   const { toast } = useToast();
   const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
 
-  React.useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
-
   const handleComplete = (id: string, completed: boolean) => {
-    const originalTasks = tasks;
+    const originalTasks = initialTasks;
     const optimisticUpdate = (prevTasks: Task[]) =>
       prevTasks.map(task =>
         task.id === id
@@ -68,19 +64,22 @@ export function TaskList() {
           : task
       );
 
-    setTasks(optimisticUpdate);
     setAllTasks(optimisticUpdate);
 
     startTransition(async () => {
         try {
-            await completeTaskAction(userId, id, completed);
+            await updateTask(firestore, userId, id, { completed, completedAt: completed ? new Date().toISOString() : null });
+            if (completed) {
+                await onTaskCompleted(userId);
+            } else {
+                await onClientWrite();
+            }
         } catch(error) {
             toast({
                 variant: 'destructive',
                 title: 'Uh oh! Something went wrong.',
                 description: 'There was a problem updating your task. Reverting changes.',
             });
-            setTasks(originalTasks); // Revert from original state
             setAllTasks(originalTasks);
         }
     });
@@ -89,14 +88,14 @@ export function TaskList() {
   const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>) => {
     startTransition(async () => {
       try {
-        const newTask = await createTaskAction(userId, taskData);
+        const newTask = await addTask(firestore, userId, taskData);
         const optimisticUpdate = (prev: Task[]) => [...prev, newTask];
-        setTasks(optimisticUpdate);
         setAllTasks(optimisticUpdate);
         toast({
           title: 'Task created!',
           description: 'Your new task has been added.',
         });
+        await onClientWrite();
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -110,12 +109,12 @@ export function TaskList() {
   const handleUpdateTask = (taskId: string, taskData: Partial<Omit<Task, 'id'>>) => {
     startTransition(async () => {
         try {
-            await updateTaskAction(userId, taskId, taskData);
+            await updateTask(firestore, userId, taskId, taskData);
             const optimisticUpdate = (prev: Task[]) => prev.map(t => t.id === taskId ? {...t, ...taskData} as Task : t);
-            setTasks(optimisticUpdate);
             setAllTasks(optimisticUpdate);
             toast({ title: "Task updated!" });
             setEditingTask(null);
+            await onClientWrite();
         } catch (error) {
              toast({
                 variant: 'destructive',
@@ -129,12 +128,12 @@ export function TaskList() {
   const handleDeleteTask = (taskId: string) => {
     startTransition(async () => {
         try {
-            await deleteTaskAction(userId, taskId);
+            await deleteTask(firestore, userId, taskId);
             const optimisticUpdate = (prev: Task[]) => prev.filter(t => t.id !== taskId);
-            setTasks(optimisticUpdate);
             setAllTasks(optimisticUpdate);
             toast({ title: "Task deleted!" });
             setEditingTask(null);
+            await onClientWrite();
         } catch (error) {
              toast({
                 variant: 'destructive',
@@ -154,7 +153,7 @@ export function TaskList() {
     return projects.find(p => p.id === projectId)?.name;
   }
 
-  const filteredTasks = tasks.filter(task => {
+  const filteredTasks = initialTasks.filter(task => {
     if (filter === 'all') return !task.completed;
     return task.energyLevel === filter && !task.completed;
   });

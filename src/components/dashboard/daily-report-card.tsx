@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -7,14 +6,16 @@ import { Clipboard, FileText, Play, Square, Goal, CheckCircle2, Hourglass } from
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { updateReportAction } from '@/app/actions';
+import { onClientWrite } from '@/app/actions';
 import type { DailyReport } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
+import { updateTodaysReport } from '@/lib/data-firestore';
 
 export function DailyReportCard() {
   const { user } = useUser();
+  const firestore = useFirestore();
   const { todaysReport: initialReport } = useDashboardData();
   const userId = user!.uid;
 
@@ -25,10 +26,12 @@ export function DailyReportCard() {
 
   React.useEffect(() => {
     setReport(initialReport);
-    setClientFormattedTimes({
-      startTime: initialReport?.startTime ? format(parseISO(initialReport.startTime), 'p') : 'Not set',
-      endTime: initialReport?.endTime ? format(parseISO(initialReport.endTime), 'p') : 'Not set',
-    });
+    if(initialReport) {
+        setClientFormattedTimes({
+            startTime: initialReport.startTime ? format(parseISO(initialReport.startTime), 'p') : 'Not set',
+            endTime: initialReport.endTime ? format(parseISO(initialReport.endTime), 'p') : 'Not set',
+        });
+    }
   }, [initialReport]);
 
   const handleTimeTracking = (action: 'start' | 'end') => {
@@ -51,14 +54,14 @@ export function DailyReportCard() {
 
     startTransition(async () => {
       try {
-        const updatedReport = await updateReportAction(userId, updates);
-        // Sync with server state
+        const updatedReport = await updateTodaysReport(firestore, userId, updates);
         setReport(updatedReport);
-        setClientFormattedTimes({
+         setClientFormattedTimes({
             startTime: updatedReport?.startTime ? format(parseISO(updatedReport.startTime), 'p') : 'Not set',
             endTime: updatedReport?.endTime ? format(parseISO(updatedReport.endTime), 'p') : 'Not set',
         });
         toast({ title: `Work ${action} time recorded!` });
+        await onClientWrite();
       } catch (e) {
         // Revert on error
         setReport(previousReport);

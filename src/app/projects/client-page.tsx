@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -18,16 +17,17 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { createProjectAction, deleteProjectAction, updateProjectAction } from '@/app/actions';
 import type { Project, Task } from '@/lib/types';
 import { RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { ProjectDetailsDialog } from '@/components/projects/project-details-dialog';
 import { getProjectProgress } from '@/lib/utils';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { addProject, updateProject, deleteProject } from '@/lib/data-firestore';
+import { onClientWrite } from '@/app/actions';
 
 const projectFormSchema = z.object({
   name: z.string().min(2, 'Project name must be at least 2 characters.'),
@@ -37,10 +37,10 @@ type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 export function ProjectClientPage() {
   const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
   const router = useRouter();
   const { projects: initialProjects, tasks, loading: dataLoading, setProjects: setAllProjects } = useDashboardData();
   
-  const [projects, setProjects] = React.useState<Project[]>(initialProjects);
   const [isPending, startTransition] = useTransition();
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
   const { toast } = useToast();
@@ -51,10 +51,6 @@ export function ProjectClientPage() {
     }
   }, [user, userLoading, router]);
 
-  React.useEffect(() => {
-    setProjects(initialProjects);
-  }, [initialProjects]);
-
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: { name: '' },
@@ -64,11 +60,11 @@ export function ProjectClientPage() {
     if (!user) return;
     startTransition(async () => {
       try {
-        const newProject = await createProjectAction(user.uid, data.name);
-        setProjects(prev => [...prev, newProject]);
-        setAllProjects(prev => [...prev, newProject]); // Update global state
+        const newProject = await addProject(firestore, user.uid, { name: data.name, priority: 'Medium' });
+        setAllProjects(prev => [...prev, newProject]);
         toast({ title: 'Project created!' });
         form.reset();
+        await onClientWrite();
       } catch (e) {
         toast({ variant: 'destructive', title: 'Failed to create project.' });
       }
@@ -78,26 +74,26 @@ export function ProjectClientPage() {
   const handleUpdateProject = (projectId: string, updates: Partial<Project>) => {
     if (!user) return;
     startTransition(async () => {
-      updateProjectAction(user.uid, projectId, updates);
-      const updatedProjects = prev => prev.map(p => p.id === projectId ? { ...p, ...updates } : p);
-      setProjects(updatedProjects);
-      setAllProjects(updatedProjects);
+      await updateProject(firestore, user.uid, projectId, updates);
+      const optimisticUpdate = (prev: Project[]) => prev.map(p => p.id === projectId ? { ...p, ...updates } as Project : p);
+      setAllProjects(optimisticUpdate);
       toast({ title: "Project updated!" });
       if (selectedProject?.id === projectId) {
         setSelectedProject(prev => prev ? { ...prev, ...updates } : null);
       }
+      await onClientWrite();
     });
   };
 
   const handleDeleteProject = (projectId: string) => {
       if (!user) return;
       startTransition(async () => {
-          deleteProjectAction(user.uid, projectId);
-          const updatedProjects = prev => prev.filter(p => p.id !== projectId);
-          setProjects(updatedProjects);
-          setAllProjects(updatedProjects);
+          await deleteProject(firestore, user.uid, projectId);
+          const optimisticUpdate = (prev: Project[]) => prev.filter(p => p.id !== projectId);
+          setAllProjects(optimisticUpdate);
           toast({ title: 'Project deleted' });
           setSelectedProject(null);
+          await onClientWrite();
       });
   };
 
@@ -160,7 +156,7 @@ export function ProjectClientPage() {
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map(project => {
+          {initialProjects.map(project => {
               const progress = getProjectProgress(project.id, tasks);
               return (
               <Card 
@@ -242,5 +238,3 @@ export function ProjectClientPage() {
     </>
   );
 }
-
-    
