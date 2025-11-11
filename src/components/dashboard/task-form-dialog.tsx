@@ -308,7 +308,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                        <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select focus type" />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="Creative">Creative</SelectItem>
@@ -384,3 +384,5 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
     </Dialog>
   );
 }
+
+    
