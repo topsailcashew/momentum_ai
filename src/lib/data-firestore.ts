@@ -1,6 +1,4 @@
 
-'use server';
-
 import {
   collection,
   doc,
@@ -88,7 +86,7 @@ export async function deleteTask(db: Firestore, userId: string, taskId: string):
 }
 
 // Category Functions - Now from an in-memory array as they are static
-export async function getCategories(): Promise<Category[]> {
+export function getCategories(): Category[] {
   return categories;
 }
 
