@@ -59,7 +59,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isAuthPage) {
     return (
-       <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
+       <div className="flex min-h-screen items-center justify-center p-4">
         {children}
       </div>
     )
