@@ -59,7 +59,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isAuthPage) {
     return (
-       <div className="flex min-h-screen flex-col items-center justify-center p-4">
+       <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-background">
+        <div className="absolute inset-0 -z-10 h-full w-full bg-secondary [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
         {children}
       </div>
     )
@@ -67,7 +68,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Sidebar collapsible="icon">
+      <Sidebar>
         <SidebarRail />
         <SidebarHeader className="pt-6">
           <div className="flex items-center gap-2">
