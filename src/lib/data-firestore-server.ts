@@ -38,11 +38,6 @@ export async function addTask(db: Firestore, userId: string, taskData: Omit<Task
     return { id: docRef.id, ...newTaskData };
 }
 
-export async function updateTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<Task, 'id'>>): Promise<void> {
-    const taskRef = db.collection('users').doc(userId).collection('tasks').doc(taskId);
-    await taskRef.update(updates);
-}
-
 export async function deleteTask(db: Firestore, userId: string, taskId: string): Promise<void> {
     const taskRef = db.collection('users').doc(userId).collection('tasks').doc(taskId);
     await taskRef.delete();

@@ -1,11 +1,9 @@
-
 'use server';
 
 import { revalidatePath } from 'next/cache';
 import {
   getTasks,
   addTask,
-  updateTask,
   deleteTask,
   setTodayEnergy,
   getEnergyLog,
@@ -50,11 +48,13 @@ export async function createTaskAction(userId: string, data: Omit<Task, 'id' | '
 }
 
 export async function updateTaskAction(userId: string, taskId: string, data: Partial<Omit<Task, 'id'>>) {
-  await updateTask(getDb(), userId, taskId, data);
-  revalidatePath('/');
-  revalidatePath('/projects');
-  revalidatePath('/reports');
-  revalidatePath('/weekly-planner');
+    const db = getDb();
+    const taskRef = db.collection('users').doc(userId).collection('tasks').doc(taskId);
+    await taskRef.update(data);
+    revalidatePath('/');
+    revalidatePath('/projects');
+    revalidatePath('/reports');
+    revalidatePath('/weekly-planner');
 }
 
 export async function deleteTaskAction(userId: string, taskId: string) {
@@ -106,15 +106,18 @@ async function calculateAndSaveMomentumScore(userId: string) {
 }
 
 export async function completeTaskAction(userId: string, taskId: string, completed: boolean) {
+  const db = getDb();
   const completedAt = completed ? new Date().toISOString() : null;
-  await updateTask(getDb(), userId, taskId, { completed, completedAt });
+  const taskRef = db.collection('users').doc(userId).collection('tasks').doc(taskId);
+  await taskRef.update({ completed, completedAt });
+
 
   if (completed) {
       await calculateAndSaveMomentumScore(userId);
   }
 
   // Update report after completing a task
-  await getTodaysReport(getDb(), userId);
+  await getTodaysReport(db, userId);
 
   revalidatePath('/');
   revalidatePath('/analytics');
@@ -164,11 +167,13 @@ export async function deleteProjectAction(userId: string, projectId: string) {
     revalidatePath('/');
 }
 
-export async function createRecurringTaskAction(userId: string, data: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>): Promise<RecurringTask> {
+export async function createRecurringTaskAction(userId: string, data: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>): Promise<RecurringTask[]> {
     const db = getDb();
-    const newTask = await addRecurringTask(db, userId, data);
+    await addRecurringTask(db, userId, data);
     revalidatePath('/recurring');
-    return newTask;
+    // refetch all recurring tasks to return the new list
+    const tasks = await getRecurringTasks(db, userId);
+    return tasks;
 }
 
 export async function completeRecurringTaskAction(userId: string, taskId: string) {
