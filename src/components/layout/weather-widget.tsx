@@ -38,6 +38,14 @@ const getMockWeather = (lat: number, lon: number): Promise<WeatherData> => {
   });
 };
 
+const weatherIcons = {
+    Sunny: Sun,
+    Cloudy: Cloud,
+    Rainy: CloudRain,
+    Snowy: CloudSnow,
+    Windy: Wind
+};
+
 
 export function WeatherWidget() {
   const [weather, setWeather] = React.useState<WeatherData | null>(null);
