@@ -24,10 +24,10 @@ import { RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { ProjectDetailsDialog } from '@/components/projects/project-details-dialog';
 import { getProjectProgress } from '@/lib/utils';
-import { useFirestore, useUser } from '@/firebase';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { getProjects, getTasks } from '@/lib/data-firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 const projectFormSchema = z.object({
   name: z.string().min(2, 'Project name must be at least 2 characters.'),
@@ -37,12 +37,10 @@ type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 export function ProjectClientPage() {
   const { user, loading: userLoading } = useUser();
-  const firestore = useFirestore();
   const router = useRouter();
+  const { projects: initialProjects, tasks, loading: dataLoading } = useDashboardData();
   
-  const [projects, setProjects] = React.useState<Project[]>([]);
-  const [tasks, setTasks] = React.useState<Task[]>([]);
-  const [dataLoading, setDataLoading] = React.useState(true);
+  const [projects, setProjects] = React.useState<Project[]>(initialProjects);
   const [isPending, startTransition] = useTransition();
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
   const { toast } = useToast();
@@ -54,21 +52,8 @@ export function ProjectClientPage() {
   }, [user, userLoading, router]);
 
   React.useEffect(() => {
-    if (user && firestore) {
-      setDataLoading(true);
-      Promise.all([
-        getProjects(firestore, user.uid), 
-        getTasks(firestore, user.uid)
-      ]).then(([proj, task]) => {
-          setProjects(proj);
-          setTasks(task);
-          setDataLoading(false);
-      }).catch(error => {
-        console.error("Error fetching projects data:", error);
-        setDataLoading(false);
-      });
-    }
-  }, [user, firestore]);
+    setProjects(initialProjects);
+  }, [initialProjects]);
 
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
@@ -88,7 +73,7 @@ export function ProjectClientPage() {
   const handleUpdateProject = (projectId: string, updates: Partial<Project>) => {
     if (!user) return;
     startTransition(async () => {
-      await updateProjectAction(user.uid, projectId, updates);
+      updateProjectAction(user.uid, projectId, updates);
       setProjects(prev => prev.map(p => p.id === projectId ? { ...p, ...updates } : p));
       toast({ title: "Project updated!" });
       setSelectedProject(null);
@@ -98,7 +83,7 @@ export function ProjectClientPage() {
   const handleDeleteProject = (projectId: string) => {
       if (!user) return;
       startTransition(async () => {
-          await deleteProjectAction(user.uid, projectId);
+          deleteProjectAction(user.uid, projectId);
           setProjects(prev => prev.filter(p => p.id !== projectId));
           toast({ title: 'Project deleted' });
           setSelectedProject(null);

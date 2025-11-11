@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,11 +18,11 @@ import { useToast } from '@/hooks/use-toast';
 import { updateUserProfileAction } from '../actions';
 import { updateProfile } from 'firebase/auth';
 import type { Task, Category } from '@/lib/types';
-import { getTasks, getCategories } from '@/lib/data-firestore';
 import { TrendingUp, Zap, Tag, Calendar, CheckCircle, Clock } from 'lucide-react';
 import { getDay, parseISO, format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -47,13 +47,10 @@ const StatCard = ({ icon, title, value }: { icon: React.ElementType, title: stri
 
 export function ProfileClientPage() {
   const { user, loading: userLoading } = useUser();
-  const firestore = useFirestore();
+  const { tasks, categories, loading: dataLoading } = useDashboardData();
   const router = useRouter();
   const { toast } = useToast();
   
-  const [tasks, setTasks] = React.useState<Task[]>([]);
-  const [categories, setCategories] = React.useState<Category[]>([]);
-  const [dataLoading, setDataLoading] = React.useState(true);
   const [isPending, startTransition] = React.useTransition();
 
   const form = useForm<ProfileFormValues>({
@@ -75,22 +72,6 @@ export function ProfileClientPage() {
     }
   }, [user, form]);
   
-  React.useEffect(() => {
-      if (user && firestore) {
-          setDataLoading(true);
-          Promise.all([
-              getTasks(firestore, user.uid),
-              getCategories(),
-          ]).then(([tasks, cats]) => {
-              setTasks(tasks);
-              setCategories(cats);
-              setDataLoading(false);
-          }).catch(error => {
-              console.error("Error fetching profile data:", error);
-              setDataLoading(false);
-          });
-      }
-  }, [user, firestore]);
 
   const onSubmit = (data: ProfileFormValues) => {
     if (!user) return;
@@ -100,7 +81,7 @@ export function ProfileClientPage() {
         if(user && user.displayName !== data.displayName) {
           await updateProfile(user, { displayName: data.displayName });
         }
-        await updateUserProfileAction(user.uid, { displayName: data.displayName });
+        updateUserProfileAction(user.uid, { displayName: data.displayName });
         toast({
           title: 'Profile updated!',
           description: 'Your display name has been changed.',
@@ -313,7 +294,3 @@ export function ProfileClientPage() {
     </div>
   );
 }
-
-    
-
-    

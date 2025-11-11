@@ -11,19 +11,20 @@ import { Clipboard, Download, FileText } from 'lucide-react';
 import type { DailyReport } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { useFirestore, useUser } from '@/firebase';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { getReports } from '@/lib/data-firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 
 export function ReportsClientPage() {
   const { user, loading: userLoading } = useUser();
-  const firestore = useFirestore();
   const router = useRouter();
+  const { loading: dataLoading, todaysReport } = useDashboardData();
 
   const [reports, setReports] = React.useState<DailyReport[]>([]);
-  const [dataLoading, setDataLoading] = React.useState(true);
+  const [isFetching, setIsFetching] = React.useState(true);
   const [selectedReport, setSelectedReport] = React.useState<DailyReport | null>(null);
   const [clientFormattedTimes, setClientFormattedTimes] = React.useState({ startTime: 'N/A', endTime: 'N/A' });
   const { toast } = useToast();
@@ -35,21 +36,21 @@ export function ReportsClientPage() {
   }, [user, userLoading, router]);
 
   React.useEffect(() => {
-    if (user && firestore) {
-      setDataLoading(true);
-      getReports(firestore, user.uid)
+    if (user) {
+      setIsFetching(true);
+      getReports(user.uid)
         .then(reportsData => {
           const reportsArray = Object.values(reportsData).sort((a, b) => b.date.localeCompare(a.date));
           setReports(reportsArray);
           setSelectedReport(reportsArray[0] || null);
-          setDataLoading(false);
+          setIsFetching(false);
         })
         .catch(error => {
           console.error("Error fetching reports:", error);
-          setDataLoading(false);
+          setIsFetching(false);
         });
     }
-  }, [user, firestore]);
+  }, [user, todaysReport]);
 
   React.useEffect(() => {
     if (selectedReport) {
@@ -80,7 +81,7 @@ export function ReportsClientPage() {
     toast({ title: 'Report exported as .txt!' });
   };
   
-  if (userLoading || dataLoading || !user) {
+  if (userLoading || dataLoading || isFetching || !user) {
     return (
          <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-1">
@@ -168,5 +169,3 @@ export function ReportsClientPage() {
     </div>
   );
 }
-
-    
