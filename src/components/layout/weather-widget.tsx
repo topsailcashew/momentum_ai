@@ -85,10 +85,10 @@ export function WeatherWidget() {
         <Tooltip>
             <TooltipTrigger asChild>
                 <div className="flex items-center justify-center h-10 w-10 rounded-full bg-muted/50">
-                    {isLoading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
-                    {error && <Sun className="h-5 w-5 text-muted-foreground" />}
+                    {isLoading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
+                    {error && <Sun className="h-6 w-6 text-muted-foreground" />}
                     {!isLoading && !error && WeatherIcon && (
-                        <WeatherIcon className="h-5 w-5 text-primary" />
+                        <WeatherIcon className="h-6 w-6 text-primary" />
                     )}
                 </div>
             </TooltipTrigger>
