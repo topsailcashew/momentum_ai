@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -20,29 +19,52 @@ import { AddRecurringTaskDialog } from '@/components/recurring/add-recurring-tas
 import { completeRecurringTaskAction, createRecurringTaskAction } from '@/app/actions';
 import type { RecurringTask } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore, useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { getRecurringTasks } from '@/lib/data-firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface RecurringTasksClientPageProps {
-  tasks: RecurringTask[];
-  userId: string;
-}
+export function RecurringTasksClientPage() {
+  const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
+  const router = useRouter();
 
-export function RecurringTasksClientPage({ tasks: initialTasks, userId }: RecurringTasksClientPageProps) {
-  const [tasks, setTasks] = React.useState(initialTasks);
+  const [tasks, setTasks] = React.useState<RecurringTask[]>([]);
+  const [dataLoading, setDataLoading] = React.useState(true);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
   React.useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
+    if (!userLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, userLoading, router]);
+
+  React.useEffect(() => {
+    if (user && firestore) {
+      setDataLoading(true);
+      getRecurringTasks(firestore, user.uid)
+        .then(tasksData => {
+          setTasks(tasksData);
+          setDataLoading(false);
+        })
+        .catch(error => {
+          console.error("Error fetching recurring tasks:", error);
+          setDataLoading(false);
+        });
+    }
+  }, [user, firestore]);
 
   const handleCompleteTask = (taskId: string) => {
+    if (!user) return;
+    const originalTasks = tasks;
     startTransition(async () => {
         try {
             // Optimistic update
             setTasks(currentTasks => currentTasks.map(task => 
                 task.id === taskId ? { ...task, lastCompleted: new Date().toISOString() } : task
             ));
-            await completeRecurringTaskAction(userId, taskId);
+            await completeRecurringTaskAction(user.uid, taskId);
             toast({ title: 'Task marked as complete!' });
         } catch (error) {
             toast({
@@ -51,16 +73,21 @@ export function RecurringTasksClientPage({ tasks: initialTasks, userId }: Recurr
                 description: 'There was a problem completing the task.',
             });
             // Revert optimistic update
-            setTasks(initialTasks);
+            setTasks(originalTasks);
         }
     });
   }
 
   const handleCreateRecurringTask = (taskData: Omit<RecurringTask, 'id' | 'lastCompleted'>) => {
+    if (!user) return;
     startTransition(async () => {
       try {
-        await createRecurringTaskAction(userId, taskData);
-        // The page will be revalidated by the server action, so we don't need to update state here.
+        await createRecurringTaskAction(user.uid, taskData);
+        // Refetch tasks after creation
+        if(firestore) {
+          const updatedTasks = await getRecurringTasks(firestore, user.uid);
+          setTasks(updatedTasks);
+        }
         toast({ title: 'Recurring task created!' });
       } catch (error) {
         toast({
@@ -134,6 +161,17 @@ export function RecurringTasksClientPage({ tasks: initialTasks, userId }: Recurr
       </Table>
     );
   };
+  
+  if (userLoading || dataLoading || !user) {
+    return (
+         <div className="flex flex-col gap-4">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-48 w-full" />
+        </div>
+    )
+  }
+
 
   return (
     <div className="flex flex-col gap-4">

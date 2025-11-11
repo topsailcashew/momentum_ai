@@ -10,28 +10,50 @@ import { createTaskAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useFirestore, useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { getTasks, getProjects, getCategories } from '@/lib/data-firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface WeeklyPlannerClientPageProps {
-  tasks: Task[];
-  projects: Project[];
-  categories: Category[];
-  userId: string;
-}
+export function WeeklyPlannerClientPage() {
+  const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
+  const router = useRouter();
 
-export function WeeklyPlannerClientPage({
-  tasks: initialTasks,
-  projects,
-  categories,
-  userId
-}: WeeklyPlannerClientPageProps) {
-  const [tasks, setTasks] = React.useState(initialTasks);
+  const [tasks, setTasks] = React.useState<Task[]>([]);
+  const [projects, setProjects] = React.useState<Project[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
+  const [dataLoading, setDataLoading] = React.useState(true);
+  
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [isPending, startTransition] = React.useTransition();
   const { toast } = useToast();
 
   React.useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
+    if (!userLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, userLoading, router]);
+
+  React.useEffect(() => {
+    if (user && firestore) {
+      setDataLoading(true);
+      Promise.all([
+        getTasks(firestore, user.uid), 
+        getProjects(firestore, user.uid),
+        getCategories()
+      ]).then(([task, proj, cat]) => {
+          setTasks(task);
+          setProjects(proj);
+          setCategories(cat);
+          setDataLoading(false);
+      }).catch(error => {
+        console.error("Error fetching weekly planner data:", error);
+        setDataLoading(false);
+      });
+    }
+  }, [user, firestore]);
+
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
@@ -45,9 +67,10 @@ export function WeeklyPlannerClientPage({
   };
 
   const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => {
+    if (!user) return;
     startTransition(async () => {
       try {
-        const newTask = await createTaskAction(userId, taskData);
+        const newTask = await createTaskAction(user.uid, taskData);
         setTasks(prevTasks => [...prevTasks, newTask]);
         toast({
           title: 'Task created!',
@@ -75,6 +98,10 @@ export function WeeklyPlannerClientPage({
   const goToPreviousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
   const goToNextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
   const goToToday = () => setCurrentDate(new Date());
+
+  if (userLoading || dataLoading || !user) {
+    return <Skeleton className="h-[500px] w-full" />
+  }
 
   return (
     <Card>

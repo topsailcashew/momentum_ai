@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -11,15 +10,45 @@ import { Clipboard, Download, FileText } from 'lucide-react';
 import type { DailyReport } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { useFirestore, useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { getReports } from '@/lib/data-firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface ReportsClientPageProps {
-  reports: DailyReport[];
-}
 
-export function ReportsClientPage({ reports }: ReportsClientPageProps) {
-  const [selectedReport, setSelectedReport] = React.useState<DailyReport | null>(reports[0] || null);
+export function ReportsClientPage() {
+  const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
+  const router = useRouter();
+
+  const [reports, setReports] = React.useState<DailyReport[]>([]);
+  const [dataLoading, setDataLoading] = React.useState(true);
+  const [selectedReport, setSelectedReport] = React.useState<DailyReport | null>(null);
   const [clientFormattedTimes, setClientFormattedTimes] = React.useState({ startTime: 'N/A', endTime: 'N/A' });
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (!userLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, userLoading, router]);
+
+  React.useEffect(() => {
+    if (user && firestore) {
+      setDataLoading(true);
+      getReports(firestore, user.uid)
+        .then(reportsData => {
+          const reportsArray = Object.values(reportsData).sort((a, b) => b.date.localeCompare(a.date));
+          setReports(reportsArray);
+          setSelectedReport(reportsArray[0] || null);
+          setDataLoading(false);
+        })
+        .catch(error => {
+          console.error("Error fetching reports:", error);
+          setDataLoading(false);
+        });
+    }
+  }, [user, firestore]);
 
   React.useEffect(() => {
     if (selectedReport) {
@@ -50,12 +79,18 @@ export function ReportsClientPage({ reports }: ReportsClientPageProps) {
     toast({ title: 'Report exported as .txt!' });
   };
   
-  const formatTime = (time: string | null) => {
-    if (!time) return 'N/A';
-    // This will run on server and initial client render, so we show a placeholder
-    if (typeof window === 'undefined') return '...'; 
-    return format(parseISO(time), 'h:mm a');
-  };
+  if (userLoading || dataLoading || !user) {
+    return (
+         <div className="grid gap-4 md:grid-cols-3">
+            <div className="md:col-span-1">
+                <Skeleton className="h-96 w-full" />
+            </div>
+            <div className="md:col-span-2">
+                <Skeleton className="h-96 w-full" />
+            </div>
+        </div>
+    )
+  }
 
   return (
     <div className="grid gap-4 md:grid-cols-3">

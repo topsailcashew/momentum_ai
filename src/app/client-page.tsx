@@ -56,6 +56,9 @@ export function DashboardClientPage() {
         setLatestMomentum(latestMomentum);
         setTodaysReport(report);
         setDataLoading(false);
+      }).catch(error => {
+        console.error("Error fetching dashboard data:", error);
+        setDataLoading(false);
       });
     }
   }, [user, firestore]);

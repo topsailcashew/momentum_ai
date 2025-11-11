@@ -23,6 +23,10 @@ import { RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { ProjectDetailsDialog } from '@/components/projects/project-details-dialog';
 import { getProjectProgress } from '@/lib/utils';
+import { useFirestore, useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { getProjects, getTasks } from '@/lib/data-firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const projectFormSchema = z.object({
   name: z.string().min(2, 'Project name must be at least 2 characters.'),
@@ -30,15 +34,40 @@ const projectFormSchema = z.object({
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
-export function ProjectClientPage({ projects: initialProjects, tasks, userId }: { projects: Project[]; tasks: Task[], userId: string }) {
-  const [projects, setProjects] = React.useState(initialProjects);
+export function ProjectClientPage() {
+  const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
+  const router = useRouter();
+  
+  const [projects, setProjects] = React.useState<Project[]>([]);
+  const [tasks, setTasks] = React.useState<Task[]>([]);
+  const [dataLoading, setDataLoading] = React.useState(true);
   const [isPending, startTransition] = useTransition();
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
   const { toast } = useToast();
 
   React.useEffect(() => {
-    setProjects(initialProjects);
-  }, [initialProjects]);
+    if (!userLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, userLoading, router]);
+
+  React.useEffect(() => {
+    if (user && firestore) {
+      setDataLoading(true);
+      Promise.all([
+        getProjects(firestore, user.uid), 
+        getTasks(firestore, user.uid)
+      ]).then(([proj, task]) => {
+          setProjects(proj);
+          setTasks(task);
+          setDataLoading(false);
+      }).catch(error => {
+        console.error("Error fetching projects data:", error);
+        setDataLoading(false);
+      });
+    }
+  }, [user, firestore]);
 
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
@@ -46,9 +75,10 @@ export function ProjectClientPage({ projects: initialProjects, tasks, userId }: 
   });
 
   const onSubmit = (data: ProjectFormValues) => {
+    if (!user) return;
     startTransition(async () => {
       try {
-        const newProject = await createProjectAction(userId, data.name);
+        const newProject = await createProjectAction(user.uid, data.name);
         setProjects(prev => [...prev, newProject]);
         toast({ title: 'Project created!' });
         form.reset();
@@ -63,9 +93,10 @@ export function ProjectClientPage({ projects: initialProjects, tasks, userId }: 
   };
 
   const handleUpdateProject = (projectId: string, updates: Partial<Project>) => {
+    if (!user) return;
     startTransition(async () => {
         try {
-            const updatedProject = await updateProjectAction(userId, projectId, updates);
+            const updatedProject = await updateProjectAction(user.uid, projectId, updates);
             if (updatedProject) {
               setProjects(prev => prev.map(p => p.id === projectId ? updatedProject : p));
               toast({ title: "Project updated!" });
@@ -82,9 +113,10 @@ export function ProjectClientPage({ projects: initialProjects, tasks, userId }: 
   };
 
   const handleDeleteProject = (projectId: string) => {
+      if (!user) return;
       startTransition(async () => {
           try {
-              await deleteProjectAction(userId, projectId);
+              await deleteProjectAction(user.uid, projectId);
               setProjects(prev => prev.filter(p => p.id !== projectId));
               toast({ title: 'Project deleted' });
               setSelectedProject(null);
@@ -101,6 +133,19 @@ export function ProjectClientPage({ projects: initialProjects, tasks, userId }: 
   const getProjectTasks = (projectId: string) => {
     return tasks.filter(t => t.projectId === projectId);
   };
+  
+  if (userLoading || dataLoading || !user) {
+    return (
+        <div className="flex flex-col gap-4">
+            <Skeleton className="h-32 w-full" />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-48 w-full" />
+            </div>
+        </div>
+    )
+  }
 
   return (
     <>
@@ -210,7 +255,7 @@ export function ProjectClientPage({ projects: initialProjects, tasks, userId }: 
           onUpdate={handleUpdateProject}
           onDelete={handleDeleteProject}
           isPending={isPending}
-          userId={userId}
+          userId={user.uid}
         />
       )}
     </>

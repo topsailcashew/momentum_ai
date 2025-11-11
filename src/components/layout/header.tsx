@@ -9,10 +9,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/firebase';
 
 export function Header() {
-  const [currentTime, setCurrentTime] = React.useState<Date | null>(null);
+  const [currentTime, setCurrentTime] = React.useState<Date>(new Date());
+  const [mounted, setMounted] = React.useState(false);
   const { user } = useUser();
 
   React.useEffect(() => {
+    setMounted(true);
     setCurrentTime(new Date()); // Set initial time on client
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -28,11 +30,11 @@ export function Header() {
       </div>
       <div className="flex items-center gap-4">
         <div className="flex flex-col items-end gap-1 text-sm text-muted-foreground">
-          <span>
-              {currentTime ? format(currentTime, 'eeee, MMMM d') : 'Loading date...'}
+          <span suppressHydrationWarning>
+              {mounted ? format(currentTime, 'eeee, MMMM d') : format(new Date(), 'eeee, MMMM d')}
           </span>
-          <span className="font-bold bg-muted/50 px-2 py-1 rounded-md text-foreground text-xs">
-              {currentTime ? format(currentTime, 'h:mm:ss a') : '...'}
+          <span className="font-bold bg-muted/50 px-2 py-1 rounded-md text-foreground text-xs" suppressHydrationWarning>
+              {mounted ? format(currentTime, 'h:mm:ss a') : format(new Date(), 'h:mm:ss a')}
           </span>
         </div>
         <Separator orientation="vertical" className="h-10" />
