@@ -58,6 +58,15 @@ export function WeeklyPlannerClientPage({
     });
   };
 
+  const handleAddTaskInline = (taskName: string, day: Date) => {
+    handleCreateTask({
+      name: taskName,
+      deadline: day.toISOString(),
+      category: 'personal', // Default category
+      energyLevel: 'Medium' // Default energy level
+    });
+  };
+
   return (
     <Card>
         <CardHeader className="flex-row items-center justify-between">
@@ -75,7 +84,7 @@ export function WeeklyPlannerClientPage({
             >
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Task
+                    Add Detailed Task
                 </Button>
             </TaskFormDialog>
         </CardHeader>
@@ -86,6 +95,8 @@ export function WeeklyPlannerClientPage({
                         key={day.toISOString()}
                         day={day}
                         tasks={getTasksForDay(day)}
+                        onAddTask={handleAddTaskInline}
+                        isPending={isPending}
                     />
                 ))}
             </div>
