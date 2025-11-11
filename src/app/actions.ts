@@ -38,30 +38,28 @@ function getDb() {
 }
 
 export async function setEnergyLevelAction(userId: string, level: EnergyLevel) {
-  await setTodayEnergy(getDb(), userId, level);
+  setTodayEnergy(getDb(), userId, level);
   revalidatePath('/');
 }
 
 export async function createTaskAction(userId: string, data: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>) {
-  const newTask = await addTask(getDb(), userId, data);
+  addTask(getDb(), userId, data);
   revalidatePath('/');
   revalidatePath('/projects');
   revalidatePath('/reports');
   revalidatePath('/weekly-planner');
-  return newTask;
 }
 
 export async function updateTaskAction(userId: string, taskId: string, data: Partial<Omit<Task, 'id'>>) {
-  const updatedTask = await updateTask(getDb(), userId, taskId, data);
+  updateTask(getDb(), userId, taskId, data);
   revalidatePath('/');
   revalidatePath('/projects');
   revalidatePath('/reports');
   revalidatePath('/weekly-planner');
-  return updatedTask;
 }
 
 export async function deleteTaskAction(userId: string, taskId: string) {
-    await deleteTask(getDb(), userId, taskId);
+    deleteTask(getDb(), userId, taskId);
     revalidatePath('/');
     revalidatePath('/projects');
     revalidatePath('/reports');
@@ -101,7 +99,7 @@ async function calculateAndSaveMomentumScore(userId: string) {
 
     const aiResult = await calculateDailyMomentumScore(scoreInput);
 
-    await saveMomentumScore(db, userId, {
+    saveMomentumScore(db, userId, {
         score: aiResult.dailyScore,
         summary: aiResult.summary,
         streak: streak
@@ -110,10 +108,10 @@ async function calculateAndSaveMomentumScore(userId: string) {
 
 export async function completeTaskAction(userId: string, taskId: string, completed: boolean) {
   const completedAt = completed ? new Date().toISOString() : null;
-  await updateTask(getDb(), userId, taskId, { completed, completedAt });
+  updateTask(getDb(), userId, taskId, { completed, completedAt });
 
   if (completed) {
-      await calculateAndSaveMomentumScore(userId);
+      calculateAndSaveMomentumScore(userId);
   }
 
   revalidatePath('/');
@@ -145,45 +143,42 @@ export async function getFlowAlignmentReport(userId: string) {
 }
 
 export async function createProjectAction(userId: string, name: string) {
-    const newProject = await addProject(getDb(), userId, { name, priority: 'Medium' });
+    addProject(getDb(), userId, { name, priority: 'Medium' });
     revalidatePath('/projects');
     revalidatePath('/');
-    return newProject;
 }
 
 export async function updateProjectAction(userId: string, projectId: string, updates: Partial<Project>) {
-    const updatedProject = await updateProject(getDb(), userId, projectId, updates);
+    updateProject(getDb(), userId, projectId, updates);
     revalidatePath('/projects');
     revalidatePath('/');
-    return updatedProject;
 }
 
 export async function deleteProjectAction(userId: string, projectId: string) {
-    await deleteProject(getDb(), userId, projectId);
+    deleteProject(getDb(), userId, projectId);
     revalidatePath('/projects');
     revalidatePath('/');
 }
 
 export async function createRecurringTaskAction(userId: string, data: Omit<RecurringTask, 'id' | 'lastCompleted'>) {
-    await addRecurringTask(getDb(), userId, data);
+    addRecurringTask(getDb(), userId, data);
     revalidatePath('/recurring');
 }
 
 export async function completeRecurringTaskAction(userId: string, taskId: string) {
-    await updateRecurringTask(getDb(), userId, taskId, { lastCompleted: new Date().toISOString() });
+    updateRecurringTask(getDb(), userId, taskId, { lastCompleted: new Date().toISOString() });
     revalidatePath('/recurring');
 }
 
 export async function updateReportAction(userId: string, updates: Partial<DailyReport>) {
-  const report = await updateTodaysReport(getDb(), userId, updates);
+  updateTodaysReport(getDb(), userId, updates);
   revalidatePath('/');
   revalidatePath('/reports');
-  return report;
 }
 
 export async function updateUserProfileAction(userId: string, updates: { displayName: string }) {
   const db = getDb();
-  await updateUserProfile(db, userId, updates);
+  updateUserProfile(db, userId, updates);
   revalidatePath('/profile');
   revalidatePath('/'); // To update name in sidebar etc.
 }

@@ -30,6 +30,7 @@ export interface Category {
 export interface EnergyLog {
   date: string; // YYYY-MM-DD
   level: EnergyLevel;
+  userId: string;
 }
 
 export interface MomentumScore {
@@ -37,6 +38,7 @@ export interface MomentumScore {
   score: number;
   streak: number;
   summary: string;
+  userId: string;
 }
 
 export interface Project {
@@ -48,6 +50,7 @@ export interface Project {
 
 export interface RecurringTask {
   id: string;
+  userId: string;
   name: string;
   frequency: 'Weekly' | 'Monthly';
   lastCompleted: string | null;
@@ -55,6 +58,7 @@ export interface RecurringTask {
 
 export interface DailyReport {
   date: string; // YYYY-MM-DD
+  userId: string;
   startTime: string | null;
   endTime: string | null;
   generatedReport: string | null;

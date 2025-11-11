@@ -39,7 +39,7 @@ export async function getTasks(db: Firestore, userId: string): Promise<Task[]> {
   return taskList;
 }
 
-export async function addTask(db: Firestore, userId: string, taskData: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>): Promise<Task> {
+export function addTask(db: Firestore, userId: string, taskData: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>) {
     const tasksCol = collection(db, 'users', userId, 'tasks');
     const newTaskData = {
         ...taskData,
@@ -49,21 +49,40 @@ export async function addTask(db: Firestore, userId: string, taskData: Omit<Task
         createdAt: new Date().toISOString(),
     };
 
-    const docRef = await addDoc(tasksCol, newTaskData);
-
-    return { id: docRef.id, ...newTaskData };
+    addDoc(tasksCol, newTaskData)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: tasksCol.path,
+          operation: 'create',
+          requestResourceData: newTaskData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
 }
 
-export async function updateTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<Task, 'id'>>): Promise<Task | undefined> {
+export function updateTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<Task, 'id'>>) {
     const taskRef = doc(db, 'users', userId, 'tasks', taskId);
-    await updateDoc(taskRef, updates);
-    const updatedDoc = await getDoc(taskRef);
-    return { id: updatedDoc.id, ...updatedDoc.data() } as Task;
+    updateDoc(taskRef, updates)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: taskRef.path,
+          operation: 'update',
+          requestResourceData: updates,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
 }
 
-export async function deleteTask(db: Firestore, userId: string, taskId: string): Promise<void> {
+export function deleteTask(db: Firestore, userId: string, taskId: string) {
     const taskRef = doc(db, 'users', userId, 'tasks', taskId);
-    await deleteDoc(taskRef);
+    deleteDoc(taskRef)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: taskRef.path,
+          operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
 }
 
 // Category Functions - Now from an in-memory array as they are static
@@ -78,13 +97,20 @@ export async function getEnergyLog(db: Firestore, userId: string): Promise<Energ
     return logSnapshot.docs.map(doc => doc.data() as EnergyLog);
 }
 
-export async function setTodayEnergy(db: Firestore, userId: string, level: EnergyLevel): Promise<EnergyLog> {
+export function setTodayEnergy(db: Firestore, userId: string, level: EnergyLevel) {
     const today = getToday();
     const logRef = doc(db, 'users', userId, 'energy-log', today);
-    const newLog: EnergyLog = { date: today, level };
+    const newLog: EnergyLog = { date: today, level, userId };
 
-    await setDoc(logRef, newLog, { merge: true });
-    return newLog;
+    setDoc(logRef, newLog, { merge: true })
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: logRef.path,
+          operation: 'write',
+          requestResourceData: newLog,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
 }
 
 export async function getTodayEnergy(db: Firestore, userId: string): Promise<EnergyLog | undefined> {
@@ -112,14 +138,20 @@ export async function getLatestMomentum(db: Firestore, userId: string): Promise<
     return snapshot.docs[0].data() as MomentumScore;
 }
 
-export async function saveMomentumScore(db: Firestore, userId: string, scoreData: Omit<MomentumScore, 'date'>): Promise<MomentumScore> {
+export function saveMomentumScore(db: Firestore, userId: string, scoreData: Omit<MomentumScore, 'date' | 'userId'>) {
     const today = getToday();
     const momentumRef = doc(db, 'users', userId, 'momentum', today);
-    const newScore: MomentumScore = { ...scoreData, date: today };
+    const newScore: MomentumScore = { ...scoreData, date: today, userId };
 
-    await setDoc(momentumRef, newScore, { merge: true });
-
-    return newScore;
+    setDoc(momentumRef, newScore, { merge: true })
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: momentumRef.path,
+          operation: 'write',
+          requestResourceData: newScore,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
 }
 
 // Project Functions
@@ -129,35 +161,58 @@ export async function getProjects(db: Firestore, userId: string): Promise<Projec
     return projectSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
 }
 
-export async function addProject(db: Firestore, userId: string, projectData: Omit<Project, 'id' | 'userId'>): Promise<Project> {
+export function addProject(db: Firestore, userId: string, projectData: Omit<Project, 'id' | 'userId'>) {
     const projectsCol = collection(db, 'users', userId, 'projects');
     const dataWithUserId = { ...projectData, userId };
-    const docRef = await addDoc(projectsCol, dataWithUserId);
-    return { id: docRef.id, ...dataWithUserId };
+    
+    addDoc(projectsCol, dataWithUserId)
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: projectsCol.path,
+          operation: 'create',
+          requestResourceData: dataWithUserId,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
 }
 
-export async function updateProject(db: Firestore, userId: string, projectId: string, updates: Partial<Project>): Promise<Project | undefined> {
+export function updateProject(db: Firestore, userId: string, projectId: string, updates: Partial<Project>) {
     const projectRef = doc(db, 'users', userId, 'projects', projectId);
-    await updateDoc(projectRef, updates);
-    const updatedDoc = await getDoc(projectRef);
-    return { id: updatedDoc.id, ...updatedDoc.data() } as Project;
+    updateDoc(projectRef, updates)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: projectRef.path,
+          operation: 'update',
+          requestResourceData: updates,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
 }
 
-export async function deleteProject(db: Firestore, userId: string, projectId: string): Promise<void> {
-    // Note: This doesn't delete sub-collections of tasks in a real scenario.
-    // For this app's logic, we filter tasks in the client/server actions.
+export async function deleteProject(db: Firestore, userId: string, projectId: string) {
     const projectRef = doc(db, 'users', userId, 'projects', projectId);
-    await deleteDoc(projectRef);
 
-    // Also delete tasks associated with the project
     const tasksCol = collection(db, 'users', userId, 'tasks');
     const q = query(tasksCol, where('projectId', '==', projectId));
-    const tasksSnapshot = await getDocs(q);
-    const batch = writeBatch(db);
-    tasksSnapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
-    });
-    await batch.commit();
+    
+    try {
+        const tasksSnapshot = await getDocs(q);
+        const batch = writeBatch(db);
+        tasksSnapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        batch.delete(projectRef); // Also delete the project itself
+        await batch.commit();
+    } catch(e) {
+        // This is a complex operation, if it fails, we surface a generic error for now
+        // A more robust solution might involve a cloud function.
+        console.error("Failed to delete project and its tasks", e);
+        const permissionError = new FirestorePermissionError({
+          path: projectRef.path,
+          operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    }
 }
 
 
@@ -168,18 +223,31 @@ export async function getRecurringTasks(db: Firestore, userId: string): Promise<
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RecurringTask));
 }
 
-export async function addRecurringTask(db: Firestore, userId: string, taskData: Omit<RecurringTask, 'id' | 'lastCompleted'>): Promise<RecurringTask> {
+export function addRecurringTask(db: Firestore, userId: string, taskData: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>) {
     const tasksCol = collection(db, 'users', userId, 'recurring-tasks');
-    const newTaskData = { ...taskData, lastCompleted: null };
-    const docRef = await addDoc(tasksCol, newTaskData);
-    return { id: docRef.id, ...newTaskData };
+    const newTaskData = { ...taskData, lastCompleted: null, userId };
+    addDoc(tasksCol, newTaskData)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: tasksCol.path,
+          operation: 'create',
+          requestResourceData: newTaskData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
 }
 
-export async function updateRecurringTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<RecurringTask, 'id'>>): Promise<RecurringTask | undefined> {
+export function updateRecurringTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<RecurringTask, 'id'>>) {
     const taskRef = doc(db, 'users', userId, 'recurring-tasks', taskId);
-    await updateDoc(taskRef, updates);
-    const updatedDoc = await getDoc(taskRef);
-    return { id: updatedDoc.id, ...updatedDoc.data() } as RecurringTask;
+    updateDoc(taskRef, updates)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: taskRef.path,
+          operation: 'update',
+          requestResourceData: updates,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
 }
 
 // Report Functions
@@ -203,6 +271,7 @@ export async function getTodaysReport(db: Firestore, userId: string): Promise<Da
     
     const defaultReport: DailyReport = {
         date: today,
+        userId: userId,
         startTime: null,
         endTime: null,
         generatedReport: null,
@@ -221,26 +290,58 @@ export async function getTodaysReport(db: Firestore, userId: string): Promise<Da
     };
 
     if (!reportSnap.exists() || JSON.stringify(existingReport) !== JSON.stringify(updatedReport)) {
-        await setDoc(reportRef, updatedReport, { merge: true });
+        setDoc(reportRef, updatedReport, { merge: true }).catch(err => console.error("Error syncing today's report", err));
     }
 
     return updatedReport;
 }
 
-export async function updateTodaysReport(db: Firestore, userId: string, updates: Partial<DailyReport>): Promise<DailyReport> {
+export function updateTodaysReport(db: Firestore, userId: string, updates: Partial<DailyReport>) {
     const today = getToday();
-    const todaysReport = await getTodaysReport(db, userId); // Ensures we have the latest stats
     const reportRef = doc(db, 'users', userId, 'reports', today);
 
-    const newReportData = { ...todaysReport, ...updates };
-
-    await setDoc(reportRef, newReportData, { merge: true });
-    
-    return newReportData;
+    // This is non-blocking, we just fire and forget.
+    getTodaysReport(db, userId).then(currentReport => {
+      const newReportData = { ...currentReport, ...updates };
+      setDoc(reportRef, newReportData, { merge: true })
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: reportRef.path,
+          operation: 'write',
+          requestResourceData: newReportData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
+    });
 }
 
 // User Profile
-export async function updateUserProfile(db: Firestore, userId: string, updates: { displayName: string }): Promise<void> {
+export function updateUserProfile(db: Firestore, userId: string, updates: { displayName: string }): void {
   const userRef = doc(db, 'users', userId);
-  await updateDoc(userRef, updates);
+  updateDoc(userRef, updates)
+  .catch(async (serverError) => {
+    const permissionError = new FirestorePermissionError({
+      path: userRef.path,
+      operation: 'update',
+      requestResourceData: updates,
+    });
+    errorEmitter.emit('permission-error', permissionError);
+  });
+}
+
+export function createUserProfile(db: Firestore, userId: string, data: { email: string | null; displayName: string | null; photoURL: string | null }) {
+    const userRef = doc(db, 'users', userId);
+    const profileData = {
+      id: userId,
+      ...data,
+    }
+    setDoc(userRef, profileData, { merge: true })
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'create',
+            requestResourceData: profileData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
 }

@@ -37,6 +37,7 @@ import { Logo } from '@/components/logo';
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { createUserProfile } from '@/lib/data-firestore';
 
 const formSchema = z
   .object({
@@ -79,32 +80,32 @@ export default function SignupPage() {
   
     // Sample Projects
     const projects = [
-      { id: 'q1-product-launch', name: 'Q1 Product Launch', priority: 'High' },
-      { id: 'website-redesign', name: 'Website Redesign', priority: 'Medium' },
-      { id: 'personal-fitness', name: 'Personal Fitness', priority: 'Low' },
+      { id: 'q1-product-launch', name: 'Q1 Product Launch', priority: 'High', userId },
+      { id: 'website-redesign', name: 'Website Redesign', priority: 'Medium', userId },
+      { id: 'personal-fitness', name: 'Personal Fitness', priority: 'Low', userId },
     ];
   
     projects.forEach(project => {
       const projectRef = doc(firestore, `users/${userId}/projects`, project.id);
-      batch.set(projectRef, { name: project.name, priority: project.priority });
+      batch.set(projectRef, { name: project.name, priority: project.priority, userId });
     });
   
     // Sample Tasks
     const tasks = [
       // Tasks for Q1 Product Launch
-      { name: 'Finalize marketing brief', energyLevel: 'Medium', category: 'work', projectId: 'q1-product-launch', deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), effort: 2, focusType: 'Analytical', priority: 'Urgent & Important' },
-      { name: 'Design promotional graphics', energyLevel: 'High', category: 'work', projectId: 'q1-product-launch', deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), effort: 3, focusType: 'Creative', priority: 'Important & Not Urgent' },
-      { name: 'Coordinate with PR agency', energyLevel: 'Low', category: 'work', projectId: 'q1-product-launch', effort: 1, focusType: 'Administrative' },
+      { name: 'Finalize marketing brief', energyLevel: 'Medium', category: 'work', projectId: 'q1-product-launch', deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), effort: 2, focusType: 'Analytical', priority: 'Urgent & Important', userId },
+      { name: 'Design promotional graphics', energyLevel: 'High', category: 'work', projectId: 'q1-product-launch', deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), effort: 3, focusType: 'Creative', priority: 'Important & Not Urgent', userId },
+      { name: 'Coordinate with PR agency', energyLevel: 'Low', category: 'work', projectId: 'q1-product-launch', effort: 1, focusType: 'Administrative', userId },
       // Tasks for Website Redesign
-      { name: 'Gather user feedback on current site', energyLevel: 'Medium', category: 'work', projectId: 'website-redesign', deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), effort: 2, focusType: 'Analytical' },
-      { name: 'Create wireframes for new homepage', energyLevel: 'High', category: 'work', projectId: 'website-redesign', priority: 'Important & Not Urgent' },
+      { name: 'Gather user feedback on current site', energyLevel: 'Medium', category: 'work', projectId: 'website-redesign', deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), effort: 2, focusType: 'Analytical', userId },
+      { name: 'Create wireframes for new homepage', energyLevel: 'High', category: 'work', projectId: 'website-redesign', priority: 'Important & Not Urgent', userId },
       // Tasks for Personal Fitness
-      { name: 'Go for a 30-minute run', energyLevel: 'High', category: 'health', projectId: 'personal-fitness', focusType: 'Physical' },
-      { name: 'Meal prep for the week', energyLevel: 'Medium', category: 'health', projectId: 'personal-fitness', deadline: new Date().toISOString(), effort: 3 },
+      { name: 'Go for a 30-minute run', energyLevel: 'High', category: 'health', projectId: 'personal-fitness', focusType: 'Physical', userId },
+      { name: 'Meal prep for the week', energyLevel: 'Medium', category: 'health', projectId: 'personal-fitness', deadline: new Date().toISOString(), effort: 3, userId },
       // Uncategorized Tasks
-      { name: 'Book dentist appointment', energyLevel: 'Low', category: 'personal', priority: 'Urgent & Not Important' },
-      { name: 'Read a chapter of a book', energyLevel: 'Low', category: 'learning' },
-      { name: 'Clean the kitchen', energyLevel: 'Medium', category: 'chore', effort: 2 },
+      { name: 'Book dentist appointment', energyLevel: 'Low', category: 'personal', priority: 'Urgent & Not Important', userId },
+      { name: 'Read a chapter of a book', energyLevel: 'Low', category: 'learning', userId },
+      { name: 'Clean the kitchen', energyLevel: 'Medium', category: 'chore', effort: 2, userId },
     ];
   
     tasks.forEach(task => {
@@ -123,12 +124,11 @@ export default function SignupPage() {
 
   const handleUserCreation = async (user: FirebaseUser, displayName: string | null) => {
     if (firestore && user) {
-        const userRef = doc(firestore, 'users', user.uid);
-        await setDoc(userRef, {
-            displayName: displayName || user.displayName,
+        createUserProfile(firestore, user.uid, {
             email: user.email,
+            displayName: displayName || user.displayName,
             photoURL: user.photoURL,
-        }, { merge: true });
+        });
         await createSampleData(user.uid);
     }
   };

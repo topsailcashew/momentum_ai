@@ -76,60 +76,29 @@ export function ProjectClientPage() {
 
   const onSubmit = (data: ProjectFormValues) => {
     if (!user) return;
-    startTransition(async () => {
-      try {
-        const newProject = await createProjectAction(user.uid, data.name);
-        setProjects(prev => [...prev, newProject]);
-        toast({ title: 'Project created!' });
-        form.reset();
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Uh oh! Something went wrong.',
-          description: 'There was a problem creating your project.',
-        });
-      }
+    startTransition(() => {
+      createProjectAction(user.uid, data.name);
+      toast({ title: 'Project created!' });
+      form.reset();
+      // Note: We are relying on revalidation to update the project list
     });
   };
 
   const handleUpdateProject = (projectId: string, updates: Partial<Project>) => {
     if (!user) return;
-    startTransition(async () => {
-        try {
-            const updatedProject = await updateProjectAction(user.uid, projectId, updates);
-            if (updatedProject) {
-              setProjects(prev => prev.map(p => p.id === projectId ? { ...p, ...updatedProject} : p));
-              if(selectedProject) {
-                setSelectedProject(prev => prev ? { ...prev, ...updatedProject } : null)
-              }
-              toast({ title: "Project updated!" });
-              
-            }
-        } catch (error) {
-            toast({
-                variant: 'destructive',
-                title: 'Error updating project',
-                description: 'Could not save your changes. Please try again.',
-            });
-        }
+    startTransition(() => {
+      updateProjectAction(user.uid, projectId, updates);
+      toast({ title: "Project updated!" });
+      setSelectedProject(null);
     });
   };
 
   const handleDeleteProject = (projectId: string) => {
       if (!user) return;
-      startTransition(async () => {
-          try {
-              await deleteProjectAction(user.uid, projectId);
-              setProjects(prev => prev.filter(p => p.id !== projectId));
-              toast({ title: 'Project deleted' });
-              setSelectedProject(null);
-          } catch (error) {
-              toast({
-                  variant: 'destructive',
-                  title: 'Error deleting project',
-                  description: 'Could not delete the project. Please try again.',
-              });
-          }
+      startTransition(() => {
+          deleteProjectAction(user.uid, projectId);
+          toast({ title: 'Project deleted' });
+          setSelectedProject(null);
       });
   };
 
