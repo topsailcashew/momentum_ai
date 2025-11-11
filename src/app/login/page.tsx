@@ -7,7 +7,6 @@ import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  getAuth,
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
@@ -32,7 +31,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/logo';
-import { useFirebaseApp } from '@/firebase';
+import { useAuth } from '@/firebase';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -44,7 +43,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const app = useFirebaseApp();
+  const auth = useAuth();
   const [isPending, startTransition] = React.useTransition();
 
   const form = useForm<FormValues>({
@@ -55,7 +54,6 @@ export default function LoginPage() {
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
       try {
-        const auth = getAuth(app);
         await signInWithEmailAndPassword(auth, data.email, data.password);
         toast({ title: 'Login successful!' });
         router.push('/');
@@ -72,7 +70,6 @@ export default function LoginPage() {
   const handleGoogleSignIn = () => {
     startTransition(async () => {
       try {
-        const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
         await signInWithPopup(auth, provider);
         toast({ title: 'Login successful!' });

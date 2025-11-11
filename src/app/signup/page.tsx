@@ -7,7 +7,6 @@ import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   updateProfile,
   GoogleAuthProvider,
@@ -33,7 +32,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/logo';
-import { useFirebaseApp, useFirestore } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
 const formSchema = z
@@ -53,7 +52,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const app = useFirebaseApp();
+  const auth = useAuth();
   const firestore = useFirestore();
   const [isPending, startTransition] = React.useTransition();
 
@@ -77,7 +76,6 @@ export default function SignupPage() {
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
       try {
-        const auth = getAuth(app);
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           data.email,
@@ -101,7 +99,6 @@ export default function SignupPage() {
   const handleGoogleSignIn = () => {
     startTransition(async () => {
       try {
-        const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
         const result = await signInWithPopup(auth, provider);
         await handleUserCreation(result.user, null);
