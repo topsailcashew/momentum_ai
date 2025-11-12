@@ -9,7 +9,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { DashboardDataProvider } from '@/hooks/use-dashboard-data';
 
 export const metadata: Metadata = {
-  title: 'Momentum AI',
+  title: 'Elvo',
   description: 'Align your tasks with your energy.',
   icons: {
     icon: '/favicon.svg',

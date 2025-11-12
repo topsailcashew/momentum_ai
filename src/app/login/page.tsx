@@ -122,7 +122,7 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <Logo className="mx-auto h-10 w-10 text-primary lg:hidden" />
           <CardTitle className="mt-2">Welcome Back</CardTitle>
-          <CardDescription>Sign in to access your Momentum AI dashboard.</CardDescription>
+          <CardDescription>Sign in to access your Elvo dashboard.</CardDescription>
         </CardHeader>
       <CardContent className="grid gap-4">
         <Form {...form}>

@@ -204,7 +204,7 @@ export default function SignupPage() {
         <CardHeader className="text-center">
           <Logo className="mx-auto h-10 w-10 text-primary lg:hidden" />
           <CardTitle className="mt-2">Create an Account</CardTitle>
-          <CardDescription>Join Momentum AI to start aligning your energy with your tasks.</CardDescription>
+          <CardDescription>Join Elvo to start aligning your energy with your tasks.</CardDescription>
         </CardHeader>
       <CardContent className="grid gap-4">
         <Form {...form}>

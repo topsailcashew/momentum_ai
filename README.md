@@ -1,6 +1,6 @@
-# Momentum AI
+# Elvo
 
-Momentum AI is an intelligent productivity application designed to help you achieve a state of "flow" by aligning your daily tasks with your self-reported energy levels. The core philosophy is to work smarter, not just harder. By tackling tasks that are best suited for your current mental and physical state, the app helps you build momentum, maintain motivation, and achieve your goals more effectively.
+Elvo is an intelligent productivity application designed to help you achieve a state of "flow" by aligning your daily tasks with your self-reported energy levels. The core philosophy is to work smarter, not just harder. By tackling tasks that are best suited for your current mental and physical state, the app helps you build momentum, maintain motivation, and achieve your goals more effectively.
 
 ## Key Features
 

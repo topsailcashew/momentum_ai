@@ -4,7 +4,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user of the Momentum AI application.",
+      "description": "Represents a user of the Elvo application.",
       "properties": {
         "id": {
           "type": "string",

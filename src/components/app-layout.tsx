@@ -75,7 +75,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="hidden lg:flex flex-col items-center justify-center gap-4 bg-secondary/50 p-8 text-center">
             <Link href="/" className="flex flex-col items-center gap-4">
                 <Logo className="w-24 h-24 text-primary" />
-                <h1 className="text-4xl font-bold font-headline">Momentum AI</h1>
+                <h1 className="text-4xl font-bold font-headline">Elvo</h1>
             </Link>
             <p className="text-muted-foreground">
               The intelligent productivity app to help you find your flow.
@@ -99,7 +99,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <SidebarHeader className="pt-6">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="size-8 text-primary" />
-            <h1 className="text-xl font-semibold font-headline group-data-[collapsible=icon]:hidden">Momentum AI</h1>
+            <h1 className="text-xl font-semibold font-headline group-data-[collapsible=icon]:hidden">Elvo</h1>
           </Link>
         </SidebarHeader>
         <SidebarContent>
@@ -210,7 +210,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex items-center justify-between md:hidden p-4">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="size-7 text-primary" />
-            <span className="font-semibold font-headline">Momentum AI</span>
+            <span className="font-semibold font-headline">Elvo</span>
           </Link>
           <SidebarTrigger>
             <PanelLeft />

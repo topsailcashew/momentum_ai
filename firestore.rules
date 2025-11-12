@@ -1,5 +1,5 @@
 /**
- * @fileOverview Firestore Security Rules for the Momentum AI application.
+ * @fileOverview Firestore Security Rules for the Elvo application.
  *
  * Core Philosophy:
  * This ruleset enforces a strict user-ownership model. Each user has complete control
