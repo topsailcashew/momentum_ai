@@ -335,3 +335,5 @@ export function DailyReportCard() {
     </Card>
   );
 }
+
+    
