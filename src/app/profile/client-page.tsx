@@ -17,11 +17,18 @@ import { useToast } from '@/hooks/use-toast';
 import { updateUserProfileAction } from '../actions';
 import { updateProfile } from 'firebase/auth';
 import type { Task, Category } from '@/lib/types';
-import { TrendingUp, Zap, Tag, Calendar, CheckCircle, Clock } from 'lucide-react';
+import { TrendingUp, Zap, Tag, Calendar, CheckCircle, Clock, PieChart, BarChart } from 'lucide-react';
 import { getDay, parseISO, format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
+import { Bar, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
+
 
 const profileFormSchema = z.object({
   displayName: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -43,6 +50,14 @@ const StatCard = ({ icon, title, value }: { icon: React.ElementType, title: stri
         </div>
     );
 };
+
+const CHART_COLORS = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+];
 
 export function ProfileClientPage() {
   const { user, loading: userLoading } = useUser();
@@ -107,13 +122,15 @@ export function ProfileClientPage() {
     .slice(0, 5);
 
 
-  const stats = React.useMemo(() => {
+  const { stats, dailyCompletionData, categoryDistributionData } = React.useMemo(() => {
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dailyCompletionData = daysOfWeek.map(day => ({ name: day, tasks: 0 }));
+
     if (completedTasks.length === 0) {
       return {
-        totalCompleted: 0,
-        productiveDay: 'N/A',
-        energySweetSpot: 'N/A',
-        topCategory: 'N/A',
+        stats: { totalCompleted: 0, productiveDay: 'N/A', energySweetSpot: 'N/A', topCategory: 'N/A' },
+        dailyCompletionData,
+        categoryDistributionData: [],
       };
     }
 
@@ -124,8 +141,13 @@ export function ProfileClientPage() {
         dayCounts[dayIndex]++;
       }
     });
+
+    dayCounts.forEach((count, index) => {
+      dailyCompletionData[index].tasks = count;
+    });
+    
     const mostProductiveDayIndex = dayCounts.indexOf(Math.max(...dayCounts));
-    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const productiveDay = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][mostProductiveDayIndex];
 
     const energyCounts = completedTasks.reduce((acc, task) => {
         acc[task.energyLevel] = (acc[task.energyLevel] || 0) + 1;
@@ -142,20 +164,23 @@ export function ProfileClientPage() {
 
     if (Object.keys(categoryCounts).length === 0) {
         return {
-          totalCompleted: completedTasks.length,
-          productiveDay: daysOfWeek[mostProductiveDayIndex],
-          energySweetSpot,
-          topCategory: 'N/A',
+          stats: { totalCompleted: completedTasks.length, productiveDay, energySweetSpot, topCategory: 'N/A' },
+          dailyCompletionData,
+          categoryDistributionData: [],
         };
     }
-
+    
     const topCategory = Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b);
+    const categoryDistributionData = Object.entries(categoryCounts).map(([id, value]) => ({
+      name: getCategoryName(id),
+      value,
+    })).sort((a,b) => b.value - a.value);
+
 
     return {
-      totalCompleted: completedTasks.length,
-      productiveDay: daysOfWeek[mostProductiveDayIndex],
-      energySweetSpot,
-      topCategory: getCategoryName(topCategory),
+      stats: { totalCompleted: completedTasks.length, productiveDay, energySweetSpot, topCategory: getCategoryName(topCategory) },
+      dailyCompletionData,
+      categoryDistributionData,
     };
   }, [completedTasks, categories]);
 
@@ -168,8 +193,11 @@ export function ProfileClientPage() {
                 <Skeleton className="h-48 w-full" />
             </div>
             <div className="md:col-span-2 space-y-6">
-                <Skeleton className="h-80 w-full" />
-                <Skeleton className="h-64 w-full" />
+                <Skeleton className="h-[28rem] w-full" />
+                 <div className="grid gap-6 lg:grid-cols-2">
+                    <Skeleton className="h-64 w-full" />
+                    <Skeleton className="h-64 w-full" />
+                </div>
             </div>
         </div>
     );
@@ -231,7 +259,7 @@ export function ProfileClientPage() {
             </Card>
         </div>
 
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 space-y-6">
            <Tabs defaultValue="upcoming" className="w-full">
               <Card>
                 <CardHeader>
@@ -289,6 +317,70 @@ export function ProfileClientPage() {
                 </CardContent>
               </Card>
             </Tabs>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card>
+                  <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                          <BarChart className="text-primary"/>
+                          Weekly Completion
+                      </CardTitle>
+                      <CardDescription>Tasks completed per day of the week.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                      <ChartContainer config={{}} className="h-48 w-full">
+                        <ResponsiveContainer>
+                          <BarChart data={dailyCompletionData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                              <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                              <Tooltip 
+                                cursor={{fill: 'hsla(var(--muted))'}}
+                                content={<ChartTooltipContent />} 
+                              />
+                              <Bar dataKey="tasks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
+                  </CardContent>
+              </Card>
+              <Card>
+                  <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                          <PieChart className="text-primary"/>
+                          Category Breakdown
+                      </CardTitle>
+                      <CardDescription>How your tasks are distributed.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                       <ChartContainer config={{}} className="h-48 w-full">
+                        <ResponsiveContainer>
+                          <PieChart>
+                              <Tooltip content={<ChartTooltipContent nameKey="name" />} />
+                              <Pie
+                                  data={categoryDistributionData}
+                                  dataKey="value"
+                                  nameKey="name"
+                                  innerRadius={50}
+                                  strokeWidth={2}
+                                  paddingAngle={2}
+                              >
+                                {categoryDistributionData.map((_, index) => (
+                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                                ))}
+                              </Pie>
+                              <Legend 
+                                  iconSize={10} 
+                                  wrapperStyle={{fontSize: "0.8rem", color: "hsl(var(--muted-foreground))"}} 
+                                  layout="vertical" 
+                                  align="right" 
+                                  verticalAlign="middle"
+                              />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
+                  </CardContent>
+              </Card>
+          </div>
         </div>
     </div>
   );
