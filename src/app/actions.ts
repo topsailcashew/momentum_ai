@@ -49,7 +49,7 @@ export async function generateReportAction(userId: string, reportDate: string) {
 
   // Note: This logic assumes tasks for the report are those created on that day.
   // This could be adjusted based on more complex business logic if needed.
-  const relevantTasks = allTasks.filter(t => t.createdAt && format(parseISO(t.createdAt), 'yyyy-MM-dd') === reportDate);
+  const relevantTasks = (allTasks || []).filter(t => t.createdAt && format(parseISO(t.createdAt), 'yyyy-MM-dd') === reportDate);
   const completedTasks = relevantTasks.filter(t => t.completed).map(t => t.name);
   const inProgressTasks = relevantTasks.filter(t => !t.completed).map(t => t.name);
 
