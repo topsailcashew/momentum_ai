@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { BrainCircuit, FileText, Loader2, ServerCrash } from 'lucide-react';
-import { getFlowAlignmentReport } from '@/app/actions';
 import { useUser } from '@/firebase';
 import { Skeleton } from '../ui/skeleton';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
 
 interface ReportData {
   visualizationUri: string;
@@ -18,6 +19,7 @@ interface ReportData {
 
 export function FlowVisualizerCard() {
   const { user } = useUser();
+  const { tasks, energyLog } = useDashboardData();
   const [reportData, setReportData] = React.useState<ReportData | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [isGenerating, startTransition] = React.useTransition();
@@ -29,7 +31,7 @@ export function FlowVisualizerCard() {
       setError(null);
       setReportData(null);
       try {
-        const result = await getFlowAlignmentReport(user.uid);
+        const result = await visualizeFlowAlignment({ tasks, energyLog });
         if (result.visualizationUri && result.report) {
             setReportData(result);
         } else {
