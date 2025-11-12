@@ -2,9 +2,10 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import type { DailyReport, ScoreAndSuggestTasksInput, Task } from '@/lib/types';
+import type { DailyReport, ScoreAndSuggestTasksInput, Task, EnergyLog } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { generateDailyWorkSummary as generateDailyWorkSummaryFlow } from '@/ai/flows/generate-daily-work-summary';
+import { visualizeFlowAlignment as visualizeFlowAlignmentFlow } from '@/ai/flows/visualize-flow-alignment';
 import { getDb } from '@/firebase/server-init';
 import { format, parseISO } from 'date-fns';
 import { doc, updateDoc } from 'firebase-admin/firestore';
@@ -18,6 +19,7 @@ export async function onTaskCompleted(userId: string) {
     revalidatePath('/projects');
     revalidatePath('/reports');
     revalidatePath('/weekly-planner');
+    revalidatePath('/profile');
 }
 
 export async function onClientWrite() {
@@ -66,4 +68,17 @@ export async function generateReportAction({ userId, report, tasks }: GenerateRe
 
 export async function getSuggestedTasks(input: ScoreAndSuggestTasksInput) {
     return await scoreAndSuggestTasksFlow(input);
+}
+
+
+export async function getFlowAlignmentReport(userId: string) {
+  const db = getDb();
+  const tasksSnapshot = await db.collection(`users/${userId}/tasks`).get();
+  const tasks = tasksSnapshot.docs.map(doc => doc.data() as Task);
+
+  const energyLogSnapshot = await db.collection(`users/${userId}/energy-log`).get();
+  const energyLog = energyLogSnapshot.docs.map(doc => doc.data() as EnergyLog);
+
+  const result = await visualizeFlowAlignmentFlow({ tasks, energyLog });
+  return result;
 }

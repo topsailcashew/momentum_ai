@@ -29,6 +29,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Bar, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Legend, BarChart as RechartsBarChart, PieChart as RechartsPieChart } from "recharts"
+import { FlowVisualizerCard } from '@/components/profile/flow-visualizer-card';
 
 
 const profileFormSchema = z.object({
@@ -380,6 +381,7 @@ export function ProfileClientPage() {
                       </ChartContainer>
                   </CardContent>
               </Card>
+              <FlowVisualizerCard />
         </div>
     </div>
   );
