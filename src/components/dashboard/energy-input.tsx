@@ -1,13 +1,17 @@
+
 'use client';
 
 import * as React from 'react';
 import { useTransition } from 'react';
 import { Zap, ZapOff, BatteryMedium, ChevronDown } from 'lucide-react';
-import { setEnergyLevelAction } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import type { EnergyLevel, EnergyLog } from '@/lib/types';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { useFirestore } from '@/firebase';
+import { setTodayEnergy } from '@/lib/data-firestore';
+import { onClientWrite } from '@/app/actions';
+import { useToast } from '@/hooks/use-toast';
 
 const energyLevels: { level: EnergyLevel; icon: React.ElementType; description: string }[] = [
   { level: 'Low', icon: ZapOff, description: 'Gentle tasks' },
@@ -24,18 +28,34 @@ interface EnergyInputProps {
 export function EnergyInput({ todayEnergy, onEnergyChange, userId }: EnergyInputProps) {
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = React.useState(false);
+  const firestore = useFirestore();
+  const { toast } = useToast();
 
   const handleSetEnergy = (level: EnergyLevel) => {
+    if (!firestore) return;
+
     const newEnergyLog = {
         date: new Date().toISOString(), // This will be overwritten by server but useful for optimistic update
         level: level,
+        userId: userId,
     };
     // Optimistic update
     onEnergyChange(newEnergyLog);
     setOpen(false);
 
-    startTransition(() => {
-      setEnergyLevelAction(userId, level);
+    startTransition(async () => {
+      try {
+        await setTodayEnergy(firestore, userId, level);
+        await onClientWrite();
+      } catch (error) {
+         toast({
+            variant: 'destructive',
+            title: 'Uh oh! Something went wrong.',
+            description: 'Could not save your energy level.',
+        });
+        // Revert optimistic update if necessary
+        onEnergyChange(todayEnergy!);
+      }
     });
   };
   
