@@ -2,11 +2,11 @@
 
 import * as React from 'react';
 import { useTransition } from 'react';
-import { Clipboard, FileText, Play, Square, Goal, CheckCircle2, Hourglass } from 'lucide-react';
+import { Clipboard, FileText, Play, Square, Goal, CheckCircle2, Hourglass, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { onClientWrite } from '@/app/actions';
+import { generateReportAction, onClientWrite } from '@/app/actions';
 import type { DailyReport } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
@@ -16,12 +16,13 @@ import { updateTodaysReport } from '@/lib/data-firestore';
 export function DailyReportCard() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { todaysReport: initialReport } = useDashboardData();
+  const { todaysReport: initialReport, loading: dataLoading } = useDashboardData();
   const userId = user!.uid;
 
   const [report, setReport] = React.useState<DailyReport | null>(initialReport);
   const [clientFormattedTimes, setClientFormattedTimes] = React.useState({ startTime: 'Not set', endTime: 'Not set' });
   const [isPending, startTransition] = useTransition();
+  const [isGenerating, startGeneratingTransition] = useTransition();
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -71,15 +72,47 @@ export function DailyReportCard() {
     });
   };
 
+  const handleGenerateReport = () => {
+    if (!report) return;
+
+    startGeneratingTransition(async () => {
+      try {
+        const generatedText = await generateReportAction(userId, report.date);
+        setReport(prev => prev ? { ...prev, generatedReport: generatedText } : null);
+        toast({ title: "AI summary generated!" });
+      } catch (error) {
+        console.error("Failed to generate report:", error);
+        toast({ variant: 'destructive', title: 'Failed to generate AI summary.' });
+      }
+    });
+  };
+
+
   const handleCopyToClipboard = () => {
     if (report?.generatedReport) {
       navigator.clipboard.writeText(report.generatedReport);
       toast({ title: 'Report copied to clipboard!' });
     } else {
-      // Placeholder for future AI generation
-      toast({ title: 'Report generated and copied!' });
+        toast({ title: 'Generate a report first to copy it.' });
     }
   };
+  
+  if (dataLoading) {
+      return (
+          <Card className="bg-secondary/30 border-primary/20">
+               <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-xl">
+                        <FileText className="text-primary" />
+                        Daily Work Report
+                    </CardTitle>
+                    <CardDescription>Log your work hours and generate a summary.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {/* Skeletons can go here */}
+                </CardContent>
+          </Card>
+      )
+  }
 
   return (
     <Card className="bg-secondary/30 border-primary/20">
@@ -138,10 +171,11 @@ export function DailyReportCard() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2 border-t border-primary/10">
-          <Button size="sm" disabled={isPending} className="w-full sm:w-auto">
-            <FileText className="mr-2 h-4 w-4" /> Generate Report
+          <Button size="sm" onClick={handleGenerateReport} disabled={isGenerating || !report} className="w-full sm:w-auto">
+            {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+            {isGenerating ? 'Generating...' : 'Generate Report'}
           </Button>
-          <Button size="sm" variant="secondary" onClick={handleCopyToClipboard} disabled={isPending} className="w-full sm:w-auto">
+          <Button size="sm" variant="secondary" onClick={handleCopyToClipboard} disabled={!report?.generatedReport} className="w-full sm:w-auto">
             <Clipboard className="mr-2 h-4 w-4" /> Copy to Clipboard
           </Button>
         </div>

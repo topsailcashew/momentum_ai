@@ -23,21 +23,6 @@ export async function getTasks(db: Firestore, userId: string): Promise<Task[]> {
   return taskList;
 }
 
-export async function addTask(db: Firestore, userId: string, taskData: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>): Promise<Task> {
-    const tasksCol = db.collection('users').doc(userId).collection('tasks');
-
-    const newTaskData = {
-        ...taskData,
-        userId,
-        completed: false,
-        completedAt: null,
-        createdAt: new Date().toISOString(),
-    };
-
-    const docRef = await tasksCol.add(newTaskData);
-    return { id: docRef.id, ...newTaskData };
-}
-
 export async function deleteTask(db: Firestore, userId: string, taskId: string): Promise<void> {
     const taskRef = db.collection('users').doc(userId).collection('tasks').doc(taskId);
     await taskRef.delete();
@@ -194,9 +179,9 @@ export async function getTodaysReport(db: Firestore, userId: string): Promise<Da
     return updatedReport;
 }
 
-export async function updateTodaysReport(db: Firestore, userId: string, updates: Partial<DailyReport>): Promise<DailyReport> {
-    const today = getToday();
-    const reportRef = db.collection('users').doc(userId).collection('reports').doc(today);
+export async function updateTodaysReport(db: Firestore, userId: string, updates: Partial<DailyReport>, date?: string): Promise<DailyReport> {
+    const reportDate = date || getToday();
+    const reportRef = db.collection('users').doc(userId).collection('reports').doc(reportDate);
 
     const currentReport = await getTodaysReport(db, userId);
     const newReportData = { ...currentReport, ...updates };

@@ -50,7 +50,16 @@ export async function addTask(db: Firestore, userId: string, taskData: Omit<Task
         createdAt: new Date().toISOString(),
     };
 
-    const docRef = await addDoc(tasksCol, newTaskData);
+    const docRef = await addDoc(tasksCol, newTaskData)
+      .catch(async (serverError) => {
+          const permissionError = new FirestorePermissionError({
+            path: tasksCol.path,
+            operation: 'create',
+            requestResourceData: newTaskData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+          throw permissionError;
+      });
     return { id: docRef.id, ...newTaskData };
 }
 
