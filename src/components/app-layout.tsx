@@ -33,12 +33,13 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { useUser } from '@/firebase';
 import { getAuth, signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingScreen } from './loading-screen';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { setOpen, isMobile } = useSidebar();
   const { setTheme, theme } = useTheme();
-  const { user, loading } = useUser();
+  const { user, loading: isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -56,6 +57,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   };
   
   const isAuthPage = pathname === '/login' || pathname === '/signup';
+
+  if (isUserLoading && !isAuthPage) {
+    return <LoadingScreen />;
+  }
 
   if (isAuthPage) {
     return (
@@ -79,10 +84,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar>
         <SidebarRail />
         <SidebarHeader className="pt-6">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <Logo className="size-8 text-primary" />
             <h1 className="text-xl font-semibold font-headline group-data-[collapsible=icon]:hidden">Momentum AI</h1>
-          </div>
+          </Link>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu className="mt-4">
