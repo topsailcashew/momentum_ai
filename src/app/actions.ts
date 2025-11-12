@@ -5,7 +5,9 @@ import { updateUserProfile } from '@/lib/data-firestore-server';
 import type { DailyReport, ScoreAndSuggestTasksInput, Task } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { generateDailyWorkSummary as generateDailyWorkSummaryFlow } from '@/ai/flows/generate-daily-work-summary';
+import { visualizeFlowAlignment as visualizeFlowAlignmentFlow } from '@/ai/flows/visualize-flow-alignment';
 import { getDb } from '@/firebase/server-init';
+import { getTasks as getTasksServer, getEnergyLog as getEnergyLogServer } from '@/lib/data-firestore-server';
 import { format, parseISO } from 'date-fns';
 
 // This function is called from a client-side data mutation, so it needs to revalidate paths
@@ -66,4 +68,18 @@ export async function generateReportAction({ userId, report, tasks }: GenerateRe
 
 export async function getSuggestedTasks(input: ScoreAndSuggestTasksInput) {
     return await scoreAndSuggestTasksFlow(input);
+}
+
+export async function getFlowAlignmentReport(userId: string) {
+  const db = getDb();
+  const tasks = await getTasksServer(db, userId);
+  const energyLog = await getEnergyLogServer(db, userId);
+
+  const result = await visualizeFlowAlignmentFlow({
+    taskData: JSON.stringify(tasks),
+    energyRatingData: JSON.stringify(energyLog),
+  });
+
+  revalidatePath('/analytics');
+  return result;
 }
