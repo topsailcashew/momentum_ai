@@ -335,6 +335,15 @@ export async function updateTodaysReport(db: Firestore, userId: string, updates:
     return newReportData;
 }
 
+export async function resetTodaysReport(db: Firestore, userId: string): Promise<DailyReport> {
+  const updates: Partial<DailyReport> = {
+    startTime: null,
+    endTime: null,
+    generatedReport: null,
+  };
+  return await updateTodaysReport(db, userId, updates);
+}
+
 // User Profile
 export function updateUserProfile(db: Firestore, userId: string, updates: { displayName: string }): Promise<void> {
   const userRef = doc(db, 'users', userId);

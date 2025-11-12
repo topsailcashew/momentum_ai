@@ -2,16 +2,16 @@
 
 import * as React from 'react';
 import { useTransition } from 'react';
-import { Clipboard, FileText, Play, Square, Goal, CheckCircle2, Hourglass, Loader2 } from 'lucide-react';
+import { Clipboard, FileText, Play, Square, Goal, CheckCircle2, Hourglass, Loader2, RotateCcw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { generateReportAction, onClientWrite } from '@/app/actions';
 import type { DailyReport, Task } from '@/lib/types';
-import { format, parseISO } from 'date-fns';
+import { format, isToday, parseISO } from 'date-fns';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
-import { getTasks, updateTodaysReport } from '@/lib/data-firestore';
+import { getTasks, resetTodaysReport, updateTodaysReport } from '@/lib/data-firestore';
 
 export function DailyReportCard() {
   const { user } = useUser();
@@ -25,24 +25,50 @@ export function DailyReportCard() {
   const [isGenerating, startGeneratingTransition] = useTransition();
   const { toast } = useToast();
 
+  const handleReset = React.useCallback(() => {
+    if (!firestore) return;
+    const previousReport = report;
+    setReport(prev => prev ? { ...prev, startTime: null, endTime: null, generatedReport: null } : null);
+    setClientFormattedTimes({ startTime: 'Not set', endTime: 'Not set' });
+
+    startTransition(async () => {
+      try {
+        const updatedReport = await resetTodaysReport(firestore, userId);
+        setReport(updatedReport);
+        toast({ title: "Report reset!" });
+        await onClientWrite();
+      } catch (e) {
+        setReport(previousReport); // Revert on error
+        toast({ variant: 'destructive', title: "Failed to reset report." });
+      }
+    });
+  }, [firestore, report, userId, toast]);
+
   React.useEffect(() => {
     setReport(initialReport);
     if(initialReport) {
+        // Auto-reset if the report is from a previous day
+        if (!isToday(parseISO(initialReport.date))) {
+          handleReset();
+          return;
+        }
         setClientFormattedTimes({
             startTime: initialReport.startTime ? format(parseISO(initialReport.startTime), 'p') : 'Not set',
             endTime: initialReport.endTime ? format(parseISO(initialReport.endTime), 'p') : 'Not set',
         });
     }
-  }, [initialReport]);
+  }, [initialReport, handleReset]);
 
   const handleTimeTracking = (action: 'start' | 'end') => {
+    if (!firestore) return;
+
     const now = new Date();
     const nowISO = now.toISOString();
     const nowFormatted = format(now, 'p');
 
     const updates: Partial<DailyReport> = action === 'start' ? { startTime: nowISO } : { endTime: nowISO };
 
-    // Optimistic UI update for both report data and the formatted time display
+    // Optimistic UI update
     const previousReport = report;
     const previousFormattedTimes = clientFormattedTimes;
 
@@ -73,21 +99,20 @@ export function DailyReportCard() {
   };
 
   const handleGenerateReport = () => {
-    if (!report || !firestore) return;
+    if (!report || !firestore || !user) return;
 
     startGeneratingTransition(async () => {
       try {
-        const reportDate = format(parseISO(report.date), 'yyyy-MM-dd');
-        const relevantTasks = tasks.filter(t => t.createdAt && format(parseISO(t.createdAt), 'yyyy-MM-dd') === reportDate);
+        const allTasks = await getTasks(firestore, user.uid);
         
-        const generatedText = await generateReportAction({ userId, report, tasks: relevantTasks });
-
+        const generatedText = await generateReportAction({ userId: user.uid, report: report, tasks: allTasks });
+        
         if (generatedText) {
-          await updateTodaysReport(firestore, userId, { generatedReport: generatedText });
-          setReport(prev => prev ? { ...prev, generatedReport: generatedText } : null);
+          const updatedReport = await updateTodaysReport(firestore, user.uid, { generatedReport: generatedText });
+          setReport(updatedReport);
           toast({ title: "AI summary generated!" });
         } else {
-          throw new Error("Generated report text was empty.");
+            throw new Error("Generated report text was empty.");
         }
       } catch (error) {
         console.error("Failed to generate report:", error);
@@ -179,13 +204,16 @@ export function DailyReportCard() {
             </div>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2 border-t border-primary/10">
-          <Button size="sm" onClick={handleGenerateReport} disabled={isGenerating || !report} className="w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-primary/10">
+          <Button size="sm" onClick={handleGenerateReport} disabled={isGenerating || !report} className="flex-grow sm:flex-grow-0">
             {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
             {isGenerating ? 'Generating...' : 'Generate Report'}
           </Button>
-          <Button size="sm" variant="secondary" onClick={handleCopyToClipboard} disabled={!report?.generatedReport} className="w-full sm:w-auto">
-            <Clipboard className="mr-2 h-4 w-4" /> Copy to Clipboard
+          <Button size="sm" variant="secondary" onClick={handleCopyToClipboard} disabled={!report?.generatedReport} className="flex-grow sm:flex-grow-0">
+            <Clipboard className="mr-2 h-4 w-4" /> Copy
+          </Button>
+          <Button size="sm" variant="ghost" onClick={handleReset} disabled={isPending} className="flex-grow sm:flex-grow-0">
+            <RotateCcw className="mr-2 h-4 w-4" /> Reset
           </Button>
         </div>
       </CardContent>
