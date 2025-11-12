@@ -337,15 +337,6 @@ export function DailyReportCard() {
           </TooltipProvider>
           <Button
             size="sm"
-            variant="secondary"
-            onClick={handleCopyToClipboard}
-            disabled={!report?.generatedReport}
-            className="flex-grow sm:flex-grow-0"
-          >
-            <Clipboard className="mr-2 h-4 w-4" /> Copy
-          </Button>
-          <Button
-            size="sm"
             variant="ghost"
             onClick={handleReset}
             disabled={isPending}
