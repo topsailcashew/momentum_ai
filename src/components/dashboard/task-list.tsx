@@ -258,7 +258,7 @@ export function TaskList() {
                                      </div>
                                  )}
                             </div>
-                            <div className="absolute top-2 right-2 sm:top-1/2 sm:-translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 md:transition-opacity bg-background/80 backdrop-blur-sm rounded-md p-1">
+                            <div className="flex sm:absolute sm:top-1/2 sm:-translate-y-1/2 sm:right-2 items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 md:transition-opacity bg-background/80 backdrop-blur-sm rounded-md p-1 mt-2 sm:mt-0">
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <Button

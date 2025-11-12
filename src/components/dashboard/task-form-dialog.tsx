@@ -137,7 +137,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {triggerButton && <DialogTrigger asChild>{triggerButton}</DialogTrigger>}
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Task' : 'Add a new task'}</DialogTitle>
           <DialogDescription>
@@ -159,7 +159,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <FormField
                   control={form.control}
                   name="projectId"
@@ -227,7 +227,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                     )}
                  />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="category"
@@ -275,7 +275,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                 )}
               />
             </div>
-             <div className="grid grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                <FormField
                 control={form.control}
                 name="effort"
@@ -345,11 +345,14 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                   </FormItem>
                 )}
               />
-            <DialogFooter className={isEditing ? "justify-between" : "justify-end"}>
+            <DialogFooter className={cn(
+              "flex-col gap-2 sm:flex-row",
+              isEditing ? "sm:justify-between" : "sm:justify-end"
+            )}>
                 {isEditing && onDelete && (
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button type="button" variant="destructive" size="sm">
+                            <Button type="button" variant="destructive" size="sm" className="w-full sm:w-auto">
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete Task
                             </Button>
                         </AlertDialogTrigger>
@@ -369,11 +372,11 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                         </AlertDialogContent>
                     </AlertDialog>
                 )}
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                     <DialogClose asChild>
-                        <Button type="button" variant="ghost">Cancel</Button>
+                        <Button type="button" variant="ghost" className="flex-1 sm:flex-initial">Cancel</Button>
                     </DialogClose>
-                    <Button type="submit" disabled={isPending}>
+                    <Button type="submit" disabled={isPending} className="flex-1 sm:flex-initial">
                         {isPending ? 'Saving...' : 'Save'}
                     </Button>
                 </div>

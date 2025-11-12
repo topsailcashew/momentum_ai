@@ -77,31 +77,33 @@ export function WeeklyPlannerClientPage() {
   return (
     <Card>
         <CardHeader>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                    <CardTitle>Weekly Planner</CardTitle>
-                    <CardDescription>
-                        Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
-                    </CardDescription>
+            <div className="flex flex-col gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                        <CardTitle>Weekly Planner</CardTitle>
+                        <CardDescription>
+                            Week of {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
+                        </CardDescription>
+                    </div>
+                     <div className="flex items-center gap-2">
+                        <Button variant="outline" onClick={goToPreviousWeek} size="icon" className="h-9 w-9">
+                            <ChevronLeft className="h-4 w-4" />
+                            <span className="sr-only">Previous week</span>
+                        </Button>
+                         <Button variant="outline" onClick={goToToday} className="flex-1 sm:flex-initial">Today</Button>
+                        <Button variant="outline" onClick={goToNextWeek} size="icon" className="h-9 w-9">
+                            <ChevronRight className="h-4 w-4" />
+                            <span className="sr-only">Next week</span>
+                        </Button>
+                    </div>
                 </div>
-                 <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={goToPreviousWeek} size="icon" className="h-9 w-9">
-                        <ChevronLeft className="h-4 w-4" />
-                        <span className="sr-only">Previous week</span>
-                    </Button>
-                     <Button variant="outline" onClick={goToToday}>Today</Button>
-                    <Button variant="outline" onClick={goToNextWeek} size="icon" className="h-9 w-9">
-                        <ChevronRight className="h-4 w-4" />
-                        <span className="sr-only">Next week</span>
-                    </Button>
-                </div>
-                 <TaskFormDialog 
+                 <TaskFormDialog
                     categories={categories}
                     projects={projects}
                     onSave={handleCreateTask}
                     isPending={isPending}
                 >
-                    <Button>
+                    <Button className="w-full sm:w-auto">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Detailed Task
                     </Button>
@@ -109,7 +111,7 @@ export function WeeklyPlannerClientPage() {
             </div>
         </CardHeader>
         <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2">
                 {weekDays.map(day => (
                     <DayColumn
                         key={day.toISOString()}
