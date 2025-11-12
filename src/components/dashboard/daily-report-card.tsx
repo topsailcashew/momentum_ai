@@ -185,15 +185,6 @@ export function DailyReportCard() {
     });
   };
 
-  const handleCopyToClipboard = () => {
-    if (report?.generatedReport) {
-      navigator.clipboard.writeText(report.generatedReport);
-      toast({ title: 'Report copied to clipboard!' });
-    } else {
-      toast({ title: 'Generate a report first to copy it.' });
-    }
-  };
-
   if (dataLoading) {
     return (
       <Card className="bg-secondary/30 border-primary/20">
