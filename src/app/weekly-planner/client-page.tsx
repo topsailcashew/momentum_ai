@@ -7,35 +7,23 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { DayColumn } from '@/components/weekly-planner/day-column';
 import type { Task } from '@/lib/types';
 import { TaskFormDialog } from '@/components/dashboard/task-form-dialog';
-import { createTaskAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useUser } from '@/firebase';
-import { useRouter } from 'next/navigation';
+import { useUser, useFirestore } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { addTask } from '@/lib/data-firestore';
+import { onClientWrite } from '@/app/actions';
 
 export function WeeklyPlannerClientPage() {
   const { user, loading: userLoading } = useUser();
-  const router = useRouter();
-  const { tasks: initialTasks, projects, categories, loading: dataLoading } = useDashboardData();
+  const firestore = useFirestore();
+  const { projects, categories, loading: dataLoading, tasks, setTasks } = useDashboardData();
   
-  const [tasks, setTasks] = React.useState<Task[]>(initialTasks);
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [isPending, startTransition] = React.useTransition();
   const { toast } = useToast();
-
-  React.useEffect(() => {
-    if (!userLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, userLoading, router]);
-
-  React.useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
-
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
@@ -48,15 +36,24 @@ export function WeeklyPlannerClientPage() {
     });
   };
 
-  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => {
-    if (!user) return;
+  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>) => {
+    if (!user || !firestore) return;
     startTransition(async () => {
-      const newTask = await createTaskAction(user.uid, taskData);
-      setTasks(prevTasks => [...prevTasks, newTask]);
-      toast({
-        title: 'Task created!',
-        description: 'Your new task has been added to the planner.',
-      });
+      try {
+        const newTask = await addTask(firestore, user.uid, taskData);
+        setTasks(prevTasks => [...prevTasks, newTask]);
+        toast({
+          title: 'Task created!',
+          description: 'Your new task has been added to the planner.',
+        });
+        await onClientWrite();
+      } catch (e) {
+         toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem creating your task.',
+        });
+      }
     });
   };
 

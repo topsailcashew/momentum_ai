@@ -2,20 +2,14 @@
 
 import { FlowVisualizer } from '@/components/analytics/flow-visualizer';
 import { useUser } from '@/firebase';
-import { useRouter } from 'next/navigation';
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AnalyticsPage() {
   const { user, loading } = useUser();
-  const router = useRouter();
 
-  React.useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
+  // The main auth check is in AppLayout, but we can still show a skeleton
+  // while the user object is resolving for the first time on this page.
   if (loading || !user) {
     return (
       <div className="flex flex-col gap-8">

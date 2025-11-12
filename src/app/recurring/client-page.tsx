@@ -19,7 +19,6 @@ import { AddRecurringTaskDialog } from '@/components/recurring/add-recurring-tas
 import type { RecurringTask } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
-import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { addRecurringTask, updateRecurringTask } from '@/lib/data-firestore';
@@ -28,17 +27,10 @@ import { onClientWrite } from '@/app/actions';
 export function RecurringTasksClientPage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
-  const router = useRouter();
   const { recurringTasks: initialTasks, setRecurringTasks, loading: dataLoading } = useDashboardData();
 
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-
-  React.useEffect(() => {
-    if (!userLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, userLoading, router]);
 
   const handleCompleteTask = (taskId: string) => {
     if (!user) return;

@@ -12,7 +12,6 @@ import type { DailyReport, Task } from '@/lib/types';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
-import { useRouter } from 'next/navigation';
 import { getReports, getTasks, updateTodaysReport } from '@/lib/data-firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
@@ -22,7 +21,6 @@ import { generateReportAction } from '../actions';
 export function ReportsClientPage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
-  const router = useRouter();
   const { loading: dataLoading } = useDashboardData();
 
   const [reports, setReports] = React.useState<DailyReport[]>([]);
@@ -94,10 +92,8 @@ export function ReportsClientPage() {
     startGeneratingTransition(async () => {
       try {
         const allTasks = await getTasks(firestore, user.uid);
-        const reportDate = format(parseISO(selectedReport.date), 'yyyy-MM-dd');
-        const relevantTasks = allTasks.filter(t => t.createdAt && format(parseISO(t.createdAt), 'yyyy-MM-dd') === reportDate);
         
-        const generatedText = await generateReportAction({ userId: user.uid, report: selectedReport, tasks: relevantTasks });
+        const generatedText = await generateReportAction({ userId: user.uid, report: selectedReport, tasks: allTasks });
         
         if (generatedText) {
           await updateTodaysReport(firestore, user.uid, { generatedReport: generatedText });

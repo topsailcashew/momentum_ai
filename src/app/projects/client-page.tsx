@@ -23,7 +23,6 @@ import { ChartContainer } from '@/components/ui/chart';
 import { ProjectDetailsDialog } from '@/components/projects/project-details-dialog';
 import { getProjectProgress } from '@/lib/utils';
 import { useUser, useFirestore } from '@/firebase';
-import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { addProject, updateProject, deleteProject } from '@/lib/data-firestore';
@@ -38,18 +37,11 @@ type ProjectFormValues = z.infer<typeof projectFormSchema>;
 export function ProjectClientPage() {
   const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
-  const router = useRouter();
   const { projects: initialProjects, tasks, loading: dataLoading, setProjects: setAllProjects } = useDashboardData();
   
   const [isPending, startTransition] = useTransition();
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
   const { toast } = useToast();
-
-  React.useEffect(() => {
-    if (!userLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, userLoading, router]);
 
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
