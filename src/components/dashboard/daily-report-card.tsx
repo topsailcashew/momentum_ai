@@ -35,6 +35,7 @@ import {
 } from '@/lib/data-firestore';
 import { generateReportAction } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Separator } from '../ui/separator';
 
 export function DailyReportCard() {
   const { user } = useUser();
@@ -205,7 +206,7 @@ export function DailyReportCard() {
   }
 
   return (
-    <Card className="bg-secondary/30 border-primary/20">
+    <Card className="bg-secondary/30 border-primary/20 flex flex-col h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl">
           <FileText className="text-primary" />
@@ -215,94 +216,76 @@ export function DailyReportCard() {
           Log your work hours and generate a summary.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <h4 className="text-sm font-semibold">Work Time</h4>
-            <TooltipProvider>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleTimeTracking('start')}
-                      disabled={isPending || !!report?.startTime}
-                      className="flex-1 sm:flex-none"
-                    >
-                      <Play className="mr-2 h-4 w-4" /> Start
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Log the beginning of your workday.</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleTimeTracking('end')}
-                      disabled={isPending || !report?.startTime || !!report?.endTime}
-                      className="flex-1 sm:flex-none"
-                    >
-                      <Square className="mr-2 h-4 w-4" /> End
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Log the end of your workday.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </TooltipProvider>
-            <div className="text-xs text-muted-foreground space-y-0.5">
-              <p>
-                Start:{' '}
-                <span className="font-medium text-foreground">
-                  {clientFormattedTimes.startTime}
-                </span>
-              </p>
-              <p>
-                End:{' '}
-                <span className="font-medium text-foreground">
-                  {clientFormattedTimes.endTime}
-                </span>
-              </p>
+      <CardContent className="space-y-4 flex-grow flex flex-col">
+        <TooltipProvider>
+            <div className='space-y-3'>
+                 <div className="flex items-center justify-between">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleTimeTracking('start')}
+                            disabled={isPending || !!report?.startTime}
+                            >
+                            <Play className="mr-2 h-4 w-4" /> Start
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Log the beginning of your workday.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    <span className="text-sm font-medium text-foreground">{clientFormattedTimes.startTime}</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleTimeTracking('end')}
+                                disabled={isPending || !report?.startTime || !!report?.endTime}
+                            >
+                                <Square className="mr-2 h-4 w-4" /> End
+                            </Button>
+                        </TooltipTrigger>
+                         <TooltipContent>
+                            <p>Log the end of your workday.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                     <span className="text-sm font-medium text-foreground">{clientFormattedTimes.endTime}</span>
+                 </div>
             </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <h4 className="text-sm font-semibold">Task Summary</h4>
-            <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-x-4 gap-y-2 text-sm">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-1.5 text-muted-foreground">
-                <Goal className="size-4 text-amber-500" />
-                <span className="text-xs sm:text-sm">
-                  <span className="font-bold text-foreground">
+        </TooltipProvider>
+
+        <Separator className="my-4" />
+        
+        <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="flex flex-col items-center gap-1.5 text-muted-foreground p-2 rounded-md bg-background/50">
+                <Goal className="size-5 text-amber-500" />
+                <span className="text-sm">Goals</span>
+                <span className="font-bold text-xl text-foreground">
                     {report?.goals ?? 0}
-                  </span>{' '}
-                  Goals
                 </span>
-              </div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-1.5 text-muted-foreground">
-                <CheckCircle2 className="size-4 text-green-500" />
-                <span className="text-xs sm:text-sm">
-                  <span className="font-bold text-foreground">
-                    {report?.completed ?? 0}
-                  </span>{' '}
-                  Done
-                </span>
-              </div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-1.5 text-muted-foreground">
-                <Hourglass className="size-4 text-blue-500" />
-                <span className="text-xs sm:text-sm">
-                  <span className="font-bold text-foreground">
-                    {report?.inProgress ?? 0}
-                  </span>{' '}
-                  Active
-                </span>
-              </div>
             </div>
-          </div>
+             <div className="flex flex-col items-center gap-1.5 text-muted-foreground p-2 rounded-md bg-background/50">
+                <CheckCircle2 className="size-5 text-green-500" />
+                <span className="text-sm">Done</span>
+                 <span className="font-bold text-xl text-foreground">
+                    {report?.completed ?? 0}
+                </span>
+            </div>
+             <div className="flex flex-col items-center gap-1.5 text-muted-foreground p-2 rounded-md bg-background/50">
+                <Hourglass className="size-5 text-blue-500" />
+                <span className="text-sm">Active</span>
+                 <span className="font-bold text-xl text-foreground">
+                    {report?.inProgress ?? 0}
+                </span>
+            </div>
         </div>
+
+        <div className="flex-grow" />
+
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-primary/10">
           <TooltipProvider>
             <Tooltip>
@@ -311,7 +294,7 @@ export function DailyReportCard() {
                   size="sm"
                   onClick={handleGenerateReport}
                   disabled={isGenerating || !report}
-                  className="flex-grow sm:flex-grow-0"
+                  className="flex-grow"
                 >
                   {isGenerating ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -326,15 +309,24 @@ export function DailyReportCard() {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleReset}
-            disabled={isPending}
-            className="flex-grow sm:flex-grow-0"
-          >
-            <RotateCcw className="mr-2 h-4 w-4" /> Reset
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={handleReset}
+                        disabled={isPending}
+                        className="h-9 w-9"
+                    >
+                        <RotateCcw className="h-4 w-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>Reset report for the day</p>
+                </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </CardContent>
     </Card>
