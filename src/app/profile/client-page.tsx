@@ -27,7 +27,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Bar, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
+import { Bar, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Legend, BarChart as RechartsBarChart, PieChart as RechartsPieChart } from "recharts"
 
 
 const profileFormSchema = z.object({
@@ -330,15 +330,15 @@ export function ProfileClientPage() {
                   <CardContent>
                       <ChartContainer config={{}} className="h-48 w-full">
                         <ResponsiveContainer>
-                          <BarChart data={dailyCompletionData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                          <RechartsBarChart data={dailyCompletionData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                               <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                               <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                              <Tooltip 
+                              <ChartTooltip 
                                 cursor={{fill: 'hsla(var(--muted))'}}
                                 content={<ChartTooltipContent />} 
                               />
                               <Bar dataKey="tasks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                          </BarChart>
+                          </RechartsBarChart>
                         </ResponsiveContainer>
                       </ChartContainer>
                   </CardContent>
@@ -354,8 +354,8 @@ export function ProfileClientPage() {
                   <CardContent>
                        <ChartContainer config={{}} className="h-48 w-full">
                         <ResponsiveContainer>
-                          <PieChart>
-                              <Tooltip content={<ChartTooltipContent nameKey="name" />} />
+                          <RechartsPieChart>
+                              <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
                               <Pie
                                   data={categoryDistributionData}
                                   dataKey="value"
@@ -375,7 +375,7 @@ export function ProfileClientPage() {
                                   align="right" 
                                   verticalAlign="middle"
                               />
-                          </PieChart>
+                          </RechartsPieChart>
                         </ResponsiveContainer>
                       </ChartContainer>
                   </CardContent>
