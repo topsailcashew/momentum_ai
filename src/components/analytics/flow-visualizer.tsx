@@ -4,10 +4,12 @@ import * as React from 'react';
 import Image from 'next/image';
 import { useTransition } from 'react';
 import { Wand2, Loader2, ServerCrash } from 'lucide-react';
-import { getFlowAlignmentReport } from '@/app/actions';
+import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { onClientWrite } from '@/app/actions';
 
 interface ReportData {
   visualizationUri: string;
@@ -22,15 +24,20 @@ export function FlowVisualizer({ userId }: FlowVisualizerProps) {
   const [isPending, startTransition] = useTransition();
   const [reportData, setReportData] = React.useState<ReportData | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const { tasks, energyLog } = useDashboardData();
 
   const handleGenerateReport = () => {
     startTransition(async () => {
       setError(null);
       setReportData(null);
       try {
-        const result = await getFlowAlignmentReport(userId);
+        const result = await visualizeFlowAlignment({
+            taskData: JSON.stringify(tasks),
+            energyRatingData: JSON.stringify(energyLog),
+        });
         if (result.visualizationUri && result.report) {
             setReportData(result);
+            await onClientWrite();
         } else {
             setError('The generated report was incomplete. Please try again.');
         }

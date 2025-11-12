@@ -9,6 +9,7 @@ import {
   getProjects,
   getTodaysReport,
   getRecurringTasks,
+  getEnergyLog,
 } from '@/lib/data-firestore';
 import { useUser, useFirestore } from '@/firebase';
 import type { Task, Category, Project, DailyReport, EnergyLog, MomentumScore, RecurringTask } from '@/lib/types';
@@ -18,6 +19,7 @@ interface DashboardDataContextType {
   projects: Project[];
   categories: Category[];
   recurringTasks: RecurringTask[];
+  energyLog: EnergyLog[];
   todayEnergy?: EnergyLog;
   latestMomentum?: MomentumScore;
   todaysReport: DailyReport | null;
@@ -38,6 +40,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   const [projects, setProjects] = React.useState<Project[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [recurringTasks, setRecurringTasks] = React.useState<RecurringTask[]>([]);
+  const [energyLog, setEnergyLog] = React.useState<EnergyLog[]>([]);
   const [todayEnergy, setTodayEnergy] = React.useState<EnergyLog | undefined>(undefined);
   const [latestMomentum, setLatestMomentum] = React.useState<MomentumScore | undefined>(undefined);
   const [todaysReport, setTodaysReport] = React.useState<DailyReport | null>(null);
@@ -57,6 +60,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
             latestMomentumData, 
             reportData,
             recurringTasksData,
+            energyLogData,
           ] = await Promise.all([
             getTasks(firestore, user.uid),
             getProjects(firestore, user.uid),
@@ -65,6 +69,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
             getLatestMomentum(firestore, user.uid),
             getTodaysReport(firestore, user.uid),
             getRecurringTasks(firestore, user.uid),
+            getEnergyLog(firestore, user.uid),
           ]);
           setTasks(tasksData);
           setProjects(projectsData);
@@ -73,6 +78,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
           setLatestMomentum(latestMomentumData);
           setTodaysReport(reportData);
           setRecurringTasks(recurringTasksData);
+          setEnergyLog(energyLogData);
         } catch (error: any) {
           console.error("Error fetching dashboard data:", error);
           setError(error);
@@ -92,6 +98,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     projects,
     categories,
     recurringTasks,
+    energyLog,
     todayEnergy,
     latestMomentum,
     todaysReport,

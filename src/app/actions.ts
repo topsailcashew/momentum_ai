@@ -70,20 +70,3 @@ export async function generateReportAction({ userId, report, tasks }: GenerateRe
 export async function getSuggestedTasks(input: ScoreAndSuggestTasksInput) {
     return await scoreAndSuggestTasksFlow(input);
 }
-
-export async function getFlowAlignmentReport(userId: string) {
-  const db = getDb();
-  const tasksSnapshot = await db.collection(`users/${userId}/tasks`).get();
-  const tasks = tasksSnapshot.docs.map(doc => doc.data() as Task);
-
-  const energyLogSnapshot = await db.collection(`users/${userId}/energy-log`).get();
-  const energyLog = energyLogSnapshot.docs.map(doc => doc.data());
-
-  const result = await visualizeFlowAlignmentFlow({
-    taskData: JSON.stringify(tasks),
-    energyRatingData: JSON.stringify(energyLog),
-  });
-
-  revalidatePath('/analytics');
-  return result;
-}
