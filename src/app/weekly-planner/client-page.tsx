@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -22,7 +21,7 @@ export function WeeklyPlannerClientPage() {
   const { projects, categories, loading: dataLoading, tasks, setTasks } = useDashboardData();
   
   const [currentDate, setCurrentDate] = React.useState(new Date());
-  const [isPending, startTransition] = React.useTransition();
+  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
