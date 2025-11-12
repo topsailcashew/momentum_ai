@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -22,8 +23,8 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { generateReportAction, onClientWrite } from '@/app/actions';
-import type { DailyReport, Task } from '@/lib/types';
+import { onClientWrite } from '@/app/actions';
+import type { DailyReport } from '@/lib/types';
 import { format, isToday, parseISO } from 'date-fns';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
@@ -32,6 +33,8 @@ import {
   resetTodaysReport,
   updateTodaysReport,
 } from '@/lib/data-firestore';
+import { generateReportAction } from '@/app/actions';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 export function DailyReportCard() {
   const { user } = useUser();
@@ -39,7 +42,6 @@ export function DailyReportCard() {
   const {
     todaysReport: initialReport,
     loading: dataLoading,
-    tasks,
   } = useDashboardData();
   const userId = user!.uid;
 
@@ -226,26 +228,42 @@ export function DailyReportCard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
             <h4 className="text-sm font-semibold">Work Time</h4>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleTimeTracking('start')}
-                disabled={isPending || !!report?.startTime}
-                className="flex-1 sm:flex-none"
-              >
-                <Play className="mr-2 h-4 w-4" /> Start
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleTimeTracking('end')}
-                disabled={isPending || !report?.startTime || !!report?.endTime}
-                className="flex-1 sm:flex-none"
-              >
-                <Square className="mr-2 h-4 w-4" /> End
-              </Button>
-            </div>
+            <TooltipProvider>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleTimeTracking('start')}
+                      disabled={isPending || !!report?.startTime}
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Play className="mr-2 h-4 w-4" /> Start
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Log the beginning of your workday.</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleTimeTracking('end')}
+                      disabled={isPending || !report?.startTime || !!report?.endTime}
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Square className="mr-2 h-4 w-4" /> End
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Log the end of your workday.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
             <div className="text-xs text-muted-foreground space-y-0.5">
               <p>
                 Start:{' '}
