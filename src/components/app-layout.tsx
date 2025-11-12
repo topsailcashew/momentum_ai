@@ -185,7 +185,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="group-data-[collapsible=icon]:size-8 border hover:bg-transparent focus-visible:ring-0"
+                    className="group-data-[collapsible=icon]:size-8 hover:bg-transparent focus-visible:ring-0"
                   >
                     <Avatar className="size-full">
                        {user?.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || 'User'} />}
