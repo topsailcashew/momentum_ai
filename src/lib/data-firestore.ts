@@ -340,6 +340,9 @@ export async function resetTodaysReport(db: Firestore, userId: string): Promise<
     startTime: null,
     endTime: null,
     generatedReport: null,
+    goals: 0,
+    completed: 0,
+    inProgress: 0,
   };
   return await updateTodaysReport(db, userId, updates);
 }
