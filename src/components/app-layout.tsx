@@ -58,22 +58,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   
   const isAuthPage = pathname === '/login' || pathname === '/signup';
 
+  React.useEffect(() => {
+    if (!isUserLoading && !user && !isAuthPage) {
+      router.push('/login');
+    }
+  }, [isUserLoading, user, isAuthPage, router]);
+
   if (isUserLoading) {
     return <LoadingScreen />;
   }
 
-  if (!user && !isAuthPage) {
-    // If we're done loading, there's no user, and we're not on an auth page, redirect.
-    // A simple `router.push` might not be enough due to race conditions in rendering.
-    // Returning null or a loading screen is safer, and the effect will trigger the redirect.
-    // You could also render the login page directly here.
-    if (typeof window !== 'undefined') {
-        router.push('/login');
-    }
-    return <LoadingScreen />; // Show loading screen while redirecting
-  }
-
-  if (isAuthPage) {
+  if (!user && isAuthPage) {
     return (
        <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
           <div className="hidden lg:flex flex-col items-center justify-center gap-4 bg-secondary/50 p-8 text-center">
@@ -90,6 +85,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
     );
+  }
+
+  if (!user && !isAuthPage) {
+      return <LoadingScreen />; // Show loading screen while redirecting
   }
 
   return (
