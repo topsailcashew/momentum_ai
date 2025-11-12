@@ -8,9 +8,15 @@ import { Separator } from '@/components/ui/separator';
 import type { MomentumScore, EnergyLog, Project, Task } from '@/lib/types';
 import { EnergyInput } from './energy-input';
 import { SuggestionsDialog } from './suggestions-dialog';
-import { getSuggestedTasks, ScoreAndSuggestTasksOutput } from '@/app/actions';
+import { getSuggestedTasks } from '@/app/actions';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser } from '@/firebase';
+
+interface ScoreAndSuggestTasksOutput {
+  suggestedTasks: Task[];
+  routineSuggestion?: string;
+}
+
 
 export function MomentumCard() {
   const { user } = useUser();

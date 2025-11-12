@@ -12,8 +12,12 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { SuggestedTasks } from './suggested-tasks';
-import { ScoreAndSuggestTasksOutput } from '@/app/actions';
-import type { EnergyLevel } from '@/lib/types';
+import type { EnergyLevel, Task } from '@/lib/types';
+
+interface ScoreAndSuggestTasksOutput {
+  suggestedTasks: Task[];
+  routineSuggestion?: string;
+}
 
 interface SuggestionsDialogProps {
   suggestions: ScoreAndSuggestTasksOutput;

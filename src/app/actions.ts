@@ -5,8 +5,9 @@ import {
   getTasks,
   updateTodaysReport,
   updateUserProfile,
+  getProjects as getProjectsServer,
 } from '@/lib/data-firestore-server';
-import type { DailyReport } from '@/lib/types';
+import type { DailyReport, ScoreAndSuggestTasksInput } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { visualizeFlowAlignment } from '@/ai/flows/visualize-flow-alignment';
 import { generateDailyWorkSummary as generateDailyWorkSummaryFlow } from '@/ai/flows/generate-daily-work-summary';
@@ -71,4 +72,9 @@ export async function generateReportAction(userId: string, reportDate: string) {
   revalidatePath('/reports');
 
   return result.report;
+}
+
+
+export async function getSuggestedTasks(input: ScoreAndSuggestTasksInput) {
+    return await scoreAndSuggestTasksFlow(input);
 }

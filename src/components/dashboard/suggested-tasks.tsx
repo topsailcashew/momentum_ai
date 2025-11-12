@@ -1,7 +1,11 @@
 import { CheckCircle } from 'lucide-react';
-import type { EnergyLevel } from '@/lib/types';
+import type { EnergyLevel, Task } from '@/lib/types';
 import { Badge } from '../ui/badge';
-import type { ScoreAndSuggestTasksOutput } from '@/app/actions';
+
+interface ScoreAndSuggestTasksOutput {
+  suggestedTasks: Task[];
+  routineSuggestion?: string;
+}
 
 interface SuggestedTasksProps {
   suggestions: ScoreAndSuggestTasksOutput;
