@@ -44,7 +44,7 @@ export function WeeklyPlannerClientPage({
     });
   };
 
-  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => {
+  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'> | Partial<Omit<Task, 'id'>>, taskId?: string) => {
     startTransition(async () => {
       try {
         const newTask = await createTaskAction(userId, taskData);

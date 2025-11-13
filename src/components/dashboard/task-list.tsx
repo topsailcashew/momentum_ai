@@ -87,7 +87,7 @@ export function TaskList({ initialTasks, categories, projects, todayEnergy, user
     });
   };
 
-  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => {
+  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'> | Partial<Omit<Task, 'id'>>, taskId?: string) => {
     startTransition(async () => {
       try {
         await createTaskAction(userId, taskData);
