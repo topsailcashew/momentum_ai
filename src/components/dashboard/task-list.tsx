@@ -90,7 +90,7 @@ export function TaskList({ initialTasks, categories, projects, todayEnergy, user
   const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'> | Partial<Omit<Task, 'id'>>, taskId?: string) => {
     startTransition(async () => {
       try {
-        await createTaskAction(userId, taskData);
+        await createTaskAction(userId, taskData as Omit<Task, "id" | "completed" | "completedAt" | "createdAt">);
         toast({
           title: 'Task created!',
           description: 'Your new task has been added.',

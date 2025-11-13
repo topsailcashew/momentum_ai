@@ -47,7 +47,7 @@ export function WeeklyPlannerClientPage({
   const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'> | Partial<Omit<Task, 'id'>>, taskId?: string) => {
     startTransition(async () => {
       try {
-        const newTask = await createTaskAction(userId, taskData);
+        const newTask = await createTaskAction(userId, taskData as Omit<Task, "id" | "completed" | "completedAt" | "createdAt">);
         setTasks(prevTasks => [...prevTasks, newTask]);
         toast({
           title: 'Task created!',

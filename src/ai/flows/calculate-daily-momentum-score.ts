@@ -74,7 +74,7 @@ const calculateDailyMomentumScoreFlow = ai.defineFlow(
     const {output} = await prompt(input);
     return {
       dailyScore: finalScore,
-      summary: output.summary,
+      summary: output?.summary ?? "Keep up the momentum!",
     };
   }
 );
