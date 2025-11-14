@@ -1,14 +1,12 @@
-
 'use client';
 
 import * as React from 'react';
 import { useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Clipboard, Download, FileText, Loader2, Calendar, CheckCircle } from 'lucide-react';
+import { Clipboard, Download, FileText, Loader2 } from 'lucide-react';
 import type { DailyReport } from '@/lib/types';
-import { format, parseISO, isToday } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
 import { getReports, getTasks, updateTodaysReport } from '@/lib/data-firestore';
@@ -17,8 +15,8 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { generateReportAction } from '../actions';
 import { MarkdownPreview } from '@/components/markdown-preview';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
-
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { DateCard } from '@/components/reports/date-card';
 
 export function ReportsClientPage() {
   const { user, loading: userLoading } = useUser();
@@ -113,93 +111,59 @@ export function ReportsClientPage() {
   
   if (userLoading || dataLoading || isFetching || !user) {
     return (
-         <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-1">
-                <Skeleton className="h-[calc(100vh-10rem)] w-full" />
-            </div>
-            <div className="lg:col-span-2">
-                <Skeleton className="h-[calc(100vh-10rem)] w-full" />
-            </div>
+         <div className="space-y-6">
+            <Skeleton className="h-36 w-full" />
+            <Skeleton className="h-96 w-full" />
         </div>
     )
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      <Card className="lg:col-span-1">
-          <CardHeader>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
             <CardTitle>Reports History</CardTitle>
             <CardDescription>Select a day to view its report.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[calc(100vh-15rem)]">
-              <div className="flex flex-col gap-2 pr-4">
-                {reports.map(report => {
-                    const completionRate = report.goals > 0 ? (report.completed / report.goals) * 100 : 0;
-                    const isSelected = selectedReport?.date === report.date;
-
-                    return (
-                        <button
-                            key={report.date}
-                            onClick={() => setSelectedReport(report)}
-                            className={cn(
-                                "flex flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent",
-                                isSelected && "bg-accent shadow-inner"
-                            )}
-                        >
-                            <div className="flex w-full flex-col gap-1">
-                                <div className="flex items-center">
-                                    <div className="flex items-center gap-2">
-                                        <Calendar className="h-4 w-4" />
-                                        <div className="font-semibold">{format(parseISO(report.date), 'MMM d, yyyy')}</div>
-                                    </div>
-                                    {isToday(parseISO(report.date)) && (
-                                        <div className="ml-auto text-xs">
-                                            <Badge>Today</Badge>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                    {format(parseISO(report.date), 'eeee')}
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                    <CheckCircle className="h-3 w-3"/>
-                                    {report.completed} / {report.goals} done
-                                </div>
-                            </div>
-                             <div className="w-full bg-secondary rounded-full h-1.5">
-                                <div className="bg-primary h-1.5 rounded-full" style={{ width: `${completionRate}%` }}></div>
-                            </div>
-                        </button>
-                    )
-                })}
-              </div>
-            </ScrollArea>
-          </CardContent>
+        </CardHeader>
+        <CardContent>
+            {reports.length > 0 ? (
+                <Carousel opts={{ align: "start", dragFree: true }}>
+                    <CarouselContent className="-ml-2">
+                        {reports.map((report, index) => (
+                            <CarouselItem key={index} className="basis-auto pl-2">
+                                <DateCard
+                                    report={report}
+                                    isSelected={selectedReport?.date === report.date}
+                                    onSelect={() => setSelectedReport(report)}
+                                />
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2" />
+                    <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2" />
+                </Carousel>
+            ) : (
+                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 bg-muted rounded-lg">
+                    <FileText className="size-12 mb-4"/>
+                    <h3 className="font-semibold text-lg text-foreground">No reports generated yet</h3>
+                    <p>Complete tasks and use the daily report card to create your first report.</p>
+                </div>
+            )}
+        </CardContent>
       </Card>
 
-      <div className="lg:col-span-2">
+      {selectedReport ? (
         <Card className="h-full flex flex-col">
           <CardHeader>
-            {selectedReport ? (
-              <>
-                <CardTitle>
-                  {`Report for ${format(parseISO(selectedReport.date), 'eeee, MMMM d')}`}
-                </CardTitle>
-                <CardDescription>
-                    {`Started: ${clientFormattedTimes.startTime} | Ended: ${clientFormattedTimes.endTime}`}
-                </CardDescription>
-              </>
-            ) : (
-                <CardTitle>No Report Selected</CardTitle>
-            )}
+              <CardTitle>
+                {`Report for ${format(parseISO(selectedReport.date), 'eeee, MMMM d')}`}
+              </CardTitle>
+              <CardDescription>
+                  {`Started: ${clientFormattedTimes.startTime} | Ended: ${clientFormattedTimes.endTime}`}
+              </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex flex-col gap-4">
-            {selectedReport ? (
-              <>
-                 <ScrollArea className="flex-grow h-[calc(100vh-25rem)] w-full rounded-md border bg-background/50 p-4">
+                 <ScrollArea className="flex-grow h-[calc(100vh-28rem)] w-full rounded-md border bg-background/50 p-4">
                      <MarkdownPreview content={selectedReport.generatedReport}/>
                  </ScrollArea>
                  <div className="flex flex-wrap gap-2">
@@ -210,17 +174,17 @@ export function ReportsClientPage() {
                     <Button variant="secondary" onClick={() => handleCopyToClipboard(selectedReport.generatedReport)}><Clipboard className="mr-2 h-4 w-4" />Copy</Button>
                     <Button variant="outline" onClick={() => handleExport(selectedReport)}><Download className="mr-2 h-4 w-4" />Export .txt</Button>
                  </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 bg-muted rounded-lg">
-                <FileText className="size-16 mb-4"/>
-                <h3 className="font-semibold text-lg text-foreground">Select a report</h3>
-                <p>Choose a day from the history list to see its details and generate an AI summary.</p>
-              </div>
-            )}
           </CardContent>
         </Card>
-      </div>
+      ) : (
+        !isFetching && reports.length > 0 && (
+             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 bg-muted rounded-lg">
+                <FileText className="size-16 mb-4"/>
+                <h3 className="font-semibold text-lg text-foreground">Select a report</h3>
+                <p>Choose a day from the history list above to see its details.</p>
+              </div>
+        )
+      )}
     </div>
   );
 }
