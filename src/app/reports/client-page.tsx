@@ -4,7 +4,6 @@ import * as React from 'react';
 import { useTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clipboard, Download, FileText, Loader2 } from 'lucide-react';
@@ -16,6 +15,8 @@ import { getReports, getTasks, updateTodaysReport } from '@/lib/data-firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { generateReportAction } from '../actions';
+import { MarkdownPreview } from '@/components/markdown-preview';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 export function ReportsClientPage() {
@@ -173,13 +174,9 @@ export function ReportsClientPage() {
           <CardContent>
             {selectedReport ? (
               <div className="space-y-4">
-                 <Textarea 
-                    placeholder="Your generated report will appear here..." 
-                    value={selectedReport.generatedReport || "Click 'Generate AI Summary' to create a summary."}
-                    readOnly
-                    rows={15}
-                    className="bg-muted"
-                 />
+                 <ScrollArea className="h-[24rem] w-full rounded-md border bg-muted p-4">
+                     <MarkdownPreview content={selectedReport.generatedReport || "Click 'Generate AI Summary' to create a summary."}/>
+                 </ScrollArea>
                  <div className="flex gap-2">
                     <Button onClick={handleGenerateReport} disabled={isGenerating}>
                         {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
