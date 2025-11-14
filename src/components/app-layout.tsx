@@ -34,6 +34,7 @@ import { useUser } from '@/firebase';
 import { getAuth, signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingScreen } from './loading-screen';
+import { DashboardDataProvider } from '@/hooks/use-dashboard-data';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -94,6 +95,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+     <DashboardDataProvider>
       <Sidebar>
         <SidebarRail />
         <SidebarHeader className="pt-6">
@@ -221,6 +223,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
         </div>
       </SidebarInset>
+      </DashboardDataProvider>
     </>
   );
 }

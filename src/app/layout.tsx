@@ -1,56 +1,53 @@
+
 import type { Metadata } from 'next';
+import { Inter as FontSans } from 'next/font/google';
 import './globals.css';
-import { Toaster } from '@/components/ui/toaster';
-import { AppLayout } from '@/components/app-layout';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/toaster';
 import { PomodoroProvider } from '@/components/dashboard/pomodoro-provider';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { DashboardDataProvider } from '@/hooks/use-dashboard-data';
+import { FirebaseClientProvider } from '@/firebase';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { AppLayout } from '@/components/app-layout';
+
+const fontSans = FontSans({
+  subsets: ['latin'],
+  variable: '--font-sans',
+});
 
 export const metadata: Metadata = {
   title: 'Elvo',
-  description: 'Align your tasks with your energy.',
-  icons: {
-    icon: '/favicon.svg',
-  },
+  description: 'Your personal dashboard for productivity and focus.',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700&family=Inter:wght@400;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="font-body antialiased">
+      <body
+        className={cn(
+          'min-h-screen bg-background font-sans antialiased',
+          fontSans.variable
+        )}
+      >
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <FirebaseClientProvider>
-            <DashboardDataProvider>
+          <TooltipProvider>
+            <FirebaseClientProvider>
               <PomodoroProvider>
-                <SidebarProvider>
-                  <AppLayout>{children}</AppLayout>
-                </SidebarProvider>
+                <AppLayout>
+                  {children}
+                </AppLayout>
               </PomodoroProvider>
-            </DashboardDataProvider>
-          </FirebaseClientProvider>
+            </FirebaseClientProvider>
+          </TooltipProvider>
           <Toaster />
         </ThemeProvider>
       </body>

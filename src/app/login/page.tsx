@@ -1,26 +1,12 @@
-
 'use client';
 
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import {
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithRedirect,
-} from 'firebase/auth';
+import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
@@ -29,104 +15,63 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import Link from 'next/link';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Logo } from '@/components/logo';
-import { useAuth, useUser } from '@/firebase';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const formSchema = z.object({
-  email: z.string().email('Invalid email address.'),
-  password: z.string().min(6, 'Password must be at least 6 characters.'),
+  email: z.string().email({ message: 'Please enter a valid email.' }),
+  password: z.string().min(1, { message: 'Password is required.' }),
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
 export default function LoginPage() {
+  const { login, user, loading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
-  const auth = useAuth();
-  const { user, loading: userLoading } = useUser();
-  const [isPending, startTransition] = React.useTransition();
 
-  const form = useForm<FormValues>({
+  const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: {
+      email: '',
+      password: '',
+    },
   });
 
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      await login(values.email, values.password);
+      toast({ title: "Login Successful", description: "Welcome back!" });
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: error.message || 'An unknown error occurred.',
+      });
+    }
+  };
+
   React.useEffect(() => {
-    if (!userLoading && user) {
+    if (!loading && user) {
       router.push('/');
     }
-  }, [user, userLoading, router]);
+  }, [user, loading, router]);
 
-
-  const onSubmit = (data: FormValues) => {
-    if (!auth) return;
-    startTransition(async () => {
-      try {
-        await signInWithEmailAndPassword(auth, data.email, data.password);
-        toast({ title: 'Login successful!' });
-        router.push('/');
-      } catch (error: any) {
-        toast({
-          variant: 'destructive',
-          title: 'Login failed',
-          description: error.message || 'Please check your credentials and try again.',
-        });
-      }
-    });
-  };
-
-  const handleGoogleSignIn = () => {
-    if (!auth) return;
-    startTransition(async () => {
-      try {
-        const provider = new GoogleAuthProvider();
-        await signInWithRedirect(auth, provider);
-        // Note: This will redirect the user to Google. The redirect result
-        // is handled in the root layout or a redirect handler page.
-      } catch (error: any) {
-        toast({
-          variant: 'destructive',
-          title: 'Google Sign-In failed',
-          description: error.message || 'Could not sign in with Google. Please try again.',
-        });
-      }
-    });
-  };
-  
-  if (userLoading || !auth) {
-      return (
-            <Card className="w-full max-w-sm">
-                <CardHeader className="text-center">
-                    <Skeleton className="mx-auto h-10 w-10 text-primary" />
-                    <Skeleton className="h-6 w-3/4 mx-auto mt-2" />
-                    <Skeleton className="h-4 w-full mx-auto" />
-                </CardHeader>
-                <CardContent className="grid gap-4">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                </CardContent>
-                  <CardFooter className="justify-center">
-                    <Skeleton className="h-4 w-1/2" />
-                </CardFooter>
-            </Card>
-      );
+  if (loading || user) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
   return (
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <Logo className="mx-auto h-10 w-10 text-primary lg:hidden" />
-          <CardTitle className="mt-2">Welcome Back</CardTitle>
-          <CardDescription>Sign in to access your Elvo dashboard.</CardDescription>
-        </CardHeader>
-      <CardContent className="grid gap-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+      <div className="w-full max-w-md p-8 space-y-8 bg-card text-card-foreground rounded-lg shadow-lg">
+        <div className="text-center">
+          <Heart className="mx-auto w-12 h-12 text-primary" />
+          <h1 className="text-3xl font-bold mt-4">Amore</h1>
+          <p className="text-muted-foreground mt-2">Sign in to access your dashboard</p>
+        </div>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="email"
@@ -134,7 +79,7 @@ export default function LoginPage() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="name@example.com" {...field} />
+                    <Input type="email" placeholder="you@example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -147,39 +92,24 @@ export default function LoginPage() {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <Input type="password" placeholder="********" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? 'Signing In...' : 'Sign In'}
+            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? 'Signing In...' : 'Sign In'}
             </Button>
           </form>
         </Form>
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isPending}>
-          {isPending ? 'Redirecting...' : 'Google'}
-        </Button>
-      </CardContent>
-      <CardFooter className="justify-center">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-semibold text-primary hover:underline">
+          <Link href="/signup" className="font-medium text-primary hover:underline">
             Sign up
           </Link>
         </p>
-      </CardFooter>
-      </Card>
+      </div>
+    </div>
   );
 }

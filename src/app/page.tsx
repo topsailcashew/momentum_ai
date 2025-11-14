@@ -1,12 +1,10 @@
 
-'use client';
-
 import * as React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardClientPage } from './client-page';
 
 export default function DashboardPage() {
-    // Auth check is now handled by AppLayout, so we can remove it from here.
+    // Auth check and layout are now handled by the root layout.
     return (
         <React.Suspense fallback={
             <div className="flex flex-col gap-4">
