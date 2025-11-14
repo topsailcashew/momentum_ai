@@ -8,7 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { PomodoroProvider } from '@/components/dashboard/pomodoro-provider';
 import { FirebaseClientProvider } from '@/firebase';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AppLayout } from '@/components/app-layout';
+import { AppProvider } from '@/components/app-layout';
 
 const fontSans = FontSans({
   subsets: ['latin'],
@@ -42,9 +42,9 @@ export default function RootLayout({
           <TooltipProvider>
             <FirebaseClientProvider>
               <PomodoroProvider>
-                <AppLayout>
+                <AppProvider>
                   {children}
-                </AppLayout>
+                </AppProvider>
               </PomodoroProvider>
             </FirebaseClientProvider>
           </TooltipProvider>

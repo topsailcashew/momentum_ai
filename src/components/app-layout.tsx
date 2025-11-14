@@ -17,6 +17,7 @@ import {
   useSidebar,
   SidebarFooter,
   SidebarRail,
+  SidebarProvider,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { useTheme } from 'next-themes';
@@ -36,7 +37,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LoadingScreen } from './loading-screen';
 import { DashboardDataProvider } from '@/hooks/use-dashboard-data';
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { setOpen, isMobile } = useSidebar();
   const { setTheme, theme } = useTheme();
@@ -95,7 +96,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-     <DashboardDataProvider>
       <Sidebar>
         <SidebarRail />
         <SidebarHeader className="pt-6">
@@ -223,7 +223,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
         </div>
       </SidebarInset>
-      </DashboardDataProvider>
     </>
   );
+}
+
+
+export function AppProvider({ children }: { children: React.ReactNode }) {
+    return (
+        <SidebarProvider>
+            <DashboardDataProvider>
+                <AppLayoutContent>
+                    {children}
+                </AppLayoutContent>
+            </DashboardDataProvider>
+        </SidebarProvider>
+    )
 }
