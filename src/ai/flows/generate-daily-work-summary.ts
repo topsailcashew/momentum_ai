@@ -48,7 +48,7 @@ const prompt = ai.definePrompt({
   Completed: {{#each completedTasks}}- {{.}}\n{{/each}}
   In Progress: {{#each inProgressTasks}}- {{.}}\n{{/each}}
   
-  Your entire output should be a single string, ready to be displayed. Do not use Markdown formatting like '#' or '**'.
+  Your entire output should be a single string, ready to be displayed. Do not use any Markdown formatting like '#', '**', or any other special characters besides the '##' for headers and '-' for lists as specified.
 `,
 });
 
