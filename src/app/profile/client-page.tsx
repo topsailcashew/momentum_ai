@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +17,6 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { useToast } from '@/hooks/use-toast';
 import { updateUserProfileAction } from '../actions';
 import { updateProfile } from 'firebase/auth';
-import type { Task, Category } from '@/lib/types';
 import { TrendingUp, Zap, Tag, Calendar, CheckCircle, Clock, PieChart, BarChart } from 'lucide-react';
 import { getDay, parseISO, format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +29,7 @@ import {
 } from "@/components/ui/chart"
 import { Bar, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Legend, BarChart as RechartsBarChart, PieChart as RechartsPieChart } from "recharts"
 import { FlowVisualizerCard } from '@/components/profile/flow-visualizer-card';
+import { updateUserProfile } from '@/lib/data-firestore';
 
 
 const profileFormSchema = z.object({
@@ -63,6 +63,7 @@ const CHART_COLORS = [
 
 export function ProfileClientPage() {
   const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
   const { tasks, categories, loading: dataLoading } = useDashboardData();
   const router = useRouter();
   const { toast } = useToast();
@@ -90,18 +91,20 @@ export function ProfileClientPage() {
   
 
   const onSubmit = (data: ProfileFormValues) => {
-    if (!user) return;
+    if (!user || !firestore) return;
 
     startTransition(async () => {
       try {
-        if(user && user.displayName !== data.displayName) {
+        if(user.displayName !== data.displayName) {
           await updateProfile(user, { displayName: data.displayName });
+          await updateUserProfile(firestore, user.uid, { displayName: data.displayName });
         }
-        updateUserProfileAction(user.uid, { displayName: data.displayName });
+        
         toast({
           title: 'Profile updated!',
           description: 'Your display name has been changed.',
         });
+        await updateUserProfileAction(user.uid, { displayName: data.displayName });
       } catch (error) {
         console.error('Profile update error:', error);
         toast({
@@ -386,7 +389,3 @@ export function ProfileClientPage() {
     </div>
   );
 }
-
-    
-
-    

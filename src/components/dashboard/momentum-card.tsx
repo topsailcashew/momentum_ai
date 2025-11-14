@@ -5,7 +5,7 @@ import { useTransition } from 'react';
 import { TrendingUp, BrainCircuit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import type { MomentumScore, EnergyLog, Project, Task } from '@/lib/types';
+import type { Task } from '@/lib/types';
 import { EnergyInput } from './energy-input';
 import { SuggestionsDialog } from './suggestions-dialog';
 import { getSuggestedTasks } from '@/app/actions';
@@ -23,26 +23,16 @@ export function MomentumCard() {
   const {
     tasks,
     projects,
-    todayEnergy: initialTodayEnergy,
-    latestMomentum: initialLatestMomentum,
+    todayEnergy,
+    latestMomentum,
   } = useDashboardData();
   const userId = user!.uid;
 
-  const [latestMomentum, setLatestMomentum] = React.useState(initialLatestMomentum);
-  const [todayEnergy, setTodayEnergy] = React.useState(initialTodayEnergy);
   const [suggestions, setSuggestions] = React.useState<ScoreAndSuggestTasksOutput>({
     suggestedTasks: [],
     routineSuggestion: undefined,
   });
   const [, startTransition] = useTransition();
-
-  React.useEffect(() => {
-    setLatestMomentum(initialLatestMomentum);
-  }, [initialLatestMomentum]);
-  
-  React.useEffect(() => {
-    setTodayEnergy(initialTodayEnergy);
-  }, [initialTodayEnergy]);
 
   React.useEffect(() => {
     if (todayEnergy) {
@@ -93,7 +83,7 @@ export function MomentumCard() {
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1">Day Streak</p>
                 </div>
             </div>
-            <EnergyInput todayEnergy={todayEnergy} userId={userId} />
+            <EnergyInput userId={userId} />
         </div>
 
         {suggestions.routineSuggestion && (

@@ -17,7 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import type { Project, Task } from '@/lib/types';
+import type { Project } from '@/lib/types';
 import { RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { ProjectDetailsDialog } from '@/components/projects/project-details-dialog';
@@ -49,7 +49,7 @@ export function ProjectClientPage() {
   });
 
   const onSubmit = (data: ProjectFormValues) => {
-    if (!user) return;
+    if (!user || !firestore) return;
     startTransition(async () => {
       try {
         const newProject = await addProject(firestore, user.uid, { name: data.name, priority: 'Medium' });
@@ -64,7 +64,7 @@ export function ProjectClientPage() {
   };
 
   const handleUpdateProject = (projectId: string, updates: Partial<Project>) => {
-    if (!user) return;
+    if (!user || !firestore) return;
     startTransition(async () => {
       await updateProject(firestore, user.uid, projectId, updates);
       const optimisticUpdate = (prev: Project[]) => prev.map(p => p.id === projectId ? { ...p, ...updates } as Project : p);
@@ -78,7 +78,7 @@ export function ProjectClientPage() {
   };
 
   const handleDeleteProject = (projectId: string) => {
-      if (!user) return;
+      if (!user || !firestore) return;
       startTransition(async () => {
           await deleteProject(firestore, user.uid, projectId);
           const optimisticUpdate = (prev: Project[]) => prev.filter(p => p.id !== projectId);

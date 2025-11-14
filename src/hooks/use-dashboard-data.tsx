@@ -28,6 +28,10 @@ interface DashboardDataContextType {
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
   setRecurringTasks: React.Dispatch<React.SetStateAction<RecurringTask[]>>;
+  setTodaysReport: React.Dispatch<React.SetStateAction<DailyReport | null>>;
+  setTodayEnergy: React.Dispatch<React.SetStateAction<EnergyLog | undefined>>;
+  setLatestMomentum: React.Dispatch<React.SetStateAction<MomentumScore | undefined>>;
+  refetchData: () => void;
 }
 
 const DashboardDataContext = React.createContext<DashboardDataContextType | undefined>(undefined);
@@ -47,51 +51,51 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<Error | null>(null);
 
-  React.useEffect(() => {
+  const fetchAllData = React.useCallback(async () => {
     if (user && firestore) {
       setLoading(true);
-      const fetchAllData = async () => {
-        try {
-          const [
-            tasksData, 
-            projectsData, 
-            categoriesData, 
-            todayEnergyData, 
-            latestMomentumData, 
-            reportData,
-            recurringTasksData,
-            energyLogData,
-          ] = await Promise.all([
-            getTasks(firestore, user.uid),
-            getProjects(firestore, user.uid),
-            getCategories(),
-            getTodayEnergy(firestore, user.uid),
-            getLatestMomentum(firestore, user.uid),
-            getTodaysReport(firestore, user.uid),
-            getRecurringTasks(firestore, user.uid),
-            getEnergyLog(firestore, user.uid),
-          ]);
-          setTasks(tasksData);
-          setProjects(projectsData);
-          setCategories(categoriesData);
-          setTodayEnergy(todayEnergyData);
-          setLatestMomentum(latestMomentumData);
-          setTodaysReport(reportData);
-          setRecurringTasks(recurringTasksData);
-          setEnergyLog(energyLogData);
-        } catch (error: any) {
-          console.error("Error fetching dashboard data:", error);
-          setError(error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchAllData();
+      try {
+        const [
+          tasksData, 
+          projectsData, 
+          categoriesData, 
+          todayEnergyData, 
+          latestMomentumData, 
+          reportData,
+          recurringTasksData,
+          energyLogData,
+        ] = await Promise.all([
+          getTasks(firestore, user.uid),
+          getProjects(firestore, user.uid),
+          getCategories(),
+          getTodayEnergy(firestore, user.uid),
+          getLatestMomentum(firestore, user.uid),
+          getTodaysReport(firestore, user.uid),
+          getRecurringTasks(firestore, user.uid),
+          getEnergyLog(firestore, user.uid),
+        ]);
+        setTasks(tasksData);
+        setProjects(projectsData);
+        setCategories(categoriesData);
+        setTodayEnergy(todayEnergyData);
+        setLatestMomentum(latestMomentumData);
+        setTodaysReport(reportData);
+        setRecurringTasks(recurringTasksData);
+        setEnergyLog(energyLogData);
+      } catch (error: any) {
+        console.error("Error fetching dashboard data:", error);
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
     } else if (!user) {
-      // If no user, we might not want to show loading forever
       setLoading(false);
     }
   }, [user, firestore]);
+
+  React.useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const value = {
     tasks,
@@ -107,6 +111,10 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     setTasks,
     setProjects,
     setRecurringTasks,
+    setTodaysReport,
+    setTodayEnergy,
+    setLatestMomentum,
+    refetchData: fetchAllData
   };
 
   return <DashboardDataContext.Provider value={value}>{children}</DashboardDataContext.Provider>;

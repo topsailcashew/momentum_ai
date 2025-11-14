@@ -5,7 +5,6 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
-  serverTimestamp,
   query,
   where,
   limit,
@@ -39,7 +38,7 @@ export async function getTasks(db: Firestore, userId: string): Promise<Task[]> {
   return taskList;
 }
 
-export async function addTask(db: Firestore, userId: string, taskData: Omit<Task, 'id' | 'userId' | 'completed' | 'completedAt' | 'createdAt'>): Promise<Task> {
+export async function addTask(db: Firestore, userId: string, taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>): Promise<Task> {
     const tasksCol = collection(db, 'users', userId, 'tasks');
 
     const newTaskData = {
@@ -63,7 +62,7 @@ export async function addTask(db: Firestore, userId: string, taskData: Omit<Task
     return { id: docRef.id, ...newTaskData };
 }
 
-export function updateTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<Task, 'id'>>): Promise<void> {
+export function updateTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<Task, 'id' | 'userId'>>): Promise<void> {
     const taskRef = doc(db, 'users', userId, 'tasks', taskId);
     return updateDoc(taskRef, updates)
     .catch(async (serverError) => {
@@ -266,7 +265,7 @@ export async function addRecurringTask(db: Firestore, userId: string, taskData: 
     return { id: docRef.id, ...newTaskData };
 }
 
-export function updateRecurringTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<RecurringTask, 'id'>>): Promise<void> {
+export function updateRecurringTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<RecurringTask, 'id' | 'userId'>>): Promise<void> {
     const taskRef = doc(db, 'users', userId, 'recurring-tasks', taskId);
     return updateDoc(taskRef, updates)
     .catch(async (serverError) => {
@@ -340,9 +339,6 @@ export async function resetTodaysReport(db: Firestore, userId: string): Promise<
     startTime: null,
     endTime: null,
     generatedReport: null,
-    goals: 0,
-    completed: 0,
-    inProgress: 0,
   };
   return await updateTodaysReport(db, userId, updates);
 }

@@ -5,9 +5,8 @@ import { revalidatePath } from 'next/cache';
 import type { DailyReport, ScoreAndSuggestTasksInput, Task } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { generateDailyWorkSummary as generateDailyWorkSummaryFlow } from '@/ai/flows/generate-daily-work-summary';
-import { getDb } from '@/firebase/server-init';
 import { format, parseISO } from 'date-fns';
-import { doc, updateDoc } from 'firebase-admin/firestore';
+import { updateUserProfile } from '@/lib/data-firestore';
 
 // This function is called from a client-side data mutation, so it needs to revalidate paths
 // and perform any server-side logic after a task is completed.
@@ -31,9 +30,7 @@ export async function onClientWrite() {
 }
 
 export async function updateUserProfileAction(userId: string, updates: { displayName: string }) {
-  const db = getDb();
-  const userRef = doc(db, 'users', userId);
-  await updateDoc(userRef, updates);
+  await updateUserProfile(userId, updates);
   revalidatePath('/profile');
   revalidatePath('/'); // To update name in sidebar etc.
 }

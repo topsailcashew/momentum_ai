@@ -58,6 +58,7 @@ export function WeeklyPlannerClientPage() {
   };
 
   const handleAddTaskInline = (taskName: string, day: Date) => {
+     if (!user) return;
     handleCreateTask({
       name: taskName,
       deadline: day.toISOString(),

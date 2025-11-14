@@ -91,6 +91,7 @@ export function TaskList() {
   };
 
   const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>) => {
+    if (!firestore) return;
     startTransition(async () => {
       try {
         const newTask = await addTask(firestore, userId, taskData);
@@ -111,6 +112,7 @@ export function TaskList() {
   }
 
   const handleUpdateTask = (taskId: string, taskData: Partial<Omit<Task, 'id'>>) => {
+    if (!firestore) return;
     startTransition(async () => {
         try {
             await updateTask(firestore, userId, taskId, taskData);
@@ -130,6 +132,7 @@ export function TaskList() {
   };
 
   const handleDeleteTask = (taskId: string) => {
+    if (!firestore) return;
     startTransition(async () => {
         try {
             await deleteTask(firestore, userId, taskId);

@@ -33,7 +33,7 @@ export function RecurringTasksClientPage() {
   const { toast } = useToast();
 
   const handleCompleteTask = (taskId: string) => {
-    if (!user) return;
+    if (!user || !firestore) return;
     const optimisticUpdate = (currentTasks: RecurringTask[]) => currentTasks.map(task => 
         task.id === taskId ? { ...task, lastCompleted: new Date().toISOString() } : task
     );
@@ -57,7 +57,7 @@ export function RecurringTasksClientPage() {
   }
 
   const handleCreateRecurringTask = (taskData: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId'>) => {
-    if (!user) return;
+    if (!user || !firestore) return;
     startTransition(async () => {
       try {
         const newTask = await addRecurringTask(firestore, user.uid, taskData);

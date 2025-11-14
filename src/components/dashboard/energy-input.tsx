@@ -4,12 +4,11 @@ import * as React from 'react';
 import { useTransition } from 'react';
 import { Zap, ZapOff, BatteryMedium, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { EnergyLevel, EnergyLog } from '@/lib/types';
+import type { EnergyLevel } from '@/lib/types';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useFirestore } from '@/firebase';
-import { setTodayEnergy } from '@/lib/data-firestore';
-import { onClientWrite } from '@/app/actions';
+import { setTodayEnergy as setTodayEnergyInDb } from '@/lib/data-firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 
@@ -20,37 +19,42 @@ const energyLevels: { level: EnergyLevel; icon: React.ElementType; description: 
 ];
 
 interface EnergyInputProps {
-    todayEnergy: EnergyLog | undefined;
     userId: string;
 }
 
-export function EnergyInput({ todayEnergy, userId }: EnergyInputProps) {
+export function EnergyInput({ userId }: EnergyInputProps) {
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = React.useState(false);
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { todayEnergy: globalTodayEnergy, loading: dataLoading } = useDashboardData();
+  const { todayEnergy, setTodayEnergy, loading: dataLoading } = useDashboardData();
 
   const handleSetEnergy = (level: EnergyLevel) => {
     if (!firestore) return;
-
     setOpen(false);
+    
+    // Optimistic update
+    const newEnergyLog = { date: new Date().toISOString().split('T')[0], level, userId };
+    setTodayEnergy(newEnergyLog);
 
     startTransition(async () => {
       try {
-        await setTodayEnergy(firestore, userId, level);
-        await onClientWrite();
+        await setTodayEnergyInDb(firestore, userId, level);
+        // Data is already updated optimistically, but you could refetch here
+        // to ensure consistency if needed, though it's often not necessary.
       } catch (error) {
          toast({
             variant: 'destructive',
             title: 'Uh oh! Something went wrong.',
             description: 'Could not save your energy level.',
         });
+        // Revert optimistic update
+        setTodayEnergy(todayEnergy);
       }
     });
   };
   
-  if (!globalTodayEnergy && !dataLoading) {
+  if (!todayEnergy && !dataLoading) {
      return (
         <div className="p-4 rounded-lg bg-secondary/30 h-full flex flex-col justify-center">
             <h3 className="font-semibold text-foreground mb-2">How are you feeling?</h3>
@@ -75,7 +79,7 @@ export function EnergyInput({ todayEnergy, userId }: EnergyInputProps) {
     );
   }
 
-  const currentLevelData = globalTodayEnergy ? energyLevels.find(e => e.level === globalTodayEnergy.level) : null;
+  const currentLevelData = todayEnergy ? energyLevels.find(e => e.level === todayEnergy.level) : null;
   const currentLevel = currentLevelData || energyLevels[1];
 
   return (

@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -29,8 +28,8 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
 import {
   getTasks,
-  resetTodaysReport,
-  updateTodaysReport,
+  resetTodaysReport as resetTodaysReportInDb,
+  updateTodaysReport as updateTodaysReportInDb,
 } from '@/lib/data-firestore';
 import { generateReportAction } from '@/app/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
@@ -40,12 +39,12 @@ export function DailyReportCard() {
   const { user } = useUser();
   const firestore = useFirestore();
   const {
-    todaysReport: initialReport,
+    todaysReport,
+    setTodaysReport,
     loading: dataLoading,
   } = useDashboardData();
   const userId = user!.uid;
 
-  const [report, setReport] = React.useState<DailyReport | null>(initialReport);
   const [clientFormattedTimes, setClientFormattedTimes] = React.useState({
     startTime: 'Not set',
     endTime: 'Not set',
@@ -56,95 +55,66 @@ export function DailyReportCard() {
 
   const handleReset = React.useCallback(() => {
     if (!firestore) return;
-    const previousReport = report;
+    const previousReport = todaysReport;
 
-    // Optimistically update the UI to a fully reset state
-    setReport(prev =>
-      prev
-        ? {
-            ...prev,
-            startTime: null,
-            endTime: null,
-            generatedReport: null,
-            goals: 0,
-            completed: 0,
-            inProgress: 0,
-          }
-        : null
-    );
-    setClientFormattedTimes({ startTime: 'Not set', endTime: 'Not set' });
+    // Optimistically update the UI
+    const resetState: DailyReport = {
+      ...todaysReport!,
+      startTime: null,
+      endTime: null,
+      generatedReport: null,
+    };
+    setTodaysReport(resetState);
 
     startTransition(async () => {
       try {
-        const updatedReport = await resetTodaysReport(firestore, userId);
-        setReport(updatedReport); // Sync with the state from the server
+        const updatedReport = await resetTodaysReportInDb(firestore, userId);
+        setTodaysReport(updatedReport); // Sync with the state from the server
         toast({ title: 'Report reset!' });
-        await onClientWrite();
       } catch (e) {
-        setReport(previousReport); // Revert on error
+        setTodaysReport(previousReport); // Revert on error
         toast({ variant: 'destructive', title: 'Failed to reset report.' });
       }
     });
-  }, [firestore, report, userId, toast]);
+  }, [firestore, todaysReport, userId, toast, setTodaysReport]);
 
   React.useEffect(() => {
-    setReport(initialReport);
-    if (initialReport) {
-      // Auto-reset if the report is from a previous day
-      if (!isToday(parseISO(initialReport.date))) {
+    if (todaysReport) {
+      if (!isToday(parseISO(todaysReport.date))) {
         handleReset();
         return;
       }
       setClientFormattedTimes({
-        startTime: initialReport.startTime
-          ? format(parseISO(initialReport.startTime), 'p')
+        startTime: todaysReport.startTime
+          ? format(parseISO(todaysReport.startTime), 'p')
           : 'Not set',
-        endTime: initialReport.endTime
-          ? format(parseISO(initialReport.endTime), 'p')
+        endTime: todaysReport.endTime
+          ? format(parseISO(todaysReport.endTime), 'p')
           : 'Not set',
       });
     }
-  }, [initialReport, handleReset]);
+  }, [todaysReport, handleReset]);
 
   const handleTimeTracking = (action: 'start' | 'end') => {
     if (!firestore) return;
 
     const now = new Date();
     const nowISO = now.toISOString();
-    const nowFormatted = format(now, 'p');
 
     const updates: Partial<DailyReport> =
       action === 'start' ? { startTime: nowISO } : { endTime: nowISO };
 
     // Optimistic UI update
-    const previousReport = report;
-    const previousFormattedTimes = clientFormattedTimes;
-
-    setReport(prev => (prev ? { ...prev, ...updates } : null));
-    if (action === 'start') {
-      setClientFormattedTimes(prev => ({ ...prev, startTime: nowFormatted }));
-    } else {
-      setClientFormattedTimes(prev => ({ ...prev, endTime: nowFormatted }));
-    }
+    const previousReport = todaysReport;
+    setTodaysReport(prev => (prev ? { ...prev, ...updates } : null));
 
     startTransition(async () => {
       try {
-        const updatedReport = await updateTodaysReport(firestore, userId, updates);
-        setReport(updatedReport);
-        setClientFormattedTimes({
-          startTime: updatedReport?.startTime
-            ? format(parseISO(updatedReport.startTime), 'p')
-            : 'Not set',
-          endTime: updatedReport?.endTime
-            ? format(parseISO(updatedReport.endTime), 'p')
-            : 'Not set',
-        });
+        const updatedReport = await updateTodaysReportInDb(firestore, userId, updates);
+        setTodaysReport(updatedReport);
         toast({ title: `Work ${action} time recorded!` });
-        await onClientWrite();
       } catch (e) {
-        // Revert on error
-        setReport(previousReport);
-        setClientFormattedTimes(previousFormattedTimes);
+        setTodaysReport(previousReport);
         toast({
           variant: 'destructive',
           title: `Failed to record ${action} time.`,
@@ -154,23 +124,22 @@ export function DailyReportCard() {
   };
 
   const handleGenerateReport = () => {
-    if (!report || !firestore || !user) return;
+    if (!todaysReport || !firestore || !user) return;
 
     startGeneratingTransition(async () => {
       try {
         const allTasks = await getTasks(firestore, user.uid);
-
         const generatedText = await generateReportAction({
           userId: user.uid,
-          report: report,
+          report: todaysReport,
           tasks: allTasks,
         });
 
         if (generatedText) {
-          const updatedReport = await updateTodaysReport(firestore, user.uid, {
+          const updatedReport = await updateTodaysReportInDb(firestore, user.uid, {
             generatedReport: generatedText,
           });
-          setReport(updatedReport);
+          setTodaysReport(updatedReport);
           toast({ title: 'AI summary generated!' });
         } else {
           throw new Error('Generated report text was empty.');
@@ -225,7 +194,7 @@ export function DailyReportCard() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleTimeTracking('start')}
-                            disabled={isPending || !!report?.startTime}
+                            disabled={isPending || !!todaysReport?.startTime}
                             className="w-24 justify-start"
                             >
                             <Play className="mr-2 h-4 w-4" /> Start
@@ -244,7 +213,7 @@ export function DailyReportCard() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleTimeTracking('end')}
-                                disabled={isPending || !report?.startTime || !!report?.endTime}
+                                disabled={isPending || !todaysReport?.startTime || !!todaysReport?.endTime}
                                 className="w-24 justify-start"
                             >
                                 <Square className="mr-2 h-4 w-4" /> End
@@ -266,21 +235,21 @@ export function DailyReportCard() {
                 <Goal className="size-5 text-amber-500" />
                 <span className="text-sm">Goals</span>
                 <span className="font-bold text-xl text-foreground">
-                    {report?.goals ?? 0}
+                    {todaysReport?.goals ?? 0}
                 </span>
             </div>
              <div className="flex flex-col items-center gap-1.5 text-muted-foreground p-2 rounded-md bg-background/50">
                 <CheckCircle2 className="size-5 text-green-500" />
                 <span className="text-sm">Done</span>
                  <span className="font-bold text-xl text-foreground">
-                    {report?.completed ?? 0}
+                    {todaysReport?.completed ?? 0}
                 </span>
             </div>
              <div className="flex flex-col items-center gap-1.5 text-muted-foreground p-2 rounded-md bg-background/50">
                 <Hourglass className="size-5 text-blue-500" />
                 <span className="text-sm">Active</span>
                  <span className="font-bold text-xl text-foreground">
-                    {report?.inProgress ?? 0}
+                    {todaysReport?.inProgress ?? 0}
                 </span>
             </div>
         </div>
@@ -294,7 +263,7 @@ export function DailyReportCard() {
                 <Button
                   size="sm"
                   onClick={handleGenerateReport}
-                  disabled={isGenerating || !report}
+                  disabled={isGenerating || !todaysReport}
                   className="flex-grow"
                 >
                   {isGenerating ? (
