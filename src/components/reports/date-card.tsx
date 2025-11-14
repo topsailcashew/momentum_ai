@@ -22,8 +22,8 @@ export function DateCard({ report, isSelected, onSelect }: DateCardProps) {
     <button
       onClick={onSelect}
       className={cn(
-        "flex w-40 flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent h-full",
-        isSelected && "bg-accent shadow-inner border-primary/50"
+        "flex w-40 flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent/10 h-full",
+        isSelected && "bg-primary text-primary-foreground border-primary/80 shadow-lg"
       )}
     >
       <div className="flex w-full flex-col gap-1">
@@ -31,23 +31,23 @@ export function DateCard({ report, isSelected, onSelect }: DateCardProps) {
           <div className="font-semibold">{format(parseISO(report.date), 'MMM d, yyyy')}</div>
           {isReportToday && (
             <div className="ml-auto">
-              <Badge>Today</Badge>
+              <Badge variant={isSelected ? 'secondary' : 'default'}>Today</Badge>
             </div>
           )}
         </div>
-        <div className="text-xs text-muted-foreground">
+        <div className={cn("text-xs", isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
           {format(parseISO(report.date), 'eeee')}
         </div>
       </div>
       <div className="flex-grow" />
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className={cn("flex items-center gap-2 text-xs", isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
         <div className="flex items-center gap-1">
           <CheckCircle className="h-3 w-3" />
           {report.completed} / {report.goals} done
         </div>
       </div>
-      <div className="w-full bg-secondary rounded-full h-1.5">
-        <div className="bg-primary h-1.5 rounded-full" style={{ width: `${completionRate}%` }}></div>
+      <div className={cn("w-full rounded-full h-1.5", isSelected ? 'bg-primary-foreground/20' : 'bg-secondary')}>
+        <div className={cn("h-1.5 rounded-full", isSelected ? 'bg-primary-foreground' : 'bg-primary')} style={{ width: `${completionRate}%` }}></div>
       </div>
     </button>
   );
