@@ -3,17 +3,18 @@
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clipboard, Download, FileText } from 'lucide-react';
-import type { DailyReport } from '@/lib/types';
-import { format, parseISO } from 'date-fns';
+import { FileText, Mail } from 'lucide-react';
+import type { DailyReport, Task } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
-import { getReports } from '@/lib/data-firestore';
+import { getReports, getTasksForDate } from '@/lib/data-firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { DateCard } from '@/components/reports/date-card';
 import { VisualReportCard } from '@/components/reports/visual-report-card';
+import { generateEmailReportAction } from '../actions';
+import { EmailPreviewDialog } from '@/components/reports/email-preview-dialog';
 
 export function ReportsClientPage() {
   const { user, loading: userLoading } = useUser();
@@ -21,23 +22,39 @@ export function ReportsClientPage() {
   const { loading: dataLoading } = useDashboardData();
 
   const [reports, setReports] = React.useState<DailyReport[]>([]);
-  const [isFetching, setIsFetching] = React.useState(true);
   const [selectedReport, setSelectedReport] = React.useState<DailyReport | null>(null);
+  const [selectedReportTasks, setSelectedReportTasks] = React.useState<Task[]>([]);
+
+  const [isFetching, setIsFetching] = React.useState(true);
+  const [isGeneratingEmail, setIsGeneratingEmail] = React.useState(false);
+  const [emailBody, setEmailBody] = React.useState<string | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
+
   const { toast } = useToast();
 
-  const fetchReports = React.useCallback(async () => {
+  const fetchReportsAndTasks = React.useCallback(async () => {
     if (user && firestore) {
       setIsFetching(true);
       try {
         const reportsData = await getReports(firestore, user.uid);
         const reportsArray = Object.values(reportsData).sort((a, b) => b.date.localeCompare(a.date));
         setReports(reportsArray);
-        if (!selectedReport && reportsArray.length > 0) {
+
+        let currentReport = selectedReport;
+        if (!currentReport && reportsArray.length > 0) {
+          currentReport = reportsArray[0];
           setSelectedReport(reportsArray[0]);
-        } else if (selectedReport) {
-          const updatedSelected = reportsArray.find(r => r.date === selectedReport.date);
-          setSelectedReport(updatedSelected || reportsArray[0] || null);
+        } else if (currentReport) {
+            const updatedSelected = reportsArray.find(r => r.date === currentReport!.date);
+            currentReport = updatedSelected || reportsArray[0] || null;
+            setSelectedReport(currentReport);
         }
+
+        if(currentReport) {
+            const tasks = await getTasksForDate(firestore, user.uid, currentReport.date);
+            setSelectedReportTasks(tasks);
+        }
+
       } catch (error) {
         console.error("Error fetching reports:", error);
         toast({ variant: 'destructive', title: 'Could not load reports.' });
@@ -45,13 +62,37 @@ export function ReportsClientPage() {
         setIsFetching(false);
       }
     }
-  }, [user, firestore, selectedReport, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, firestore, toast]);
 
   React.useEffect(() => {
-    fetchReports();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, firestore]);
+    fetchReportsAndTasks();
+  }, [fetchReportsAndTasks]);
+
+
+  const handleDateSelect = async (report: DailyReport) => {
+    setSelectedReport(report);
+    if(user && firestore) {
+        const tasks = await getTasksForDate(firestore, user.uid, report.date);
+        setSelectedReportTasks(tasks);
+    }
+  }
   
+  const handleGenerateEmail = async () => {
+    if (!selectedReport) return;
+    setIsGeneratingEmail(true);
+    try {
+      const body = await generateEmailReportAction(selectedReport, selectedReportTasks, user!);
+      setEmailBody(body);
+      setIsPreviewOpen(true);
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Failed to generate email content.' });
+    } finally {
+      setIsGeneratingEmail(false);
+    }
+  };
+
+
   if (userLoading || dataLoading || isFetching || !user) {
     return (
          <div className="space-y-6">
@@ -77,7 +118,7 @@ export function ReportsClientPage() {
                                 <DateCard
                                     report={report}
                                     isSelected={selectedReport?.date === report.date}
-                                    onSelect={() => setSelectedReport(report)}
+                                    onSelect={() => handleDateSelect(report)}
                                 />
                             </CarouselItem>
                         ))}
@@ -96,7 +137,23 @@ export function ReportsClientPage() {
       </Card>
 
       {selectedReport ? (
-        <VisualReportCard report={selectedReport} />
+        <Card>
+             <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div>
+                        <CardTitle>Report Details</CardTitle>
+                        <CardDescription>A summary of your activities and stats for the selected day.</CardDescription>
+                    </div>
+                     <Button onClick={handleGenerateEmail} disabled={isGeneratingEmail}>
+                        <Mail className="mr-2 h-4 w-4" />
+                        {isGeneratingEmail ? 'Generating...' : 'Email Report'}
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <VisualReportCard report={selectedReport} tasks={selectedReportTasks} />
+            </CardContent>
+        </Card>
       ) : (
         !isFetching && reports.length > 0 && (
              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 bg-muted rounded-lg">
@@ -105,6 +162,16 @@ export function ReportsClientPage() {
                 <p>Choose a day from the history list above to see its details.</p>
               </div>
         )
+      )}
+
+      {selectedReport && emailBody && (
+        <EmailPreviewDialog
+          open={isPreviewOpen}
+          onOpenChange={setIsPreviewOpen}
+          report={selectedReport}
+          emailBody={emailBody}
+          userName={user?.displayName || 'User'}
+        />
       )}
     </div>
   );

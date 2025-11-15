@@ -38,6 +38,13 @@ export async function getTasks(db: Firestore, userId: string): Promise<Task[]> {
   return taskList;
 }
 
+export async function getTasksForDate(db: Firestore, userId: string, date: string): Promise<Task[]> {
+    const tasksCol = collection(db, 'users', userId, 'tasks');
+    const taskSnapshot = await getDocs(tasksCol);
+    const taskList = taskSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
+    return taskList.filter(task => task.createdAt && format(new Date(task.createdAt), 'yyyy-MM-dd') === date);
+}
+
 export async function addTask(db: Firestore, userId: string, taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>): Promise<Task> {
     const tasksCol = collection(db, 'users', userId, 'tasks');
 
@@ -294,8 +301,7 @@ export async function getTodaysReport(db: Firestore, userId: string): Promise<Da
     const reportRef = doc(db, 'users', userId, 'reports', today);
     const reportSnap = await getDoc(reportRef);
 
-    const tasks = await getTasks(db, userId);
-    const todaysTasks = tasks.filter(t => t.createdAt && format(new Date(t.createdAt), 'yyyy-MM-dd') === today);
+    const tasks = await getTasksForDate(db, userId, today);
     
     const defaultReport: DailyReport = {
         date: today,
@@ -303,21 +309,16 @@ export async function getTodaysReport(db: Firestore, userId: string): Promise<Da
         startTime: null,
         endTime: null,
         generatedReport: null,
-        goals: 0,
-        completed: 0,
-        inProgress: 0,
     };
     
     const existingReport = reportSnap.exists() ? reportSnap.data() as DailyReport : defaultReport;
 
+    // We no longer store stats in the report doc, they are derived on the fly
     const updatedReport = {
         ...existingReport,
-        goals: todaysTasks.length,
-        completed: todaysTasks.filter(t => t.completed).length,
-        inProgress: todaysTasks.filter(t => !t.completed).length,
     };
 
-    if (!reportSnap.exists() || JSON.stringify(existingReport) !== JSON.stringify(updatedReport)) {
+    if (!reportSnap.exists()) {
         await setDoc(reportRef, updatedReport, { merge: true });
     }
 

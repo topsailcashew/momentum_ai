@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
     // This option is needed to solve the ENOENT error.
-    serverExternalPackages: [],
+    serverExternalPackages: ['resend'],
   },
   typescript: {
     ignoreBuildErrors: true,

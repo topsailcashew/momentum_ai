@@ -6,9 +6,6 @@ import {
   FileText,
   Play,
   Square,
-  Goal,
-  CheckCircle2,
-  Hourglass,
   RotateCcw,
 } from 'lucide-react';
 import {
@@ -20,16 +17,19 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import type { DailyReport } from '@/lib/types';
+import type { DailyReport, Task } from '@/lib/types';
 import { format, isToday, parseISO } from 'date-fns';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
 import {
   resetTodaysReport as resetTodaysReportInDb,
   updateTodaysReport as updateTodaysReportInDb,
+  getTasksForDate
 } from '@/lib/data-firestore';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Separator } from '../ui/separator';
+import { VisualReportCard } from '../reports/visual-report-card';
+
 
 export function DailyReportCard() {
   const { user } = useUser();
@@ -45,8 +45,18 @@ export function DailyReportCard() {
     startTime: 'Not set',
     endTime: 'Not set',
   });
+
+  const [todaysTasks, setTodaysTasks] = React.useState<Task[]>([]);
+
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (firestore && userId && todaysReport) {
+        getTasksForDate(firestore, userId, todaysReport.date).then(setTodaysTasks);
+    }
+  }, [firestore, userId, todaysReport]);
+
 
   const handleReset = React.useCallback(() => {
     if (!firestore) return;
@@ -118,7 +128,7 @@ export function DailyReportCard() {
     });
   };
 
-  if (dataLoading) {
+  if (dataLoading || !todaysReport) {
     return (
       <Card className="bg-secondary/30 border-primary/20">
         <CardHeader>
@@ -192,31 +202,10 @@ export function DailyReportCard() {
             </div>
         </TooltipProvider>
 
-        <Separator className="my-4" />
+        <Separator className="my-2" />
         
-        <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="flex flex-col items-center gap-1.5 text-muted-foreground p-2 rounded-md bg-background/50">
-                <Goal className="size-5 text-amber-500" />
-                <span className="text-sm">Goals</span>
-                <span className="font-bold text-xl text-foreground">
-                    {todaysReport?.goals ?? 0}
-                </span>
-            </div>
-             <div className="flex flex-col items-center gap-1.5 text-muted-foreground p-2 rounded-md bg-background/50">
-                <CheckCircle2 className="size-5 text-green-500" />
-                <span className="text-sm">Done</span>
-                 <span className="font-bold text-xl text-foreground">
-                    {todaysReport?.completed ?? 0}
-                </span>
-            </div>
-             <div className="flex flex-col items-center gap-1.5 text-muted-foreground p-2 rounded-md bg-background/50">
-                <Hourglass className="size-5 text-blue-500" />
-                <span className="text-sm">Active</span>
-                 <span className="font-bold text-xl text-foreground">
-                    {todaysReport?.inProgress ?? 0}
-                </span>
-            </div>
-        </div>
+        {todaysReport && <VisualReportCard report={todaysReport} tasks={todaysTasks} />}
+        
 
         <div className="flex-grow" />
 
