@@ -162,13 +162,17 @@ export function ReportsClientPage() {
                 </div>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-                <div className="md:col-span-2">
-                    <h3 className="font-semibold text-lg mb-2">AI-Generated Summary</h3>
+                <Card className="md:col-span-2">
+                  <CardHeader>
+                    <CardTitle>AI-Generated Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <ScrollArea className="h-[calc(100vh-32rem)] w-full rounded-md border bg-background/50 p-4">
                         <MarkdownPreview content={selectedReport.generatedReport}/>
                     </ScrollArea>
-                </div>
-                <div className="md:col-span-1">
+                  </CardContent>
+                </Card>
+                <div className="md:col-span-1 h-full">
                      <VisualReportCard report={selectedReport} />
                 </div>
             </CardContent>
