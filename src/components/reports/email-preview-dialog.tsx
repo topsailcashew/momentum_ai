@@ -10,8 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Send } from 'lucide-react';
+import { Loader2, Send, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { emailReportAction } from '@/app/actions';
 import type { DailyReport } from '@/lib/types';
@@ -49,6 +48,12 @@ export function EmailPreviewDialog({ open, onOpenChange, report, emailBody, user
     }
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(emailBody);
+    toast({ title: 'Email HTML copied to clipboard!' });
+  };
+
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl h-[90vh] flex flex-col">
@@ -61,18 +66,24 @@ export function EmailPreviewDialog({ open, onOpenChange, report, emailBody, user
         <div className="flex-grow border rounded-md overflow-hidden">
             <iframe srcDoc={emailBody} className="w-full h-full" />
         </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSending}>
-            Cancel
-          </Button>
-          <Button onClick={handleSendEmail} disabled={isSending}>
-            {isSending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="mr-2 h-4 w-4" />
-            )}
-            {isSending ? 'Sending...' : 'Send Email'}
-          </Button>
+        <DialogFooter className="flex-wrap justify-end gap-2">
+           <Button variant="outline" onClick={handleCopy} disabled={isSending}>
+              <Copy className="mr-2 h-4 w-4" />
+              Copy Email
+            </Button>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSending}>
+              Cancel
+            </Button>
+            <Button onClick={handleSendEmail} disabled={isSending}>
+              {isSending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="mr-2 h-4 w-4" />
+              )}
+              {isSending ? 'Sending...' : 'Send Email'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
