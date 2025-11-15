@@ -52,7 +52,8 @@ export function EmailPreviewDialog({ open, onOpenChange, report, emailBody, user
   const handleCopy = () => {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = emailBody;
-    const plainText = tempDiv.textContent || tempDiv.innerText || "";
+    // Use innerText to preserve line breaks and basic formatting
+    const plainText = tempDiv.innerText || "";
     
     navigator.clipboard.writeText(plainText.trim());
     toast({ title: 'Email content copied to clipboard!' });
