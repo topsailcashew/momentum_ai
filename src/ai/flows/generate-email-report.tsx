@@ -76,9 +76,9 @@ const prompt = ai.definePrompt({
     name: 'generateEmailReportPrompt',
     input: { schema: GenerateEmailReportInputSchema },
     output: { schema: GenerateEmailReportOutputSchema },
-    prompt: `You are an AI assistant that writes professional and encouraging daily work report emails.
+    prompt: `You are writing a professional and encouraging daily work report email from the first-person perspective of the user, Nathaniel.
     
-    Based on the data provided, generate a concise summary of the day's work. The tone should be positive and professional, suitable for a report to a manager or team lead.
+    Based on the data provided, generate a brief and concise summary of the day's work. The tone should be positive and professional, suitable for a report to a manager or team lead.
 
     Data:
     - User: {{user.displayName}}
@@ -88,7 +88,7 @@ const prompt = ai.definePrompt({
     
     Instructions:
     1.  **Greeting**: Start with a friendly but professional greeting. Address it to "G".
-    2.  **Summary**: Write a one-paragraph summary of the user's main focus for the day. Identify key themes or projects from the task list. Mention significant accomplishments.
+    2.  **Summary**: Write a one-paragraph summary of the user's main focus for the day. Keep it brief and concise. Identify key themes or projects from the task list. Mention significant accomplishments.
     3.  **Collaborators**: Analyze the task names. If a task mentions a name (e.g., "completed with Bitz", "in collaboration with Debby"), extract those names. Return a unique list of collaborator names.
     
     Output the result in the specified JSON format.
