@@ -13,9 +13,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 const energyLevels: { level: EnergyLevel; icon: React.ElementType; description: string }[] = [
-  { level: 'Low', icon: ZapOff, description: 'For chill, soft-power days' },
-  { level: 'Medium', icon: BatteryMedium, description: 'For the dailies and steady progress' },
-  { level: 'High', icon: Zap, description: 'For deep work and high-impact tasks' },
+  { level: 'Low', icon: ZapOff, description: 'Gentle tasks' },
+  { level: 'Medium', icon: BatteryMedium, description: 'Steady pace' },
+  { level: 'High', icon: Zap, description: 'Full power' },
 ];
 
 interface EnergyInputProps {
