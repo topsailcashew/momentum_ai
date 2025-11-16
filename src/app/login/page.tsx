@@ -70,7 +70,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md p-8 space-y-8 bg-card text-card-foreground rounded-lg shadow-lg">
         <div className="text-center">
           <Heart className="mx-auto w-12 h-12 text-primary" />
-          <h1 className="text-3xl font-bold mt-4">Amore</h1>
+          <h1 className="text-3xl font-bold mt-4">Momentum AI</h1>
           <p className="text-muted-foreground mt-2">Sign in to access your dashboard</p>
         </div>
         <Form {...form}>

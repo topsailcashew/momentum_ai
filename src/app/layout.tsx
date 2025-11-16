@@ -16,7 +16,7 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
-  title: 'Amore',
+  title: 'Momentum AI',
   description: 'Your personal dashboard for productivity and focus.',
 };
 

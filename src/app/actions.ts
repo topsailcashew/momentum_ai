@@ -51,7 +51,7 @@ export async function emailReportAction(report: DailyReport, emailBody: string, 
 
     try {
         await resend.emails.send({
-            from: 'Amore Reports <reports@resend.dev>',
+            from: 'Momentum AI Reports <reports@resend.dev>',
             to: 'nathaniel.senje@theoceanindar.org',
             subject: `Daily Work Report for ${report.date} from ${userName}`,
             html: emailBody,
