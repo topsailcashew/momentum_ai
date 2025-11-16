@@ -1,6 +1,6 @@
-import { Heart } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import type { SVGProps } from 'react';
 
 export function Logo(props: SVGProps<SVGSVGElement>) {
-  return <Heart {...props} />;
+  return <Activity {...props} />;
 }
