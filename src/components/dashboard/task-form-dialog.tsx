@@ -346,7 +346,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                 )}
               />
             <DialogFooter className={cn(
-              "flex-col gap-2 sm:flex-row",
+              "pt-4",
               isEditing ? "sm:justify-between" : "sm:justify-end"
             )}>
                 {isEditing && onDelete && (
@@ -387,3 +387,5 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
     </Dialog>
   );
 }
+
+    
