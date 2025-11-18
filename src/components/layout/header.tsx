@@ -40,11 +40,16 @@ export function Header() {
     return 'Good evening';
   };
 
+  const getFirstName = () => {
+    if (!user?.displayName) return 'User';
+    return user.displayName.split(' ')[0];
+  }
+
   return (
     <header className="hidden md:flex items-center justify-between p-4 md:p-6 lg:p-8 pt-0">
       <div className="flex-1">
         <h2 className="text-2xl font-bold text-foreground">
-          {getGreeting()}, {user?.displayName || 'User'}!
+          {getGreeting()}, {getFirstName()}!
         </h2>
         <p className="text-muted-foreground" suppressHydrationWarning>
             {mounted ? format(currentTime, 'eeee, MMMM d, yyyy') : format(new Date(), 'eeee, MMMM d, yyyy')}
