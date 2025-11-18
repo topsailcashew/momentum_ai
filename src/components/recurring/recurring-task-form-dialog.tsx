@@ -39,9 +39,9 @@ import { format } from 'date-fns';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 const recurringTaskFormSchema = z.object({
-  name: z.string().min(3, 'Task name must be at least 3 characters.'),
-  category: z.string().min(1, 'Please select a category.'),
-  energyLevel: z.enum(['Low', 'Medium', 'High']),
+  name: z.string().min(1, 'Task name is required.'),
+  category: z.string().optional(),
+  energyLevel: z.enum(['Low', 'Medium', 'High', 'none']).optional(),
   frequency: z.enum(['Weekly', 'Monthly']),
   projectId: z.string().optional(),
   deadline: z.date().optional(),
@@ -74,8 +74,8 @@ export function RecurringTaskFormDialog({
     resolver: zodResolver(recurringTaskFormSchema),
     defaultValues: {
       name: '',
-      category: '',
-      energyLevel: 'Medium',
+      category: undefined,
+      energyLevel: undefined,
       frequency: 'Weekly',
       projectId: 'none',
       collaboration: '',
@@ -86,8 +86,8 @@ export function RecurringTaskFormDialog({
   const onSubmit = (data: RecurringTaskFormValues) => {
     const taskData: RecurringTaskData = {
       name: data.name,
-      category: data.category,
-      energyLevel: data.energyLevel,
+      category: data.category === 'none' ? undefined : data.category,
+      energyLevel: data.energyLevel === 'none' ? undefined : (data.energyLevel as any),
       frequency: data.frequency,
       projectId: data.projectId === 'none' ? undefined : data.projectId,
       deadline: data.deadline ? data.deadline.toISOString() : undefined,
@@ -158,14 +158,15 @@ export function RecurringTaskFormDialog({
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category *</FormLabel>
+                    <FormLabel>Category</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
+                          <SelectValue placeholder="None" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
                         {categories.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
                             {cat.name}
@@ -184,14 +185,15 @@ export function RecurringTaskFormDialog({
                 name="energyLevel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Energy Level *</FormLabel>
+                    <FormLabel>Energy Level</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="None" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
                         <SelectItem value="Low">Low</SelectItem>
                         <SelectItem value="Medium">Medium</SelectItem>
                         <SelectItem value="High">High</SelectItem>

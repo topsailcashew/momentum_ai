@@ -122,11 +122,11 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 <SidebarMenuButton
                   asChild
                   isActive={pathname === '/dashboard'}
-                  tooltip="Dashboard"
+                  tooltip="Reports"
                 >
                   <Link href="/dashboard">
                     <Gauge />
-                    <span>Dashboard</span>
+                    <span>Reports</span>
                   </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>

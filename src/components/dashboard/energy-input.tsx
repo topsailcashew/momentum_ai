@@ -57,8 +57,8 @@ export function EnergyInput({ userId }: EnergyInputProps) {
   if (!todayEnergy && !dataLoading) {
      return (
         <div className="p-4 rounded-lg bg-secondary/30 h-full flex flex-col justify-center">
-            <h3 className="font-semibold text-foreground mb-2">How are you feeling?</h3>
-            <p className="text-sm text-muted-foreground mb-4">Select your energy level for task suggestions.</p>
+            <h3 className="font-semibold text-foreground mb-2">Set Your Energy</h3>
+            <p className="text-sm text-muted-foreground mb-4">Optional: Get AI task suggestions based on your energy.</p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {energyLevels.map(({ level, icon: Icon, description }) => (
                 <Button

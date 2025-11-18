@@ -1,6 +1,12 @@
 import * as React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardClientPage } from './client-page';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Reports',
+    description: 'View your productivity reports and analytics',
+};
 
 export default function DashboardPage() {
     return (

@@ -40,11 +40,13 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog';
 import { Textarea } from '../ui/textarea';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '../ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 const taskFormSchema = z.object({
-  name: z.string().min(3, 'Task name must be at least 3 characters.'),
-  category: z.string().min(1, 'Please select a category.'),
-  energyLevel: z.enum(['Low', 'Medium', 'High']),
+  name: z.string().min(1, 'Task name is required.'),
+  category: z.string().optional(),
+  energyLevel: z.enum(['Low', 'Medium', 'High', 'none']).optional(),
   projectId: z.string().optional(),
   deadline: z.date().optional(),
   priority: z.enum(['Urgent & Important', 'Important & Not Urgent', 'Urgent & Not Important', 'Not Urgent & Not Important']).optional(),
@@ -70,6 +72,7 @@ interface TaskFormDialogProps {
 
 export function TaskFormDialog({ task, categories, projects, open: externalOpen, onOpenChange: externalOnOpenChange, onSave, onDelete, isPending, children, defaultDeadline }: TaskFormDialogProps) {
   const [internalOpen, setInternalOpen] = React.useState(false);
+  const [showOptionalFields, setShowOptionalFields] = React.useState(false);
 
   const isEditing = !!task;
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -79,8 +82,8 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       name: '',
-      category: '',
-      energyLevel: 'Medium',
+      category: undefined,
+      energyLevel: undefined,
       projectId: 'none',
       collaboration: '',
       details: '',
@@ -91,8 +94,8 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
     if (open && task) {
         form.reset({
             name: task.name,
-            category: task.category,
-            energyLevel: task.energyLevel,
+            category: task.category || undefined,
+            energyLevel: task.energyLevel || undefined,
             projectId: task.projectId || 'none',
             deadline: task.deadline ? new Date(task.deadline) : undefined,
             priority: task.priority,
@@ -102,8 +105,8 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
     } else if (open && !task && defaultDeadline) {
         form.reset({
           name: '',
-          category: '',
-          energyLevel: 'Medium',
+          category: undefined,
+          energyLevel: undefined,
           projectId: 'none',
           deadline: defaultDeadline,
           priority: undefined,
@@ -113,8 +116,8 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
     } else if (!open) {
         form.reset({
           name: '',
-          category: '',
-          energyLevel: 'Medium',
+          category: undefined,
+          energyLevel: undefined,
           projectId: 'none',
           deadline: undefined,
           priority: undefined,
@@ -128,6 +131,8 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
   const onSubmit = (data: TaskFormValues) => {
     const taskData: TaskData | Partial<Omit<Task, 'id'>> = {
         ...data,
+        category: data.category === 'none' ? undefined : data.category,
+        energyLevel: data.energyLevel === 'none' ? undefined : (data.energyLevel as any),
         projectId: data.projectId === 'none' ? undefined : data.projectId,
         deadline: data.deadline ? data.deadline.toISOString() : undefined,
     };
@@ -156,7 +161,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Task' : 'Add a new task'}</DialogTitle>
           <DialogDescription>
-            {isEditing ? 'Update the details of your task.' : 'What do you want to accomplish? Assign it an energy level.'}
+            {isEditing ? 'Update the details of your task.' : 'Just enter a task name to get started. Add optional details if needed.'}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -174,55 +179,70 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="energyLevel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Energy Level</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select energy level" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Low">Low</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="High">High</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Collapsible open={showOptionalFields} onOpenChange={setShowOptionalFields}>
+              <CollapsibleTrigger asChild>
+                <Button type="button" variant="ghost" size="sm" className="w-full justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    {showOptionalFields ? 'Hide' : 'Show'} optional fields
+                  </span>
+                  <ChevronDown className={cn(
+                    "h-4 w-4 transition-transform",
+                    showOptionalFields && "rotate-180"
+                  )} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="None" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {categories.map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="energyLevel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Energy Level</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="None" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="Low">Low</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="High">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <FormField
                   control={form.control}
                   name="projectId"
@@ -326,23 +346,25 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
                     </FormItem>
                 )}
                 />
-            <FormField
-              control={form.control}
-              name="details"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Task Details</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Add any relevant details, links, or notes..."
-                      className="resize-y"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="details"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Task Details</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Add any relevant details, links, or notes..."
+                          className="resize-y"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CollapsibleContent>
+            </Collapsible>
             <DialogFooter className={cn(
               "pt-4",
               isEditing ? "sm:justify-between" : "sm:justify-end"

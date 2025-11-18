@@ -112,7 +112,7 @@ export function EndDayDialog({
         <DialogHeader>
           <DialogTitle>End Your Workday</DialogTitle>
           <DialogDescription>
-            Add notes for your tasks to generate today's report
+            Optionally add notes to get a more detailed AI report
           </DialogDescription>
         </DialogHeader>
 

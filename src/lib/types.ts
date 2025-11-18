@@ -8,8 +8,8 @@ export interface Task {
   id: string;
   userId: string;
   name: string;
-  category: string;
-  energyLevel: EnergyLevel;
+  category?: string;
+  energyLevel?: EnergyLevel;
   completed: boolean;
   completedAt: string | null;
   createdAt: string;
@@ -51,8 +51,8 @@ export interface RecurringTask {
   id: string;
   userId: string;
   name: string;
-  category: string;
-  energyLevel: EnergyLevel;
+  category?: string;
+  energyLevel?: EnergyLevel;
   frequency: 'Weekly' | 'Monthly';
   lastCompleted: string | null;
   createdAt: string;

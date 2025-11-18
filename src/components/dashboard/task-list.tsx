@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TaskFormDialog } from './task-form-dialog';
+import { QuickAddTask } from './quick-add-task';
 import type { Task, Category, EnergyLevel, Project, EisenhowerMatrix } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Zap, ZapOff, BatteryMedium, Target, ListTodo, Folder, PlayCircle, Shield, Edit } from 'lucide-react';
@@ -199,12 +200,18 @@ export function TaskList() {
         </div>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+          <QuickAddTask
+            onAdd={handleCreateTask}
+            isPending={isPending}
+          />
+        </div>
         <div className="space-y-3">
             {filteredTasks.length > 0 ? (
                 <TooltipProvider>
                 {filteredTasks.map(task => {
-                    const Icon = energyIcons[task.energyLevel];
-                    const isAligned = todayEnergy?.level === task.energyLevel;
+                    const Icon = task.energyLevel ? energyIcons[task.energyLevel] : null;
+                    const isAligned = todayEnergy?.level && task.energyLevel ? todayEnergy.level === task.energyLevel : false;
                     const projectName = task.projectId ? getProjectName(task.projectId) : null;
                     const isFocused = focusedTask?.id === task.id;
                     const priorityColor = task.priority ? priorityColors[task.priority] : 'text-gray-500';
@@ -227,12 +234,14 @@ export function TaskList() {
                                     {task.name}
                                 </label>
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground mt-1.5">
-                                    <Badge variant="secondary" className="capitalize text-xs">{getCategoryName(task.category)}</Badge>
-                                    <div className="flex items-center gap-1 whitespace-nowrap">
-                                        <Icon className="size-3 flex-shrink-0" />
-                                        <span className="hidden sm:inline">{task.energyLevel} Energy</span>
-                                        <span className="sm:hidden">{task.energyLevel}</span>
-                                    </div>
+                                    {task.category && <Badge variant="secondary" className="capitalize text-xs">{getCategoryName(task.category)}</Badge>}
+                                    {task.energyLevel && Icon && (
+                                      <div className="flex items-center gap-1 whitespace-nowrap">
+                                          <Icon className="size-3 flex-shrink-0" />
+                                          <span className="hidden sm:inline">{task.energyLevel} Energy</span>
+                                          <span className="sm:hidden">{task.energyLevel}</span>
+                                      </div>
+                                    )}
                                     {projectName && (
                                         <div className="flex items-center gap-1 max-w-[120px] sm:max-w-none truncate">
                                             <Folder className="size-3 flex-shrink-0" />
@@ -251,15 +260,6 @@ export function TaskList() {
                                         </Tooltip>
                                     )}
                                 </div>
-                                 {todayEnergy && !task.completed && (
-                                     <div className={cn(
-                                         "flex items-center gap-1.5 text-xs mt-1.5",
-                                         isAligned ? "text-primary" : "text-amber-600"
-                                     )}>
-                                        <Target className="size-3"/>
-                                        <span>{isAligned ? "Perfect for your current energy" : "Not aligned with today's vibe"}</span>
-                                     </div>
-                                 )}
                             </div>
                             <div className="flex sm:absolute sm:top-1/2 sm:-translate-y-1/2 sm:right-2 items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 md:transition-opacity bg-background/80 backdrop-blur-sm rounded-md p-1 mt-2 sm:mt-0">
                                 <Tooltip>

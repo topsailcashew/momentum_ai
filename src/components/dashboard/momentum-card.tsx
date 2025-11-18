@@ -61,7 +61,7 @@ export function MomentumCard() {
                 <TrendingUp className="text-primary size-5" />
                 Daily Momentum
             </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">Your daily overview and task-energy alignment.</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">Track your progress and get AI suggestions.</CardDescription>
           </div>
           {todayEnergy && (
             <div className="self-start sm:self-auto">
@@ -105,12 +105,12 @@ export function MomentumCard() {
         )}
          {!latestMomentum && !suggestions.routineSuggestion && !todayEnergy && (
             <div className="p-3 text-sm text-center rounded-lg bg-muted text-muted-foreground">
-                <p>Select your energy level to get started!</p>
+                <p>Complete tasks to earn momentum points!</p>
             </div>
         )}
          {!latestMomentum && todayEnergy && (
             <div className="p-3 text-sm text-center rounded-lg bg-muted text-muted-foreground">
-                <p>Complete a task to see your first momentum score.</p>
+                <p>Complete a task to earn your first momentum score.</p>
             </div>
         )}
       </CardContent>
