@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -54,11 +55,12 @@ export function CalendarClientPage() {
           return;
         }
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch calendar events');
-        }
-
         const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch calendar events');
+        }
+        
         setEvents(data.events || []);
       } catch (err: any) {
         console.error('Error fetching calendar events:', err);
@@ -66,7 +68,7 @@ export function CalendarClientPage() {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Failed to load calendar events. Please try again.',
+          description: err.message || 'Failed to load calendar events. Please try again.',
         });
       } finally {
         setIsLoading(false);
@@ -184,7 +186,7 @@ export function CalendarClientPage() {
         </div>
       </div>
 
-      {events.length === 0 ? (
+      {events.length === 0 && error !== 'fetch_failed' ? (
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-12 bg-muted/50 rounded-lg">
@@ -196,6 +198,21 @@ export function CalendarClientPage() {
             </div>
           </CardContent>
         </Card>
+      ) : error === 'fetch_failed' ? (
+        <Card>
+           <CardContent className="pt-6">
+             <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-12 bg-muted/50 rounded-lg">
+               <AlertCircle className="size-16 mb-4 text-destructive" />
+               <h3 className="font-semibold text-lg text-foreground">Could Not Load Events</h3>
+               <p className="max-w-md mx-auto mt-2">
+                 There was an error loading your calendar events. Please try again later or check your connection in settings.
+               </p>
+               <Button onClick={() => router.push('/settings')} className="mt-6">
+                Go to Settings
+              </Button>
+             </div>
+           </CardContent>
+         </Card>
       ) : (
         <div className="space-y-4">
           {events.map(event => (
