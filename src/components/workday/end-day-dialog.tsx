@@ -58,8 +58,8 @@ export function EndDayDialog({
         const completedWithNotes = completedTasks.map(t => ({
           taskId: t.id,
           taskName: t.name,
-          category: t.category,
-          energyLevel: t.energyLevel,
+          category: t.category ?? 'personal',
+          energyLevel: t.energyLevel ?? 'Medium',
           notes: notes[t.id] || 'No notes provided',
           completedAt: t.completedAt ?? undefined,
           deadline: t.deadline ?? undefined,
@@ -68,8 +68,8 @@ export function EndDayDialog({
         const incompleteWithNotes = incompleteTasks.map(t => ({
           taskId: t.id,
           taskName: t.name,
-          category: t.category,
-          energyLevel: t.energyLevel,
+          category: t.category ?? 'personal',
+          energyLevel: t.energyLevel ?? 'Medium',
           notes: notes[t.id] || 'No notes provided',
           deadline: t.deadline ?? undefined,
         }));

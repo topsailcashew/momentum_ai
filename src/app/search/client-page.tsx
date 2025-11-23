@@ -141,7 +141,7 @@ export function SearchClientPage() {
                   {searchResults.tasks.length > 0 ? (
                     <div className="space-y-3">
                       {searchResults.tasks.map(task => {
-                        const Icon = energyIcons[task.energyLevel];
+                        const Icon = energyIcons[task.energyLevel ?? 'Medium'];
                         const projectName = task.projectId ? getProjectName(task.projectId) : null;
 
                         return (
@@ -161,7 +161,7 @@ export function SearchClientPage() {
                               </div>
                               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-muted-foreground">
                                 <Badge variant="secondary" className="capitalize">
-                                  {getCategoryName(task.category)}
+                                  {getCategoryName(task.category ?? 'personal')}
                                 </Badge>
                                 <div className="flex items-center gap-1">
                                   <Icon className="size-3" />
@@ -281,6 +281,10 @@ export function SearchClientPage() {
           open={!!selectedTask}
           onOpenChange={(open) => !open && setSelectedTask(null)}
           task={selectedTask}
+          categories={categories}
+          projects={projects}
+          onSave={() => { }} // TODO: Implement save functionality
+          isPending={false}
         />
       )}
     </div>

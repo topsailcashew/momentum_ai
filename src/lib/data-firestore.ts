@@ -14,7 +14,7 @@ import {
   setDoc,
   Firestore,
 } from 'firebase/firestore';
-import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, RecurringTask, DailyReport, WorkdayTask } from './types';
+import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, RecurringTask, DailyReport, WorkdayTask, EisenhowerMatrix } from './types';
 import { format, isSameDay, parseISO, subDays } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -48,8 +48,18 @@ export async function getTasksForDate(db: Firestore, userId: string, date: strin
 export async function addTask(db: Firestore, userId: string, taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>): Promise<Task> {
     const tasksCol = collection(db, 'users', userId, 'tasks');
 
-    const newTaskData = {
+    const baseData = {
+        category: 'personal',
+        energyLevel: 'Medium' as EnergyLevel,
+        priority: 'Important & Not Urgent' as EisenhowerMatrix,
         ...taskData,
+    };
+
+    const newTaskData = {
+        ...baseData,
+        category: baseData.category ?? 'personal',
+        energyLevel: baseData.energyLevel ?? 'Medium',
+        priority: baseData.priority ?? 'Important & Not Urgent',
         userId,
         completed: false,
         completedAt: null,
@@ -271,8 +281,18 @@ export async function getRecurringTasks(db: Firestore, userId: string): Promise<
 
 export async function addRecurringTask(db: Firestore, userId: string, taskData: Omit<RecurringTask, 'id' | 'lastCompleted' | 'userId' | 'createdAt'>): Promise<RecurringTask> {
     const tasksCol = collection(db, 'users', userId, 'recurring-tasks');
-    const newTaskData = {
+    const baseData = {
+        category: 'personal',
+        energyLevel: 'Medium' as EnergyLevel,
+        priority: 'Important & Not Urgent' as EisenhowerMatrix,
         ...taskData,
+    };
+
+    const newTaskData = {
+        ...baseData,
+        category: baseData.category ?? 'personal',
+        energyLevel: baseData.energyLevel ?? 'Medium',
+        priority: baseData.priority ?? 'Important & Not Urgent',
         lastCompleted: null,
         userId,
         createdAt: new Date().toISOString()

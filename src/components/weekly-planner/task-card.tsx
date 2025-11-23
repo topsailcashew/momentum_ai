@@ -20,17 +20,17 @@ const energyColors = {
 };
 
 export function TaskCard({ task }: { task: Task }) {
-  const Icon = energyIcons[task.energyLevel];
-  
+  const Icon = energyIcons[task.energyLevel ?? 'Medium'];
+
   return (
     <Card className="p-2 cursor-pointer hover:bg-card-foreground/5 transition-colors">
       <p className="text-xs font-semibold leading-tight">{task.name}</p>
       <div className="flex items-center justify-between mt-2">
         <Badge variant="secondary" className="text-xs">{task.category}</Badge>
-        <Icon className={cn("h-3 w-3", 
-            task.energyLevel === 'Low' && 'text-blue-500',
-            task.energyLevel === 'Medium' && 'text-amber-500',
-            task.energyLevel === 'High' && 'text-red-500',
+        <Icon className={cn("h-3 w-3",
+          task.energyLevel === 'Low' && 'text-blue-500',
+          task.energyLevel === 'Medium' && 'text-amber-500',
+          task.energyLevel === 'High' && 'text-red-500',
         )} />
       </div>
     </Card>

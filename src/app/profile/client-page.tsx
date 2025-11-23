@@ -40,18 +40,18 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 const StatCard = ({ icon, title, value }: { icon: React.ElementType, title: string, value: string | number }) => {
-    const Icon = icon;
-    return (
-        <div className="flex items-center gap-4 p-4 rounded-lg bg-secondary/50">
-            <div className="p-2 bg-primary/10 rounded-md">
-                <Icon className="size-6 text-primary" />
-            </div>
-            <div>
-                <p className="text-sm text-muted-foreground">{title}</p>
-                <p className="text-lg font-semibold">{value}</p>
-            </div>
-        </div>
-    );
+  const Icon = icon;
+  return (
+    <div className="flex items-center gap-4 p-4 rounded-lg bg-secondary/50">
+      <div className="p-2 bg-primary/10 rounded-md">
+        <Icon className="size-6 text-primary" />
+      </div>
+      <div>
+        <p className="text-sm text-muted-foreground">{title}</p>
+        <p className="text-lg font-semibold">{value}</p>
+      </div>
+    </div>
+  );
 };
 
 const CHART_COLORS = [
@@ -150,11 +150,11 @@ export function ProfileClientPage() {
 
     startTransition(async () => {
       try {
-        if(user.displayName !== data.displayName) {
+        if (user.displayName !== data.displayName) {
           await updateProfile(user, { displayName: data.displayName });
           await updateUserProfile(firestore, user.uid, { displayName: data.displayName });
         }
-        
+
         toast({
           title: 'Profile updated!',
           description: 'Your display name has been changed.',
@@ -276,36 +276,37 @@ export function ProfileClientPage() {
     dayCounts.forEach((count, index) => {
       dailyCompletionData[index].tasks = count;
     });
-    
+
     const mostProductiveDayIndex = dayCounts.indexOf(Math.max(...dayCounts));
     const productiveDay = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][mostProductiveDayIndex];
 
     const energyCounts = completedTasks.reduce((acc, task) => {
-        acc[task.energyLevel] = (acc[task.energyLevel] || 0) + 1;
-        return acc;
+      const level = task.energyLevel ?? 'Medium';
+      acc[level] = (acc[level] || 0) + 1;
+      return acc;
     }, {} as Record<string, number>);
     const energySweetSpot = Object.keys(energyCounts).reduce((a, b) => energyCounts[a] > energyCounts[b] ? a : b);
 
     const categoryCounts = completedTasks.reduce((acc, task) => {
-        if (task.category) {
-            acc[task.category] = (acc[task.category] || 0) + 1;
-        }
-        return acc;
+      if (task.category) {
+        acc[task.category] = (acc[task.category] || 0) + 1;
+      }
+      return acc;
     }, {} as Record<string, number>);
 
     if (Object.keys(categoryCounts).length === 0) {
-        return {
-          stats: { totalCompleted: completedTasks.length, productiveDay, energySweetSpot, topCategory: 'N/A' },
-          dailyCompletionData,
-          categoryDistributionData: [],
-        };
+      return {
+        stats: { totalCompleted: completedTasks.length, productiveDay, energySweetSpot, topCategory: 'N/A' },
+        dailyCompletionData,
+        categoryDistributionData: [],
+      };
     }
-    
+
     const topCategory = Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b);
     const categoryDistributionData = Object.entries(categoryCounts).map(([id, value]) => ({
       name: getCategoryName(id),
       value,
-    })).sort((a,b) => b.value - a.value);
+    })).sort((a, b) => b.value - a.value);
 
 
     return {
@@ -318,262 +319,262 @@ export function ProfileClientPage() {
 
   if (userLoading || dataLoading || !user) {
     return (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <div className="lg:col-span-1 space-y-6">
-                <Skeleton className="h-64 w-full" />
-                <Skeleton className="h-48 w-full" />
-            </div>
-            <div className="lg:col-span-2 space-y-6">
-                <Skeleton className="h-[28rem] w-full" />
-                 <div className="grid gap-6 lg:grid-cols-2">
-                    <Skeleton className="h-64 w-full" />
-                    <Skeleton className="h-64 w-full" />
-                </div>
-            </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="lg:col-span-1 space-y-6">
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-48 w-full" />
         </div>
+        <div className="lg:col-span-2 space-y-6">
+          <Skeleton className="h-[28rem] w-full" />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-        <div className="space-y-6">
-             <Card>
-                <CardHeader>
-                    <div className="flex items-center gap-4">
-                        <Avatar className="h-24 w-24">
-                        <AvatarImage src={user.photoURL || undefined} />
-                        <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
-                        </Avatar>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-4">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={user.photoURL || undefined} />
+                <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-xl font-semibold">{user.displayName}</p>
+                <p className="text-sm text-muted-foreground">{user.email}</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="displayName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label htmlFor="displayName">Display Name</Label>
+                      <FormControl>
+                        <Input id="displayName" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={isPending} className="w-full">
+                  {isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
+        <Tabs defaultValue="upcoming" className="w-full">
+          <Card>
+            <CardHeader>
+              <CardTitle>Activity Overview</CardTitle>
+              <CardDescription>Your recent accomplishments and what's coming up next.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+                <TabsTrigger value="recent">Recent</TabsTrigger>
+              </TabsList>
+              <TabsContent value="upcoming" className="mt-4">
+                {upcomingTasks.length > 0 ? (
+                  <ul className="space-y-3">
+                    {upcomingTasks.map(task => (
+                      <li key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                         <div>
-                        <p className="text-xl font-semibold">{user.displayName}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                          <p className="font-medium text-sm">{task.name}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                            <Clock className="size-3" />
+                            Due on {format(parseISO(task.deadline!), 'MMM d, yyyy')}
+                          </p>
                         </div>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField
-                            control={form.control}
-                            name="displayName"
-                            render={({ field }) => (
-                            <FormItem>
-                                <Label htmlFor="displayName">Display Name</Label>
-                                <FormControl>
-                                <Input id="displayName" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                        <Button type="submit" disabled={isPending} className="w-full">
-                            {isPending ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                        </form>
-                    </Form>
-                </CardContent>
-            </Card>
-
-            <Tabs defaultValue="upcoming" className="w-full">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Activity Overview</CardTitle>
-                  <CardDescription>Your recent accomplishments and what's coming up next.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-                    <TabsTrigger value="recent">Recent</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="upcoming" className="mt-4">
-                     {upcomingTasks.length > 0 ? (
-                        <ul className="space-y-3">
-                            {upcomingTasks.map(task => (
-                                <li key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-                                    <div>
-                                        <p className="font-medium text-sm">{task.name}</p>
-                                        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                                            <Clock className="size-3" />
-                                            Due on {format(parseISO(task.deadline!), 'MMM d, yyyy')}
-                                        </p>
-                                    </div>
-                                    <Badge variant="secondary">{getCategoryName(task.category)}</Badge>
-                                </li>
-                            ))}
-                        </ul>
-                   ) : (
-                       <div className="text-center text-muted-foreground py-12">
-                           <p>No upcoming tasks with deadlines. Enjoy the calm!</p>
-                       </div>
-                   )}
-                  </TabsContent>
-                  <TabsContent value="recent" className="mt-4">
-                     {recentTasks.length > 0 ? (
-                          <ul className="space-y-3">
-                              {recentTasks.map(task => (
-                                  <li key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-                                      <div>
-                                          <p className="font-medium text-sm">{task.name}</p>
-                                          <p className="text-xs text-muted-foreground">
-                                              Completed on {format(parseISO(task.completedAt!), 'MMM d, yyyy')}
-                                          </p>
-                                      </div>
-                                      <Badge variant="secondary">{getCategoryName(task.category)}</Badge>
-                                  </li>
-                              ))}
-                          </ul>
-                    ) : (
-                        <div className="text-center text-muted-foreground py-12">
-                            <p>No completed tasks yet. Go get something done!</p>
-                        </div>
-                    )}
-                  </TabsContent>
-                </CardContent>
-              </Card>
-            </Tabs>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Google Calendar Integration</CardTitle>
-                <CardDescription>Connect your Google Calendar to view events alongside your tasks.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <Calendar className="size-6 text-primary" />
-                    <div>
-                      <h3 className="font-semibold">Google Calendar</h3>
-                      {isLoadingStatus ? (
-                        <Skeleton className="h-4 w-24 mt-1" />
-                      ) : !calendarStatus?.connected ? (
-                        <div className="flex items-center gap-2 mt-1">
-                          <XCircle className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">Not connected</span>
-                        </div>
-                      ) : calendarStatus.isExpired ? (
-                        <div className="flex items-center gap-2 mt-1">
-                          <AlertTriangle className="h-4 w-4 text-amber-500" />
-                          <span className="text-sm text-amber-600">Connection expired</span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-1 mt-1">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                            <Badge variant="outline" className="text-green-600 border-green-600 text-xs">Connected</Badge>
-                          </div>
-                          {calendarStatus.connectedAt && (
-                            <span className="text-xs text-muted-foreground">
-                              Since {format(parseISO(calendarStatus.connectedAt), 'MMM d, yyyy')}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                        <Badge variant="secondary">{getCategoryName(task.category ?? 'personal')}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-center text-muted-foreground py-12">
+                    <p>No upcoming tasks with deadlines. Enjoy the calm!</p>
                   </div>
+                )}
+              </TabsContent>
+              <TabsContent value="recent" className="mt-4">
+                {recentTasks.length > 0 ? (
+                  <ul className="space-y-3">
+                    {recentTasks.map(task => (
+                      <li key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
+                        <div>
+                          <p className="font-medium text-sm">{task.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Completed on {format(parseISO(task.completedAt!), 'MMM d, yyyy')}
+                          </p>
+                        </div>
+                        <Badge variant="secondary">{getCategoryName(task.category ?? 'personal')}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-center text-muted-foreground py-12">
+                    <p>No completed tasks yet. Go get something done!</p>
+                  </div>
+                )}
+              </TabsContent>
+            </CardContent>
+          </Card>
+        </Tabs>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Google Calendar Integration</CardTitle>
+            <CardDescription>Connect your Google Calendar to view events alongside your tasks.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-4">
+                <Calendar className="size-6 text-primary" />
+                <div>
+                  <h3 className="font-semibold">Google Calendar</h3>
                   {isLoadingStatus ? (
-                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-4 w-24 mt-1" />
                   ) : !calendarStatus?.connected ? (
-                    <Button onClick={handleConnectCalendar} disabled={isConnecting} size="sm">
-                      {isConnecting ? 'Connecting...' : 'Connect'}
-                    </Button>
+                    <div className="flex items-center gap-2 mt-1">
+                      <XCircle className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Not connected</span>
+                    </div>
                   ) : calendarStatus.isExpired ? (
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={handleDisconnectCalendar} disabled={isDisconnecting}>
-                        {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
-                      </Button>
-                      <Button size="sm" onClick={handleConnectCalendar} disabled={isConnecting}>
-                        {isConnecting ? 'Reconnecting...' : 'Reconnect'}
-                      </Button>
+                    <div className="flex items-center gap-2 mt-1">
+                      <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      <span className="text-sm text-amber-600">Connection expired</span>
                     </div>
                   ) : (
-                    <Button variant="outline" size="sm" onClick={handleDisconnectCalendar} disabled={isDisconnecting}>
-                      {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
-                    </Button>
+                    <div className="flex flex-col gap-1 mt-1">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <Badge variant="outline" className="text-green-600 border-green-600 text-xs">Connected</Badge>
+                      </div>
+                      {calendarStatus.connectedAt && (
+                        <span className="text-xs text-muted-foreground">
+                          Since {format(parseISO(calendarStatus.connectedAt), 'MMM d, yyyy')}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-        </div>
+              </div>
+              {isLoadingStatus ? (
+                <Skeleton className="h-10 w-24" />
+              ) : !calendarStatus?.connected ? (
+                <Button onClick={handleConnectCalendar} disabled={isConnecting} size="sm">
+                  {isConnecting ? 'Connecting...' : 'Connect'}
+                </Button>
+              ) : calendarStatus.isExpired ? (
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleDisconnectCalendar} disabled={isDisconnecting}>
+                    {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+                  </Button>
+                  <Button size="sm" onClick={handleConnectCalendar} disabled={isConnecting}>
+                    {isConnecting ? 'Reconnecting...' : 'Reconnect'}
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="outline" size="sm" onClick={handleDisconnectCalendar} disabled={isDisconnecting}>
+                  {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        <div className="space-y-6">
-           <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <TrendingUp className="text-primary" />
-                        Productivity Stats
-                    </CardTitle>
-                </CardHeader>
-                 <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <StatCard icon={CheckCircle} title="Total Tasks Completed" value={stats.totalCompleted} />
-                    <StatCard icon={Calendar} title="Most Productive Day" value={stats.productiveDay} />
-                    <StatCard icon={Zap} title="Energy Sweet Spot" value={stats.energySweetSpot} />
-                    <StatCard icon={Tag} title="Top Category" value={stats.topCategory} />
-                </CardContent>
-            </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="text-primary" />
+              Productivity Stats
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <StatCard icon={CheckCircle} title="Total Tasks Completed" value={stats.totalCompleted} />
+            <StatCard icon={Calendar} title="Most Productive Day" value={stats.productiveDay} />
+            <StatCard icon={Zap} title="Energy Sweet Spot" value={stats.energySweetSpot} />
+            <StatCard icon={Tag} title="Top Category" value={stats.topCategory} />
+          </CardContent>
+        </Card>
 
-              <Card>
-                  <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                          <BarChart className="text-primary"/>
-                          Weekly Completion
-                      </CardTitle>
-                      <CardDescription>Tasks completed per day of the week.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                      <ChartContainer config={{}} className="h-48 w-full">
-                        <ResponsiveContainer>
-                          <RechartsBarChart data={dailyCompletionData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                              <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                              <ChartTooltip 
-                                cursor={{fill: 'hsla(var(--muted))'}}
-                                content={<ChartTooltipContent />} 
-                              />
-                              <Bar dataKey="tasks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                          </RechartsBarChart>
-                        </ResponsiveContainer>
-                      </ChartContainer>
-                  </CardContent>
-              </Card>
-              <Card>
-                  <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                          <PieChart className="text-primary"/>
-                          Category Breakdown
-                      </CardTitle>
-                      <CardDescription>How your tasks are distributed.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                       <ChartContainer config={{}} className="h-48 w-full">
-                        <ResponsiveContainer>
-                          <RechartsPieChart>
-                              <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                              <Pie
-                                  data={categoryDistributionData}
-                                  dataKey="value"
-                                  nameKey="name"
-                                  innerRadius={50}
-                                  strokeWidth={2}
-                                  paddingAngle={2}
-                              >
-                                {categoryDistributionData.map((_, index) => (
-                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                                ))}
-                              </Pie>
-                              <Legend 
-                                  iconSize={10} 
-                                  wrapperStyle={{fontSize: "0.8rem", color: "hsl(var(--muted-foreground))"}} 
-                                  layout="vertical" 
-                                  align="right" 
-                                  verticalAlign="middle"
-                              />
-                          </RechartsPieChart>
-                        </ResponsiveContainer>
-                      </ChartContainer>
-                  </CardContent>
-              </Card>
-              <FlowVisualizerCard />
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart className="text-primary" />
+              Weekly Completion
+            </CardTitle>
+            <CardDescription>Tasks completed per day of the week.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={{}} className="h-48 w-full">
+              <ResponsiveContainer>
+                <RechartsBarChart data={dailyCompletionData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                  <ChartTooltip
+                    cursor={{ fill: 'hsla(var(--muted))' }}
+                    content={<ChartTooltipContent />}
+                  />
+                  <Bar dataKey="tasks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </RechartsBarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChart className="text-primary" />
+              Category Breakdown
+            </CardTitle>
+            <CardDescription>How your tasks are distributed.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={{}} className="h-48 w-full">
+              <ResponsiveContainer>
+                <RechartsPieChart>
+                  <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+                  <Pie
+                    data={categoryDistributionData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={50}
+                    strokeWidth={2}
+                    paddingAngle={2}
+                  >
+                    {categoryDistributionData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Legend
+                    iconSize={10}
+                    wrapperStyle={{ fontSize: "0.8rem", color: "hsl(var(--muted-foreground))" }}
+                    layout="vertical"
+                    align="right"
+                    verticalAlign="middle"
+                  />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+        <FlowVisualizerCard />
+      </div>
     </div>
   );
 }

@@ -49,13 +49,13 @@ export function Header() {
     <header className="hidden md:flex items-start justify-between p-4 md:p-6 lg:p-8 pt-0">
       <div className="flex-shrink-0">
         <h2 className="text-xl font-bold text-foreground">
-          {getGreeting()}, {getFirstName()}!
+          {mounted ? getGreeting() : 'Welcome'}, {getFirstName()}!
         </h2>
-        <p className="text-sm text-muted-foreground" suppressHydrationWarning>
-            {mounted ? format(currentTime, 'eeee, MMMM d, yyyy') : format(new Date(), 'eeee, MMMM d, yyyy')}
+        <p className="text-sm text-muted-foreground">
+          {mounted ? format(currentTime, 'eeee, MMMM d, yyyy') : null}
         </p>
-         <p className="font-mono text-xs text-muted-foreground" suppressHydrationWarning>
-            {mounted ? format(currentTime, 'HH:mm:ss') : format(new Date(), 'HH:mm:ss')}
+        <p className="font-mono text-xs text-muted-foreground">
+          {mounted ? format(currentTime, 'HH:mm:ss') : null}
         </p>
       </div>
       <div className="flex items-start gap-4 flex-1 justify-end">

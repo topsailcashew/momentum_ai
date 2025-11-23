@@ -32,10 +32,10 @@ const energyIcons: Record<EnergyLevel, React.ElementType> = {
 };
 
 const priorityColors: Record<EisenhowerMatrix, string> = {
-    'Urgent & Important': 'text-red-500',
-    'Important & Not Urgent': 'text-amber-500',
-    'Urgent & Not Important': 'text-blue-500',
-    'Not Urgent & Not Important': 'text-gray-500',
+  'Urgent & Important': 'text-red-500',
+  'Important & Not Urgent': 'text-amber-500',
+  'Urgent & Not Important': 'text-blue-500',
+  'Not Urgent & Not Important': 'text-gray-500',
 };
 
 export function WorkdayTasksCard() {
@@ -113,31 +113,31 @@ export function WorkdayTasksCard() {
 
       // Optimistically update the UI
       setAllTasks(currentTasks => {
-          originalTasksState = currentTasks;
-          return currentTasks.map(task =>
-              task.id === id
-              ? { ...task, completed, completedAt: completed ? new Date().toISOString() : null }
-              : task
-          );
+        originalTasksState = currentTasks;
+        return currentTasks.map(task =>
+          task.id === id
+            ? { ...task, completed, completedAt: completed ? new Date().toISOString() : null }
+            : task
+        );
       });
 
       startTransition(async () => {
-          try {
-              await updateTask(firestore, userId, id, { completed, completedAt: completed ? new Date().toISOString() : null });
-              if (completed) {
-                  await calculateAndSaveMomentumScore(firestore, userId);
-                  await onTaskCompleted(userId);
-              } else {
-                  await onClientWrite();
-              }
-          } catch(error) {
-              toast({
-                  variant: 'destructive',
-                  title: 'Uh oh! Something went wrong.',
-                  description: 'There was a problem updating your task. Reverting changes.',
-              });
-              setAllTasks(originalTasksState);
+        try {
+          await updateTask(firestore, userId, id, { completed, completedAt: completed ? new Date().toISOString() : null });
+          if (completed) {
+            await calculateAndSaveMomentumScore(firestore, userId);
+            await onTaskCompleted(userId);
+          } else {
+            await onClientWrite();
           }
+        } catch (error) {
+          toast({
+            variant: 'destructive',
+            title: 'Uh oh! Something went wrong.',
+            description: 'There was a problem updating your task. Reverting changes.',
+          });
+          setAllTasks(originalTasksState);
+        }
       });
     } else {
       // Handle recurring tasks
@@ -145,34 +145,34 @@ export function WorkdayTasksCard() {
 
       // Optimistically update the UI
       setRecurringTasks(currentTasks => {
-          originalRecurringTasksState = currentTasks;
-          return currentTasks.map(task =>
-              task.id === id
-              ? { ...task, lastCompleted: completed ? new Date().toISOString() : null }
-              : task
-          );
+        originalRecurringTasksState = currentTasks;
+        return currentTasks.map(task =>
+          task.id === id
+            ? { ...task, lastCompleted: completed ? new Date().toISOString() : null }
+            : task
+        );
       });
 
       startTransition(async () => {
-          try {
-              if (completed) {
-                  // Update lastCompleted to now
-                  await updateRecurringTask(firestore, userId, id, { lastCompleted: new Date().toISOString() });
-                  await calculateAndSaveMomentumScore(firestore, userId);
-                  await onTaskCompleted(userId);
-              } else {
-                  // Un-complete by setting lastCompleted to null
-                  await updateRecurringTask(firestore, userId, id, { lastCompleted: null });
-                  await onClientWrite();
-              }
-          } catch(error) {
-              toast({
-                  variant: 'destructive',
-                  title: 'Uh oh! Something went wrong.',
-                  description: 'There was a problem updating your recurring task. Reverting changes.',
-              });
-              setRecurringTasks(originalRecurringTasksState);
+        try {
+          if (completed) {
+            // Update lastCompleted to now
+            await updateRecurringTask(firestore, userId, id, { lastCompleted: new Date().toISOString() });
+            await calculateAndSaveMomentumScore(firestore, userId);
+            await onTaskCompleted(userId);
+          } else {
+            // Un-complete by setting lastCompleted to null
+            await updateRecurringTask(firestore, userId, id, { lastCompleted: null });
+            await onClientWrite();
           }
+        } catch (error) {
+          toast({
+            variant: 'destructive',
+            title: 'Uh oh! Something went wrong.',
+            description: 'There was a problem updating your recurring task. Reverting changes.',
+          });
+          setRecurringTasks(originalRecurringTasksState);
+        }
       });
     }
   };
@@ -215,7 +215,7 @@ export function WorkdayTasksCard() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex-grow">
               <CardTitle className="flex items-center gap-2 text-xl">
-                <CalendarCheck2 className="text-primary"/>
+                <CalendarCheck2 className="text-primary" />
                 Today's Workday
               </CardTitle>
               <CardDescription>
@@ -251,7 +251,7 @@ export function WorkdayTasksCard() {
                 <h3 className="text-sm font-semibold text-muted-foreground">Active Tasks</h3>
                 <TooltipProvider>
                   {incompleteTasks.map(task => {
-                    const Icon = energyIcons[task.energyLevel];
+                    const Icon = energyIcons[task.energyLevel ?? 'Medium'];
                     const isAligned = todayEnergy?.level === task.energyLevel;
                     const projectName = task.projectId ? getProjectName(task.projectId) : null;
                     const isFocused = focusedTask?.id === task.id;
@@ -275,7 +275,7 @@ export function WorkdayTasksCard() {
                             {task.name}
                           </label>
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground mt-1.5">
-                            <Badge variant="secondary" className="capitalize text-xs">{getCategoryName(task.category)}</Badge>
+                            <Badge variant="secondary" className="capitalize text-xs">{getCategoryName(task.category ?? 'personal')}</Badge>
                             <div className="flex items-center gap-1 whitespace-nowrap">
                               <Icon className="size-3 flex-shrink-0" />
                               <span>{task.energyLevel}</span>
@@ -344,7 +344,7 @@ export function WorkdayTasksCard() {
                 <h3 className="text-sm font-semibold text-muted-foreground">Completed ({completedTasks.length})</h3>
                 <TooltipProvider>
                   {completedTasks.map(task => {
-                    const Icon = energyIcons[task.energyLevel];
+                    const Icon = energyIcons[task.energyLevel ?? 'Medium'];
                     const projectName = task.projectId ? getProjectName(task.projectId) : null;
 
                     return (
@@ -361,7 +361,7 @@ export function WorkdayTasksCard() {
                             {task.name}
                           </label>
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground mt-1.5">
-                            <Badge variant="secondary" className="capitalize text-xs opacity-60">{getCategoryName(task.category)}</Badge>
+                            <Badge variant="secondary" className="capitalize text-xs opacity-60">{getCategoryName(task.category ?? 'personal')}</Badge>
                             <div className="flex items-center gap-1">
                               <Icon className="size-3" />
                               <span>{task.energyLevel}</span>
