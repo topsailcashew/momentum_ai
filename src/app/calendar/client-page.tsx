@@ -57,10 +57,15 @@ export function CalendarClientPage() {
 
         const data = await response.json();
 
+        if (response.status === 503 && data.configError) {
+          setError('not_configured');
+          return;
+        }
+
         if (!response.ok) {
           throw new Error(data.error || 'Failed to fetch calendar events');
         }
-        
+
         setEvents(data.events || []);
       } catch (err: any) {
         console.error('Error fetching calendar events:', err);
@@ -170,6 +175,33 @@ export function CalendarClientPage() {
               <Button onClick={() => router.push('/settings')}>
                 Reconnect Calendar
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error === 'not_configured') {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Calendar</h1>
+            <p className="text-muted-foreground">View your events and tasks in one place.</p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center text-center text-muted-foreground p-12 bg-muted/50 rounded-lg">
+              <AlertCircle className="size-16 mb-4 text-amber-500" />
+              <h3 className="font-semibold text-lg text-foreground">Calendar Not Configured</h3>
+              <p className="max-w-md mx-auto mt-2">
+                Google Calendar integration requires configuration. The administrator needs to set up Google OAuth credentials in the environment variables.
+              </p>
+              <p className="text-xs text-muted-foreground mt-4">
+                Missing: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET
+              </p>
             </div>
           </CardContent>
         </Card>

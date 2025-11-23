@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   if (!state) {
     console.error('Missing state parameter (userId)');
-    return NextResponse.redirect(new URL('/settings?status=error&message=missing_user', req.url));
+    return NextResponse.redirect(new URL('/profile?status=error&message=missing_user', req.url));
   }
 
   try {
@@ -36,11 +36,11 @@ export async function GET(req: NextRequest) {
     }, { merge: true });
 
 
-    // Redirect user to the settings page with a success message
-    return NextResponse.redirect(new URL('/settings?status=success', req.url));
+    // Redirect user to the profile page with a success message
+    return NextResponse.redirect(new URL('/profile?status=success', req.url));
   } catch (error: any) {
     console.error('Error exchanging code for tokens:', error);
     // Redirect with an error
-    return NextResponse.redirect(new URL('/settings?status=error', req.url));
+    return NextResponse.redirect(new URL('/profile?status=error', req.url));
   }
 }

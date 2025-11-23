@@ -17,11 +17,12 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { useToast } from '@/hooks/use-toast';
 import { updateUserProfileAction } from '../actions';
 import { updateProfile } from 'firebase/auth';
-import { TrendingUp, Zap, Tag, Calendar, CheckCircle, Clock, PieChart, BarChart } from 'lucide-react';
+import { TrendingUp, Zap, Tag, Calendar, CheckCircle, Clock, PieChart, BarChart, XCircle, AlertTriangle } from 'lucide-react';
 import { getDay, parseISO, format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { useSearchParams } from 'next/navigation';
 import {
   ChartContainer,
   ChartTooltip,
@@ -61,14 +62,26 @@ const CHART_COLORS = [
   "hsl(var(--chart-5))",
 ];
 
+interface CalendarStatus {
+  connected: boolean;
+  hasRefreshToken?: boolean;
+  isExpired?: boolean;
+  connectedAt?: string;
+}
+
 export function ProfileClientPage() {
   const { user, isUserLoading: userLoading } = useUser();
   const firestore = useFirestore();
   const { tasks, categories, loading: dataLoading } = useDashboardData();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
-  
+
   const [isPending, startTransition] = React.useTransition();
+  const [isConnecting, setIsConnecting] = React.useState(false);
+  const [isDisconnecting, setIsDisconnecting] = React.useState(false);
+  const [calendarStatus, setCalendarStatus] = React.useState<CalendarStatus | null>(null);
+  const [isLoadingStatus, setIsLoadingStatus] = React.useState(true);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -88,7 +101,49 @@ export function ProfileClientPage() {
       form.reset({ displayName: user.displayName || '' });
     }
   }, [user, form]);
-  
+
+  // Check for OAuth callback status
+  React.useEffect(() => {
+    const status = searchParams.get('status');
+    const message = searchParams.get('message');
+
+    if (status === 'success') {
+      toast({
+        title: 'Calendar Connected!',
+        description: 'Your Google Calendar has been successfully connected.',
+      });
+      router.replace('/profile');
+    } else if (status === 'error') {
+      toast({
+        variant: 'destructive',
+        title: 'Connection Failed',
+        description: message === 'missing_user' ? 'User authentication failed.' : 'Failed to connect Google Calendar. Please try again.',
+      });
+      router.replace('/profile');
+    }
+  }, [searchParams, router, toast]);
+
+  // Fetch calendar connection status
+  React.useEffect(() => {
+    if (!user?.uid) return;
+
+    const fetchStatus = async () => {
+      setIsLoadingStatus(true);
+      try {
+        const response = await fetch(`/api/calendar/status?userId=${user.uid}`);
+        if (response.ok) {
+          const data = await response.json();
+          setCalendarStatus(data);
+        }
+      } catch (error) {
+        console.error('Error fetching calendar status:', error);
+      } finally {
+        setIsLoadingStatus(false);
+      }
+    };
+
+    fetchStatus();
+  }, [user]);
 
   const onSubmit = (data: ProfileFormValues) => {
     if (!user || !firestore) return;
@@ -114,6 +169,77 @@ export function ProfileClientPage() {
         });
       }
     });
+  };
+
+  const handleConnectCalendar = async () => {
+    if (!user?.uid) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'User not authenticated. Please log in again.',
+      });
+      return;
+    }
+
+    setIsConnecting(true);
+    try {
+      const response = await fetch(`/api/auth/google?userId=${user.uid}`);
+      const data = await response.json();
+
+      if (response.status === 503 && data.configError) {
+        toast({
+          variant: 'destructive',
+          title: 'Not Configured',
+          description: 'Google Calendar integration is not configured. Please contact the administrator.',
+        });
+        setIsConnecting(false);
+        return;
+      }
+
+      if (response.ok) {
+        window.location.href = data.authUrl;
+      } else {
+        throw new Error(data.error || 'Failed to get authorization URL.');
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Connection Failed',
+        description: error.message || 'Could not initiate connection to Google Calendar. Please try again.',
+      });
+      setIsConnecting(false);
+    }
+  };
+
+  const handleDisconnectCalendar = async () => {
+    if (!user?.uid) return;
+
+    setIsDisconnecting(true);
+    try {
+      const response = await fetch('/api/calendar/disconnect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.uid }),
+      });
+
+      if (response.ok) {
+        setCalendarStatus({ connected: false });
+        toast({
+          title: 'Calendar Disconnected',
+          description: 'Your Google Calendar has been disconnected.',
+        });
+      } else {
+        throw new Error('Failed to disconnect calendar');
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Disconnection Failed',
+        description: 'Could not disconnect Google Calendar. Please try again.',
+      });
+    } finally {
+      setIsDisconnecting(false);
+    }
   };
 
   const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || 'N/A';
@@ -305,6 +431,68 @@ export function ProfileClientPage() {
                 </CardContent>
               </Card>
             </Tabs>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Google Calendar Integration</CardTitle>
+                <CardDescription>Connect your Google Calendar to view events alongside your tasks.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <Calendar className="size-6 text-primary" />
+                    <div>
+                      <h3 className="font-semibold">Google Calendar</h3>
+                      {isLoadingStatus ? (
+                        <Skeleton className="h-4 w-24 mt-1" />
+                      ) : !calendarStatus?.connected ? (
+                        <div className="flex items-center gap-2 mt-1">
+                          <XCircle className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Not connected</span>
+                        </div>
+                      ) : calendarStatus.isExpired ? (
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertTriangle className="h-4 w-4 text-amber-500" />
+                          <span className="text-sm text-amber-600">Connection expired</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-1 mt-1">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <Badge variant="outline" className="text-green-600 border-green-600 text-xs">Connected</Badge>
+                          </div>
+                          {calendarStatus.connectedAt && (
+                            <span className="text-xs text-muted-foreground">
+                              Since {format(parseISO(calendarStatus.connectedAt), 'MMM d, yyyy')}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {isLoadingStatus ? (
+                    <Skeleton className="h-10 w-24" />
+                  ) : !calendarStatus?.connected ? (
+                    <Button onClick={handleConnectCalendar} disabled={isConnecting} size="sm">
+                      {isConnecting ? 'Connecting...' : 'Connect'}
+                    </Button>
+                  ) : calendarStatus.isExpired ? (
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={handleDisconnectCalendar} disabled={isDisconnecting}>
+                        {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+                      </Button>
+                      <Button size="sm" onClick={handleConnectCalendar} disabled={isConnecting}>
+                        {isConnecting ? 'Reconnecting...' : 'Reconnect'}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={handleDisconnectCalendar} disabled={isDisconnecting}>
+                      {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
         </div>
 
         <div className="space-y-6">

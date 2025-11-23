@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Check if Google OAuth is configured
+    const oauth2Client = getOAuth2Client();
+
     const db = getDb();
     const userTokensRef = doc(db, 'users', userId, 'private', 'googleTokens');
     const tokenDoc = await getDoc(userTokensRef);
@@ -22,7 +25,6 @@ export async function GET(req: NextRequest) {
     }
 
     const tokenData = tokenDoc.data();
-    const oauth2Client = getOAuth2Client();
 
     // Set credentials from stored tokens
     oauth2Client.setCredentials({
@@ -91,6 +93,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ events: transformedEvents });
   } catch (error: any) {
     console.error('Error fetching calendar events:', error);
+
+    // Check if this is a configuration error
+    if (error.message?.includes('client ID or secret')) {
+      return NextResponse.json({
+        error: 'Google Calendar integration is not configured. Please contact the administrator.',
+        details: error.message,
+        configError: true,
+      }, { status: 503 });
+    }
+
     return NextResponse.json({
       error: 'Failed to fetch calendar events',
       details: error.message

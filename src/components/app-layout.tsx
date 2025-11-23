@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, Gauge, PanelLeft, FolderKanban, Settings, Sun, Moon, Repeat, CalendarDays, FileText, LogOut, User as UserIcon, Search, Calendar } from 'lucide-react';
+import { Activity, Gauge, PanelLeft, FolderKanban, Sun, Moon, Repeat, CalendarDays, FileText, LogOut, User as UserIcon, Calendar } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -183,18 +183,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/search'}
-                  tooltip="Search"
-                >
-                  <Link href="/search">
-                    <Search />
-                    <span>Search</span>
-                  </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
             <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
@@ -230,10 +218,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                     <DropdownMenuItem onClick={() => router.push('/profile')}>
                       <UserIcon />
                       <span>Profile</span>
-                    </DropdownMenuItem>
-                     <DropdownMenuItem onClick={() => router.push('/settings')}>
-                      <Settings />
-                      <span>Settings</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
                     {theme === 'light' ? <Moon /> : <Sun />}

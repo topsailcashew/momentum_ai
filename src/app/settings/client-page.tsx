@@ -91,18 +91,29 @@ export function SettingsClientPage() {
     setIsConnecting(true);
     try {
         const response = await fetch(`/api/auth/google?userId=${user.uid}`);
-        if (response.ok) {
-            const { authUrl } = await response.json();
-            // Redirect the user to Google's OAuth consent screen
-            window.location.href = authUrl;
-        } else {
-            throw new Error('Failed to get authorization URL.');
+        const data = await response.json();
+
+        if (response.status === 503 && data.configError) {
+          toast({
+            variant: 'destructive',
+            title: 'Not Configured',
+            description: 'Google Calendar integration is not configured. Please contact the administrator.',
+          });
+          setIsConnecting(false);
+          return;
         }
-    } catch (error) {
+
+        if (response.ok) {
+            // Redirect the user to Google's OAuth consent screen
+            window.location.href = data.authUrl;
+        } else {
+            throw new Error(data.error || 'Failed to get authorization URL.');
+        }
+    } catch (error: any) {
         toast({
             variant: 'destructive',
             title: 'Connection Failed',
-            description: 'Could not initiate connection to Google Calendar. Please try again.',
+            description: error.message || 'Could not initiate connection to Google Calendar. Please try again.',
         });
         setIsConnecting(false);
     }
