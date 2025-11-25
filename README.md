@@ -1,14 +1,14 @@
-# Momentum AI ⚡
+# Pace Pilot ⚡
 
 > **Because productivity shouldn't feel like rocket science.**
 
-Ever noticed how some days you're crushing it, and other days even making a simple to-do list feels like climbing Everest? That's where Momentum AI comes in. We're not here to shame you with guilt-inducing notifications or turn task management into yet another chore. Instead, we're building your personal productivity sidekick that actually *gets* you.
+Ever noticed how some days you're crushing it, and other days even making a simple to-do list feels like climbing Everest? That's where Pace Pilot comes in. We're not here to shame you with guilt-inducing notifications or turn task management into yet another chore. Instead, we're building your personal productivity sidekick that actually *gets* you.
 
 ## The Big Idea 💡
 
 **Work with your energy, not against it.**
 
-You know that feeling when you try to write a complex proposal at 3 PM when you're running on fumes? Or when you waste your peak morning energy on busywork? Yeah, we've all been there. Momentum AI fixes that.
+You know that feeling when you try to write a complex proposal at 3 PM when you're running on fumes? Or when you waste your peak morning energy on busywork? Yeah, we've all been there. Pace Pilot fixes that.
 
 Here's the deal: you tell the app how you're feeling (Low, Medium, or High energy), and our AI analyzes your task list to suggest what you should actually work on right now. No judgment. No pressure. Just smart suggestions that match your current vibe.
 

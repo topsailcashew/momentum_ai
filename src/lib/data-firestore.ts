@@ -459,7 +459,7 @@ export async function getAllAvailableTasks(db: Firestore, userId: string): Promi
 }
 
 // User Profile
-export function updateUserProfile(db: Firestore, userId: string, updates: { displayName: string }): Promise<void> {
+export function updateUserProfile(db: Firestore, userId: string, updates: { displayName?: string, photoURL?: string }): Promise<void> {
   const userRef = doc(db, 'users', userId);
   return updateDoc(userRef, updates)
   .catch(async (serverError) => {

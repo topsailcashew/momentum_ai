@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import type { DailyReport, ScoreAndSuggestTasksInput, Task } from '@/lib/types';
 import { scoreAndSuggestTasks as scoreAndSuggestTasksFlow } from '@/ai/flows/suggest-tasks-based-on-energy';
 import { updateUserProfile } from '@/lib/data-firestore';
-import { generateEmailReport as generateEmailReportFlow } from '@/ai/flows/generate-email-report.tsx';
+import { generateEmailReport as generateEmailReportFlow } from '@/ai/flows/generate-email-report';
 import { EmailTemplate } from '@/components/reports/email-template';
 import { Resend } from 'resend';
 
@@ -30,8 +30,17 @@ export async function onClientWrite() {
     revalidatePath('/profile');
 }
 
-export async function updateUserProfileAction(userId: string, updates: { displayName: string }) {
-  await updateUserProfile(userId, updates);
+export async function updateUserProfileAction(userId: string, updates: { displayName?: string, photoURL?: string }) {
+  const { initializeApp, getApps } = await import('firebase/app');
+  const { getFirestore } = await import('firebase/firestore');
+  const { firebaseConfig } = await import('@/firebase/config');
+
+  if (!getApps().length) {
+    initializeApp(firebaseConfig);
+  }
+
+  const firestore = getFirestore();
+  await updateUserProfile(firestore, userId, updates);
   revalidatePath('/profile');
   revalidatePath('/'); // To update name in sidebar etc.
 }
@@ -42,7 +51,7 @@ export async function getSuggestedTasks(input: ScoreAndSuggestTasksInput) {
 
 
 export async function generateEmailReportAction(report: DailyReport, tasks: Task[], user: {displayName: string | null | undefined, email: string | null | undefined}) {
-    const emailBody = await generateEmailReportFlow({ report, tasks, user });
+    const emailBody = await generateEmailReportFlow({ report, tasks: tasks.map(t => ({ ...t, energyLevel: t.energyLevel || 'Medium', category: t.category || 'personal' })), user });
     return emailBody;
 }
 
@@ -51,7 +60,7 @@ export async function emailReportAction(report: DailyReport, emailBody: string, 
 
     try {
         await resend.emails.send({
-            from: 'Momentum AI Reports <reports@resend.dev>',
+            from: 'Pace Pilot Reports <reports@resend.dev>',
             to: 'nathaniel.senje@theoceanindar.org',
             subject: `Daily Work Report for ${report.date} from ${userName}`,
             html: emailBody,

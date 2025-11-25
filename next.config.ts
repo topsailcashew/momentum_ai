@@ -3,10 +3,6 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  experimental: {
-    // This option is needed to solve the ENOENT error.
-    serverExternalPackages: ['resend'],
-  },
   typescript: {
     ignoreBuildErrors: true,
   },

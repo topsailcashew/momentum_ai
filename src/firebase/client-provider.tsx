@@ -6,6 +6,7 @@ import { initializeFirebase } from '@/firebase';
 import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
+import { FirebaseStorage } from 'firebase/storage';
 import { LoadingScreen } from '@/components/loading-screen';
 
 interface FirebaseClientProviderProps {
@@ -16,6 +17,7 @@ interface FirebaseServices {
   firebaseApp: FirebaseApp;
   auth: Auth;
   firestore: Firestore;
+  storage: FirebaseStorage;
 }
 
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
@@ -47,6 +49,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       firebaseApp={firebaseServices.firebaseApp}
       auth={firebaseServices.auth}
       firestore={firebaseServices.firestore}
+      storage={firebaseServices.storage}
     >
       {children}
     </FirebaseProvider>

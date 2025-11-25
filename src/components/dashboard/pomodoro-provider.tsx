@@ -7,7 +7,7 @@ interface PomodoroContextType {
   focusedTask: Task | null;
   setFocusedTask: (task: Task | null) => void;
   isTimerActive: boolean;
-  setIsTimerActive: (isActive: boolean) => void;
+  setIsTimerActive: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const PomodoroContext = createContext<PomodoroContextType>({

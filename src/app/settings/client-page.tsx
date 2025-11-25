@@ -240,7 +240,7 @@ export function SettingsClientPage() {
       <Card>
         <CardHeader>
           <CardTitle>Integrations</CardTitle>
-          <CardDescription>Connect Momentum AI with other services.</CardDescription>
+          <CardDescription>Connect Pace Pilot with other services.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between p-4 border rounded-lg">

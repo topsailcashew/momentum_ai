@@ -31,6 +31,7 @@ import {
 import { Bar, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Legend, BarChart as RechartsBarChart, PieChart as RechartsPieChart } from "recharts"
 import { FlowVisualizerCard } from '@/components/profile/flow-visualizer-card';
 import { updateUserProfile } from '@/lib/data-firestore';
+import { useProfileImageUpload } from '@/hooks/use-profile-image-upload';
 
 
 const profileFormSchema = z.object({
@@ -76,6 +77,7 @@ export function ProfileClientPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { isUploading, error: uploadError, uploadImage } = useProfileImageUpload();
 
   const [isPending, startTransition] = React.useTransition();
   const [isConnecting, setIsConnecting] = React.useState(false);
@@ -242,6 +244,38 @@ export function ProfileClientPage() {
     }
   };
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user || !firestore) return;
+
+    const newPhotoURL = await uploadImage(file);
+
+    if (newPhotoURL) {
+      try {
+        await updateProfile(user, { photoURL: newPhotoURL });
+        await updateUserProfile(firestore, user.uid, { photoURL: newPhotoURL });
+        toast({
+          title: 'Profile image updated!',
+          description: 'Your new profile image has been saved.',
+        });
+        await updateUserProfileAction(user.uid, { photoURL: newPhotoURL });
+      } catch (error) {
+        console.error('Profile image update error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem updating your profile image.',
+        });
+      }
+    } else if (uploadError) {
+      toast({
+        variant: 'destructive',
+        title: 'Upload failed',
+        description: uploadError.message,
+      });
+    }
+  };
+
   const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || 'N/A';
 
   const completedTasks = tasks.filter(task => task.completed && task.completedAt);
@@ -341,13 +375,30 @@ export function ProfileClientPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={user.photoURL || undefined} />
-                <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
-              </Avatar>
+              <div className="relative group">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={user.photoURL || undefined} />
+                  <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+                <Label
+                  htmlFor="profile-image-upload"
+                  className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  Change
+                </Label>
+                <Input
+                  id="profile-image-upload"
+                  type="file"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                  accept="image/*"
+                  disabled={isUploading}
+                />
+              </div>
               <div>
                 <p className="text-xl font-semibold">{user.displayName}</p>
                 <p className="text-sm text-muted-foreground">{user.email}</p>
+                {isUploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
               </div>
             </div>
           </CardHeader>
