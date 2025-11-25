@@ -93,6 +93,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ events: transformedEvents });
   } catch (error: any) {
     console.error('Error fetching calendar events:', error);
+    if (error.response) {
+      console.error('Error response data:', error.response.data);
+    }
 
     // Check if this is a configuration error
     if (error.message?.includes('client ID or secret')) {

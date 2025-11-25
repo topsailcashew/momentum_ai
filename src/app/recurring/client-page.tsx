@@ -92,53 +92,92 @@ export function RecurringTasksClientPage() {
     }
 
     return (
-      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="min-w-[150px]">Task</TableHead>
-              <TableHead className="min-w-[120px]">Status</TableHead>
-              <TableHead className="min-w-[130px]">Last Completed</TableHead>
-              <TableHead className="text-right min-w-[140px]">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {taskArray.map(task => {
-              const isCompleted = checkCompletion(task.lastCompleted);
-              return (
-                <TableRow key={task.id}>
-                  <TableCell className="font-medium">{task.name}</TableCell>
-                  <TableCell>
-                    {isCompleted ? (
-                      <Badge variant="default" className="bg-green-500 hover:bg-green-600">
-                        <Check className="mr-1 h-3 w-3" />
-                        Completed
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">
-                        <X className="mr-1 h-3 w-3" />
-                        Pending
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {task.lastCompleted ? format(parseISO(task.lastCompleted), 'MMM d, yyyy') : 'Never'}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      onClick={() => handleCompleteTask(task.id)}
-                      disabled={isCompleted || isPending}
-                    >
-                      Mark Completed
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+      <>
+        {/* Mobile View: Card List */}
+        <div className="block md:hidden space-y-4">
+          {taskArray.map(task => {
+            const isCompleted = checkCompletion(task.lastCompleted);
+            return (
+              <div key={task.id} className="border rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="font-medium break-words">{task.name}</div>
+                  {isCompleted ? (
+                    <Badge variant="default" className="bg-green-500 hover:bg-green-600 shrink-0">
+                      <Check className="mr-1 h-3 w-3" />
+                      Done
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="shrink-0">
+                      <X className="mr-1 h-3 w-3" />
+                      Pending
+                    </Badge>
+                  )}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Last completed: {task.lastCompleted ? format(parseISO(task.lastCompleted), 'MMM d, yyyy') : 'Never'}
+                </div>
+                <Button
+                  size="sm"
+                  className="w-full"
+                  onClick={() => handleCompleteTask(task.id)}
+                  disabled={isCompleted || isPending}
+                >
+                  {isCompleted ? 'Completed' : 'Mark Completed'}
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop View: Table */}
+        <div className="hidden md:block overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[40%]">Task</TableHead>
+                <TableHead className="w-[20%]">Status</TableHead>
+                <TableHead className="w-[20%]">Last Completed</TableHead>
+                <TableHead className="text-right w-[20%]">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {taskArray.map(task => {
+                const isCompleted = checkCompletion(task.lastCompleted);
+                return (
+                  <TableRow key={task.id}>
+                    <TableCell className="font-medium break-words max-w-[200px]">{task.name}</TableCell>
+                    <TableCell>
+                      {isCompleted ? (
+                        <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                          <Check className="mr-1 h-3 w-3" />
+                          Completed
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          <X className="mr-1 h-3 w-3" />
+                          Pending
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {task.lastCompleted ? format(parseISO(task.lastCompleted), 'MMM d, yyyy') : 'Never'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        onClick={() => handleCompleteTask(task.id)}
+                        disabled={isCompleted || isPending}
+                      >
+                        Mark Completed
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </>
     );
   };
 

@@ -41,6 +41,6 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error('Error exchanging code for tokens:', error);
     // Redirect with an error
-    return NextResponse.redirect(new URL('/profile?status=error', req.url));
+    return NextResponse.redirect(new URL(`/profile?status=error&message=${encodeURIComponent(error.message || 'Unknown error')}`, req.url));
   }
 }

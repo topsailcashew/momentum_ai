@@ -24,7 +24,7 @@ export function TaskCard({ task }: { task: Task }) {
 
   return (
     <Card className="p-2 cursor-pointer hover:bg-card-foreground/5 transition-colors">
-      <p className="text-xs font-semibold leading-tight">{task.name}</p>
+      <p className="text-xs font-semibold leading-tight break-words">{task.name}</p>
       <div className="flex items-center justify-between mt-2">
         <Badge variant="secondary" className="text-xs">{task.category}</Badge>
         <Icon className={cn("h-3 w-3",

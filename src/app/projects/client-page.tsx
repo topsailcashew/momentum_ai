@@ -38,7 +38,7 @@ export function ProjectClientPage() {
   const { user, isUserLoading: userLoading } = useUser();
   const firestore = useFirestore();
   const { projects: initialProjects, tasks, loading: dataLoading, setProjects: setAllProjects } = useDashboardData();
-  
+
   const [isPending, startTransition] = useTransition();
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
   const { toast } = useToast();
@@ -78,41 +78,41 @@ export function ProjectClientPage() {
   };
 
   const handleDeleteProject = (projectId: string) => {
-      if (!user || !firestore) return;
-      startTransition(async () => {
-          await deleteProject(firestore, user.uid, projectId);
-          const optimisticUpdate = (prev: Project[]) => prev.filter(p => p.id !== projectId);
-          setAllProjects(optimisticUpdate);
-          toast({ title: 'Project deleted' });
-          setSelectedProject(null);
-          await onClientWrite();
-      });
+    if (!user || !firestore) return;
+    startTransition(async () => {
+      await deleteProject(firestore, user.uid, projectId);
+      const optimisticUpdate = (prev: Project[]) => prev.filter(p => p.id !== projectId);
+      setAllProjects(optimisticUpdate);
+      toast({ title: 'Project deleted' });
+      setSelectedProject(null);
+      await onClientWrite();
+    });
   };
 
   const getProjectTasks = (projectId: string) => {
     return tasks.filter(t => t.projectId === projectId);
   };
-  
+
   if (userLoading || dataLoading || !user) {
     return (
-        <div className="flex flex-col gap-4">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Add New Project</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex gap-2">
-                        <Skeleton className="h-10 flex-grow" />
-                        <Skeleton className="h-10 w-32" />
-                    </div>
-                </CardContent>
-            </Card>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <Skeleton className="h-48 w-full" />
-                <Skeleton className="h-48 w-full" />
-                <Skeleton className="h-48 w-full" />
+      <div className="flex flex-col gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Add New Project</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <Skeleton className="h-10 flex-grow" />
+              <Skeleton className="h-10 w-32" />
             </div>
+          </CardContent>
+        </Card>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-48 w-full" />
         </div>
+      </div>
     )
   }
 
@@ -120,99 +120,100 @@ export function ProjectClientPage() {
     <>
       <div className="flex flex-col gap-4">
         <Card>
-            <CardHeader>
-                <CardTitle>Add New Project</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
-                      <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                          <FormItem className="flex-grow">
-                          <FormControl>
-                              <Input placeholder="e.g., Q3 Marketing Campaign" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                          </FormItem>
-                      )}
-                      />
-                      <Button type="submit" disabled={isPending}>
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                          {isPending ? 'Adding...' : 'Add Project'}
-                      </Button>
-                  </form>
-              </Form>
-            </CardContent>
+          <CardHeader>
+            <CardTitle>Add New Project</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem className="flex-grow">
+                      <FormControl>
+                        <Input placeholder="e.g., Q3 Marketing Campaign" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={isPending}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  {isPending ? 'Adding...' : 'Add Project'}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {initialProjects.map(project => {
-              const progress = getProjectProgress(project.id, tasks);
-              return (
-              <Card 
+            const progress = getProjectProgress(project.id, tasks);
+            return (
+              <Card
                 key={project.id}
                 onClick={() => setSelectedProject(project)}
                 className="cursor-pointer hover:border-primary/50 transition-colors"
               >
-                  <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                              <Folder className="text-primary"/>
-                              {project.name}
-                          </div>
-                      </CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex items-center justify-between">
-                      <div>
-                          <p className="text-sm text-muted-foreground">
-                              {progress.completedTasks} of {progress.totalTasks} tasks done
-                          </p>
-                      </div>
-                       <ChartContainer
-                          config={{
-                              value: {
-                                  label: "Progress",
-                                  color: "hsl(var(--primary))",
-                              }
-                          }}
-                          className="mx-auto aspect-square h-20 w-20"
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Folder className="text-primary" />
+                      <span className="break-words line-clamp-2">{project.name}</span>
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      {progress.completedTasks} of {progress.totalTasks} tasks done
+                    </p>
+                  </div>
+                  <ChartContainer
+                    config={{
+                      value: {
+                        label: "Progress",
+                        color: "hsl(var(--primary))",
+                      }
+                    }}
+                    className="mx-auto aspect-square h-20 w-20"
+                  >
+                    <RadialBarChart
+                      data={progress.data}
+                      startAngle={90}
+                      endAngle={-270}
+                      innerRadius="70%"
+                      outerRadius="100%"
+                      barSize={8}
+                    >
+                      <PolarAngleAxis
+                        type="number"
+                        domain={[0, 100]}
+                        dataKey="value"
+                        tick={false}
+                      />
+                      <RadialBar
+                        dataKey="value"
+                        background
+                        cornerRadius={10}
+                        className="fill-primary"
+                      />
+                      <text
+                        x="50%"
+                        y="50%"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        className="fill-foreground text-sm font-medium"
                       >
-                          <RadialBarChart
-                              data={progress.data}
-                              startAngle={90}
-                              endAngle={-270}
-                              innerRadius="70%"
-                              outerRadius="100%"
-                              barSize={8}
-                          >
-                              <PolarAngleAxis
-                                  type="number"
-                                  domain={[0, 100]}
-                                  dataKey="value"
-                                  tick={false}
-                              />
-                              <RadialBar
-                                  dataKey="value"
-                                  background
-                                  cornerRadius={10}
-                                  className="fill-primary"
-                              />
-                               <text
-                                  x="50%"
-                                  y="50%"
-                                  textAnchor="middle"
-                                  dominantBaseline="middle"
-                                  className="fill-foreground text-sm font-medium"
-                              >
-                                  {progress.text}
-                              </text>
-                          </RadialBarChart>
-                      </ChartContainer>
-                  </CardContent>
+                        {progress.text}
+                      </text>
+                    </RadialBarChart>
+                  </ChartContainer>
+                </CardContent>
               </Card>
-          )})}
+            )
+          })}
         </div>
       </div>
       {selectedProject && (
