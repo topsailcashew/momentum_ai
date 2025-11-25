@@ -34,25 +34,25 @@ export function RecurringTasksClientPage() {
 
   const handleCompleteTask = (taskId: string) => {
     if (!user || !firestore) return;
-    const optimisticUpdate = (currentTasks: RecurringTask[]) => currentTasks.map(task => 
-        task.id === taskId ? { ...task, lastCompleted: new Date().toISOString() } : task
+    const optimisticUpdate = (currentTasks: RecurringTask[]) => currentTasks.map(task =>
+      task.id === taskId ? { ...task, lastCompleted: new Date().toISOString() } : task
     );
     setRecurringTasks(optimisticUpdate);
 
     startTransition(async () => {
-        try {
-            await updateRecurringTask(firestore, user.uid, taskId, { lastCompleted: new Date().toISOString() });
-            toast({ title: 'Task marked as complete!' });
-            await onClientWrite();
-        } catch (error) {
-            toast({
-                variant: 'destructive',
-                title: 'Uh oh! Something went wrong.',
-                description: 'There was a problem completing the task. Reverting changes.',
-            });
-            // Revert optimistic update by refetching from global state
-            setRecurringTasks(initialTasks); 
-        }
+      try {
+        await updateRecurringTask(firestore, user.uid, taskId, { lastCompleted: new Date().toISOString() });
+        toast({ title: 'Task marked as complete!' });
+        await onClientWrite();
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem completing the task. Reverting changes.',
+        });
+        // Revert optimistic update by refetching from global state
+        setRecurringTasks(initialTasks);
+      }
     });
   }
 
@@ -82,116 +82,118 @@ export function RecurringTasksClientPage() {
 
   const renderTaskTable = (taskArray: RecurringTask[], period: 'Weekly' | 'Monthly') => {
     const checkCompletion = (lastCompleted: string | null) => {
-        if (!lastCompleted) return false;
-        const date = parseISO(lastCompleted);
-        return period === 'Weekly' ? isThisWeek(date, { weekStartsOn: 1 }) : isThisMonth(date);
+      if (!lastCompleted) return false;
+      const date = parseISO(lastCompleted);
+      return period === 'Weekly' ? isThisWeek(date, { weekStartsOn: 1 }) : isThisMonth(date);
     };
 
     if (taskArray.length === 0) {
-        return <div className="text-center text-muted-foreground p-8">No {period.toLowerCase()} tasks yet.</div>
+      return <div className="text-center text-muted-foreground p-8">No {period.toLowerCase()} tasks yet.</div>
     }
 
     return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Task</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Last Completed</TableHead>
-            <TableHead className="text-right">Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {taskArray.map(task => {
-            const isCompleted = checkCompletion(task.lastCompleted);
-            return (
-              <TableRow key={task.id}>
-                <TableCell className="font-medium">{task.name}</TableCell>
-                <TableCell>
-                  {isCompleted ? (
-                    <Badge variant="default" className="bg-green-500 hover:bg-green-600">
-                      <Check className="mr-1 h-3 w-3" />
-                      Completed
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary">
-                      <X className="mr-1 h-3 w-3" />
-                      Pending
-                    </Badge>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {task.lastCompleted ? format(parseISO(task.lastCompleted), 'MMM d, yyyy') : 'Never'}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    size="sm"
-                    onClick={() => handleCompleteTask(task.id)}
-                    disabled={isCompleted || isPending}
-                  >
-                    Mark Completed
-                  </Button>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="min-w-[150px]">Task</TableHead>
+              <TableHead className="min-w-[120px]">Status</TableHead>
+              <TableHead className="min-w-[130px]">Last Completed</TableHead>
+              <TableHead className="text-right min-w-[140px]">Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {taskArray.map(task => {
+              const isCompleted = checkCompletion(task.lastCompleted);
+              return (
+                <TableRow key={task.id}>
+                  <TableCell className="font-medium">{task.name}</TableCell>
+                  <TableCell>
+                    {isCompleted ? (
+                      <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                        <Check className="mr-1 h-3 w-3" />
+                        Completed
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary">
+                        <X className="mr-1 h-3 w-3" />
+                        Pending
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {task.lastCompleted ? format(parseISO(task.lastCompleted), 'MMM d, yyyy') : 'Never'}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      onClick={() => handleCompleteTask(task.id)}
+                      disabled={isCompleted || isPending}
+                    >
+                      Mark Completed
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
     );
   };
-  
+
   if (userLoading || dataLoading || !user) {
     return (
-         <div className="flex flex-col gap-4">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-48 w-full" />
-            <Skeleton className="h-48 w-full" />
-        </div>
+      <div className="flex flex-col gap-4">
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-48 w-full" />
+      </div>
     )
   }
 
 
   return (
     <div className="flex flex-col gap-4">
-        <div className="flex justify-between items-center">
-            <div>
-                <h1 className="text-2xl font-bold">Recurring Tasks</h1>
-                <p className="text-muted-foreground">Manage your weekly and monthly tasks.</p>
-            </div>
-            <Button onClick={() => setShowAddDialog(true)}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Recurring Task
-            </Button>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Recurring Tasks</h1>
+          <p className="text-muted-foreground">Manage your weekly and monthly tasks.</p>
         </div>
+        <Button onClick={() => setShowAddDialog(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Recurring Task
+        </Button>
+      </div>
 
-        <div className="grid gap-6 md:grid-cols-1">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Weekly</CardTitle>
-                    <CardDescription>Tasks that reset every week.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {renderTaskTable(weeklyTasks, 'Weekly')}
-                </CardContent>
-            </Card>
+      <div className="grid gap-6 md:grid-cols-1">
+        <Card>
+          <CardHeader>
+            <CardTitle>Weekly</CardTitle>
+            <CardDescription>Tasks that reset every week.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {renderTaskTable(weeklyTasks, 'Weekly')}
+          </CardContent>
+        </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Monthly</CardTitle>
-                    <CardDescription>Tasks that reset every month.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {renderTaskTable(monthlyTasks, 'Monthly')}
-                </CardContent>
-            </Card>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly</CardTitle>
+            <CardDescription>Tasks that reset every month.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {renderTaskTable(monthlyTasks, 'Monthly')}
+          </CardContent>
+        </Card>
+      </div>
 
-        <RecurringTaskFormDialog
-            open={showAddDialog}
-            onOpenChange={setShowAddDialog}
-            onSave={handleCreateRecurringTask}
-            isPending={isPending}
-        />
+      <RecurringTaskFormDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        onSave={handleCreateRecurringTask}
+        isPending={isPending}
+      />
     </div>
   );
 }
