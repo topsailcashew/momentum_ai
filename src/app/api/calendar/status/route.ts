@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/firebase/server-init';
-import { doc, getDoc } from 'firebase/firestore';
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
@@ -12,14 +11,14 @@ export async function GET(req: NextRequest) {
 
   try {
     const db = getDb();
-    const userTokensRef = doc(db, 'users', userId, 'private', 'googleTokens');
-    const tokenDoc = await getDoc(userTokensRef);
+    const userTokensRef = db.collection('users').doc(userId).collection('private').doc('googleTokens');
+    const tokenDoc = await userTokensRef.get();
 
-    if (!tokenDoc.exists()) {
+    if (!tokenDoc.exists) {
       return NextResponse.json({ connected: false });
     }
 
-    const tokenData = tokenDoc.data();
+    const tokenData = tokenDoc.data()!;
     const isExpired = tokenData.expiryDate && tokenData.expiryDate < Date.now();
 
     return NextResponse.json({

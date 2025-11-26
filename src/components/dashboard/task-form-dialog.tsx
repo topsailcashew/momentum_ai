@@ -55,7 +55,7 @@ const taskFormSchema = z.object({
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
-type TaskData = Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>;
+type TaskData = Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>;
 
 interface TaskFormDialogProps {
     task?: Task | null;
@@ -63,7 +63,7 @@ interface TaskFormDialogProps {
     projects: Project[];
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
-    onSave: (data: TaskData | Partial<Omit<Task, 'id'>>, taskId?: string) => void;
+    onSave: (data: TaskData | Partial<Omit<Task, 'id' | 'userId'>>, taskId?: string) => void;
     onDelete?: (taskId: string) => void;
     isPending: boolean;
     children?: React.ReactNode;
@@ -129,7 +129,7 @@ export function TaskFormDialog({ task, categories, projects, open: externalOpen,
 
 
   const onSubmit = (data: TaskFormValues) => {
-    const taskData: TaskData | Partial<Omit<Task, 'id'>> = {
+    const taskData: TaskData | Partial<Omit<Task, 'id' | 'userId'>> = {
         ...data,
         category: data.category === 'none' ? undefined : data.category,
         energyLevel: data.energyLevel === 'none' ? undefined : (data.energyLevel as any),

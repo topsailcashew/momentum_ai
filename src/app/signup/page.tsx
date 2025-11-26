@@ -55,7 +55,7 @@ export default function SignUpPage() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!auth || !firestore) return;
     try {
-      const userCredential = await auth.createUserWithEmailAndPassword(values.email, values.password);
+      const userCredential = await initiateEmailSignUp(auth, values.email, values.password);
       const firebaseUser = userCredential.user;
 
       await updateProfile(firebaseUser, { displayName: values.displayName });

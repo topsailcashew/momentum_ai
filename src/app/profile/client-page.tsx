@@ -248,25 +248,17 @@ export function ProfileClientPage() {
     const file = event.target.files?.[0];
     if (!file || !user || !firestore) return;
 
+  try {
     const newPhotoURL = await uploadImage(file);
 
     if (newPhotoURL) {
-      try {
-        await updateProfile(user, { photoURL: newPhotoURL });
-        await updateUserProfile(firestore, user.uid, { photoURL: newPhotoURL });
-        toast({
-          title: 'Profile image updated!',
-          description: 'Your new profile image has been saved.',
-        });
-        await updateUserProfileAction(user.uid, { photoURL: newPhotoURL });
-      } catch (error) {
-        console.error('Profile image update error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Uh oh! Something went wrong.',
-          description: 'There was a problem updating your profile image.',
-        });
-      }
+      await updateProfile(user, { photoURL: newPhotoURL });
+      await updateUserProfile(firestore, user.uid, { photoURL: newPhotoURL });
+      toast({
+        title: 'Profile image updated!',
+        description: 'Your new profile image has been saved.',
+      });
+      await updateUserProfileAction(user.uid, { photoURL: newPhotoURL });
     } else if (uploadError) {
       toast({
         variant: 'destructive',
@@ -274,6 +266,16 @@ export function ProfileClientPage() {
         description: uploadError.message,
       });
     }
+  } catch (error) {
+    console.error('Profile image update error:', error);
+    toast({
+      variant: 'destructive',
+      title: 'Uh oh! Something went wrong.',
+      description: 'There was a problem updating your profile image.',
+    });
+  } finally {
+    //
+  }
   };
 
   const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || 'N/A';

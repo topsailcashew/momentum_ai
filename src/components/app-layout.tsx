@@ -65,13 +65,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   }, [setTheme]);
 
   React.useEffect(() => {
-    if (!isUserLoading && !user && !isAuthPage) {
-      router.push('/login');
-    }
-  }, [isUserLoading, user, isAuthPage, router]);
-
-
-  React.useEffect(() => {
     if (isMobile) {
       setOpen(false);
     }
@@ -84,31 +77,27 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
   
-  if (isUserLoading) {
+  if (isUserLoading && !isAuthPage) {
     return <LoadingScreen />;
   }
 
-  if (!user && isAuthPage) {
+  if (isAuthPage) {
     return (
-       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
-          <div className="hidden lg:flex flex-col items-center justify-center gap-4 bg-secondary/50 p-8 text-center">
-            <Link href="/" className="flex flex-col items-center gap-4">
-                <Logo className="w-24 h-24 text-primary" />
-                <h1 className="text-4xl font-bold font-headline">Pace Pilot</h1>
-            </Link>
-            <p className="text-muted-foreground">
-              The intelligent productivity app to help you find your flow.
-            </p>
-          </div>
-          <div className="flex items-center justify-center p-4">
-            {children}
-          </div>
+      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+        <div className="hidden lg:flex flex-col items-center justify-center gap-4 bg-secondary/50 p-8 text-center">
+          <Link href="/" className="flex flex-col items-center gap-4">
+            <Logo className="w-24 h-24 text-primary" />
+            <h1 className="text-4xl font-bold font-headline">Pace Pilot</h1>
+          </Link>
+          <p className="text-muted-foreground">
+            The intelligent productivity app to help you find your flow.
+          </p>
         </div>
+        <div className="flex items-center justify-center p-4">
+          {children}
+        </div>
+      </div>
     );
-  }
-
-  if (!user && !isAuthPage) {
-      return <LoadingScreen />; // Show loading screen while redirecting
   }
 
   return (

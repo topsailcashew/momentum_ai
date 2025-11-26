@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getDb } from '@/firebase/server-init';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { getOAuth2Client } from '@/lib/google';
 
 export async function GET(req: NextRequest) {
@@ -17,14 +16,14 @@ export async function GET(req: NextRequest) {
     const oauth2Client = getOAuth2Client();
 
     const db = getDb();
-    const userTokensRef = doc(db, 'users', userId, 'private', 'googleTokens');
-    const tokenDoc = await getDoc(userTokensRef);
+    const userTokensRef = db.collection('users').doc(userId).collection('private').doc('googleTokens');
+    const tokenDoc = await userTokensRef.get();
 
-    if (!tokenDoc.exists()) {
+    if (!tokenDoc.exists) {
       return NextResponse.json({ error: 'No Google Calendar connected' }, { status: 404 });
     }
 
-    const tokenData = tokenDoc.data();
+    const tokenData = tokenDoc.data()!;
 
     // Set credentials from stored tokens
     oauth2Client.setCredentials({
@@ -42,7 +41,7 @@ export async function GET(req: NextRequest) {
         oauth2Client.setCredentials(credentials);
 
         // Update stored tokens
-        await setDoc(userTokensRef, {
+        await userTokensRef.set({
           accessToken: credentials.access_token,
           refreshToken: credentials.refresh_token || tokenData.refreshToken,
           expiryDate: credentials.expiry_date,

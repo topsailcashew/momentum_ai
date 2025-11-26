@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/firebase/server-init';
-import { doc, deleteDoc, getDoc } from 'firebase/firestore';
 import { getOAuth2Client } from '@/lib/google';
 
 export async function POST(req: NextRequest) {
@@ -13,14 +12,14 @@ export async function POST(req: NextRequest) {
     }
 
     const db = getDb();
-    const userTokensRef = doc(db, 'users', userId, 'private', 'googleTokens');
-    const tokenDoc = await getDoc(userTokensRef);
+    const userTokensRef = db.collection('users').doc(userId).collection('private').doc('googleTokens');
+    const tokenDoc = await userTokensRef.get();
 
-    if (tokenDoc.exists()) {
+    if (tokenDoc.exists) {
       const tokenData = tokenDoc.data();
 
       // Revoke the token with Google
-      if (tokenData.accessToken) {
+      if (tokenData?.accessToken) {
         try {
           const oauth2Client = getOAuth2Client();
           await oauth2Client.revokeToken(tokenData.accessToken);
@@ -31,7 +30,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Delete tokens from Firestore
-      await deleteDoc(userTokensRef);
+      await userTokensRef.delete();
     }
 
     return NextResponse.json({ success: true, message: 'Calendar disconnected successfully' });

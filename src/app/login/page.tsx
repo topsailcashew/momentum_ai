@@ -43,7 +43,7 @@ export default function LoginPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      initiateEmailSignIn(auth, values.email, values.password);
+      await initiateEmailSignIn(auth, values.email, values.password);
       toast({ title: "Login Successful", description: "Welcome back!" });
     } catch (error: any) {
       console.error("Login error:", error);

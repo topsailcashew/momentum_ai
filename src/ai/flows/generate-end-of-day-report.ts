@@ -91,6 +91,9 @@ const generateEndOfDayReportFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
+    if (!output) {
+      return { report: 'Unable to generate report. Please try again.' };
+    }
     return output;
   }
 );

@@ -73,8 +73,8 @@ const calculateDailyMomentumScoreFlow = ai.defineFlow(
 
     const {output} = await prompt(input);
     return {
-      ...output,
       dailyScore: finalScore,
+      summary: output?.summary || "Task-energy alignment summary unavailable.",
     };
   }
 );

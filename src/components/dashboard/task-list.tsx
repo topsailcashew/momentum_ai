@@ -91,11 +91,11 @@ export function TaskList() {
     });
   };
 
-  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>) => {
+  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'> | Partial<Omit<Task, 'id' | 'userId'>>) => {
     if (!firestore) return;
     startTransition(async () => {
       try {
-        const newTask = await addTask(firestore, userId, taskData);
+        const newTask = await addTask(firestore, userId, taskData as Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>);
         setAllTasks(prev => [...prev, newTask]);
         toast({
           title: 'Task created!',

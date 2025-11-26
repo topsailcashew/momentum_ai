@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TaskFormDialog } from './task-form-dialog';
+import { TaskFormDialog } from '@/components/dashboard/task-form-dialog';
 import type { Task, Category, EnergyLevel, Project, EisenhowerMatrix } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Zap, ZapOff, Battery, Target, ListTodo, Folder, PlayCircle, Shield, Edit } from 'lucide-react';
@@ -24,10 +24,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useToast } from '@/hooks/use-toast';
-import { completeTaskAction, createTaskAction, deleteTaskAction, updateTaskAction } from '@/app/actions';
-import { PomodoroContext } from './pomodoro-provider';
+import { PomodoroContext } from '@/components/dashboard/pomodoro-provider';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore } from '@/firebase';
+import { addTask, deleteTask, updateTask, calculateAndSaveMomentumScore } from '@/lib/data-firestore';
+import { onClientWrite, onTaskCompleted } from '@/app/actions';
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
   Low: ZapOff,
@@ -44,49 +45,105 @@ const priorityColors: Record<EisenhowerMatrix, string> = {
 
 export function TaskList() {
   const { user } = useUser();
-  const { tasks: initialTasks, categories, projects, todayEnergy } = useDashboardData();
+  const firestore = useFirestore();
+  const { tasks: initialTasks, categories, projects, todayEnergy, setTasks: setAllTasks } = useDashboardData();
   const userId = user!.uid;
 
-  const [tasks, setTasks] = React.useState(initialTasks);
   const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = React.useState<EnergyLevel | 'all'>('all');
   const [editingTask, setEditingTask] = React.useState<Task | null>(null);
   const { toast } = useToast();
   const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
 
-  React.useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
-
   const handleComplete = (id: string, completed: boolean) => {
-    startTransition(() => {
-        completeTaskAction(userId, id, completed);
+    let originalTasksState: Task[] = [];
+
+    // Optimistically update the UI
+    setAllTasks(currentTasks => {
+        originalTasksState = currentTasks;
+        return currentTasks.map(task =>
+            task.id === id
+            ? { ...task, completed, completedAt: completed ? new Date().toISOString() : null }
+            : task
+        );
+    });
+
+    startTransition(async () => {
+        try {
+            await updateTask(firestore, userId, id, { completed, completedAt: completed ? new Date().toISOString() : null });
+            if (completed) {
+                await calculateAndSaveMomentumScore(firestore, userId);
+                await onTaskCompleted(userId);
+            } else {
+                await onClientWrite();
+            }
+        } catch(error) {
+            toast({
+                variant: 'destructive',
+                title: 'Uh oh! Something went wrong.',
+                description: 'There was a problem updating your task. Reverting changes.',
+            });
+            setAllTasks(originalTasksState);
+        }
     });
   };
 
-  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt'>) => {
-    startTransition(() => {
-        createTaskAction(userId, taskData);
+  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'> | Partial<Omit<Task, 'id' | 'userId'>>) => {
+    if (!firestore) return;
+    startTransition(async () => {
+      try {
+        const newTask = await addTask(firestore, userId, taskData as Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>);
+        setAllTasks(prev => [...prev, newTask]);
         toast({
           title: 'Task created!',
           description: 'Your new task has been added.',
         });
+        await onClientWrite();
+      } catch(error) {
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem creating your task.',
+        });
+      }
     });
   }
 
   const handleUpdateTask = (taskId: string, taskData: Partial<Omit<Task, 'id'>>) => {
-    startTransition(() => {
-        updateTaskAction(userId, taskId, taskData);
+    if (!firestore) return;
+    startTransition(async () => {
+      try {
+        await updateTask(firestore, userId, taskId, taskData);
+        setAllTasks(prev => prev.map(task => task.id === taskId ? { ...task, ...taskData } : task));
         toast({ title: "Task updated!" });
         setEditingTask(null);
+        await onClientWrite();
+      } catch(error) {
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem updating your task.',
+        });
+      }
     });
   };
 
   const handleDeleteTask = (taskId: string) => {
-    startTransition(() => {
-        deleteTaskAction(userId, taskId);
+    if (!firestore) return;
+    startTransition(async () => {
+      try {
+        await deleteTask(firestore, userId, taskId);
+        setAllTasks(prev => prev.filter(task => task.id !== taskId));
         toast({ title: "Task deleted!" });
         setEditingTask(null);
+        await onClientWrite();
+      } catch(error) {
+        toast({
+          variant: 'destructive',
+          title: 'Uh oh! Something went wrong.',
+          description: 'There was a problem deleting your task.',
+        });
+      }
     });
   };
 
@@ -99,7 +156,7 @@ export function TaskList() {
     return projects.find(p => p.id === projectId)?.name;
   }
 
-  const filteredTasks = tasks.filter(task => {
+  const filteredTasks = initialTasks.filter(task => {
     if (filter === 'all') return !task.completed;
     return task.energyLevel === filter && !task.completed;
   });

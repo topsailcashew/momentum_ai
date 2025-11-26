@@ -39,10 +39,9 @@ const taskFormSchema = z.object({
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
-type RecurringTaskData = Omit<RecurringTask, 'id' | 'lastCompleted'>;
 
 interface AddRecurringTaskDialogProps {
-  onSave: (data: RecurringTaskData) => void;
+  onSave: (data: TaskFormValues) => void;
   isPending: boolean;
   children: React.ReactNode;
 }

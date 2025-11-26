@@ -38,11 +38,11 @@ export function WeeklyPlannerClientPage() {
     });
   };
 
-  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>) => {
+  const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'> | Partial<Omit<Task, 'id' | 'userId'>>) => {
     if (!user || !firestore) return;
     startTransition(async () => {
       try {
-        const newTask = await addTask(firestore, user.uid, taskData);
+        const newTask = await addTask(firestore, user.uid, taskData as Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>);
         setTasks(prevTasks => [...prevTasks, newTask]);
         setShowTaskDialog(false);
         setSelectedDeadline(null);

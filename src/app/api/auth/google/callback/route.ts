@@ -2,7 +2,6 @@ import { getOAuth2Client } from '@/lib/google';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
 import { getDb } from '@/firebase/server-init';
-import { doc, setDoc } from 'firebase/firestore';
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
@@ -27,8 +26,8 @@ export async function GET(req: NextRequest) {
 
     // Save tokens to Firestore for the user
     const db = getDb();
-    const userTokensRef = doc(db, 'users', userId, 'private', 'googleTokens');
-    await setDoc(userTokensRef, {
+    const userTokensRef = db.collection('users').doc(userId).collection('private').doc('googleTokens');
+    await userTokensRef.set({
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
         expiryDate: tokens.expiry_date,

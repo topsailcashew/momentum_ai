@@ -24,12 +24,12 @@ export function useProfileImageUpload() {
       const storageRef = ref(storage, `profile-images/${user.uid}/${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
+      setIsUploading(false);
       return downloadURL;
     } catch (e) {
       setError(e as Error);
-      return null;
-    } finally {
       setIsUploading(false);
+      return null;
     }
   };
 

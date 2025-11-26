@@ -171,10 +171,14 @@ export function DashboardClientPage() {
     const productiveDay = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][mostProductiveDayIndex];
 
     const energyCounts = completedTasks.reduce((acc, task) => {
-        acc[task.energyLevel] = (acc[task.energyLevel] || 0) + 1;
+        if (task.energyLevel) {
+            acc[task.energyLevel] = (acc[task.energyLevel] || 0) + 1;
+        }
         return acc;
     }, {} as Record<string, number>);
-    const energySweetSpot = Object.keys(energyCounts).reduce((a, b) => energyCounts[a] > energyCounts[b] ? a : b);
+    const energySweetSpot = Object.keys(energyCounts).length > 0
+        ? Object.keys(energyCounts).reduce((a, b) => energyCounts[a] > energyCounts[b] ? a : b)
+        : 'N/A';
 
     const categoryCounts = completedTasks.reduce((acc, task) => {
         if (task.category) {
@@ -380,7 +384,7 @@ export function DashboardClientPage() {
                                       Due on {format(parseISO(task.deadline!), 'MMM d, yyyy')}
                                   </p>
                               </div>
-                              <Badge variant="secondary">{getCategoryName(task.category)}</Badge>
+                              <Badge variant="secondary">{getCategoryName(task.category || '')}</Badge>
                           </li>
                       ))}
                   </ul>
@@ -401,7 +405,7 @@ export function DashboardClientPage() {
                                         Completed on {format(parseISO(task.completedAt!), 'MMM d, yyyy')}
                                     </p>
                                 </div>
-                                <Badge variant="secondary">{getCategoryName(task.category)}</Badge>
+                                <Badge variant="secondary">{getCategoryName(task.category || '')}</Badge>
                             </li>
                         ))}
                     </ul>

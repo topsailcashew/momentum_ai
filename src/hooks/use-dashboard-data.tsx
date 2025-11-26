@@ -94,8 +94,10 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   }, [user, firestore]);
 
   React.useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+    if (user) {
+      fetchAllData();
+    }
+  }, [user, fetchAllData]);
 
   const value = {
     tasks,
