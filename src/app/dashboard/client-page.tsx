@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useFirestore } from '@/firebase';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
-import { getReports, getTasksForDate } from '@/lib/data-firestore';
+import { getReports, getTasksForWorkday } from '@/lib/data-firestore';
 import { useToast } from '@/hooks/use-toast';
 import type { DailyReport, Task } from '@/lib/types';
 import { getDay, parseISO, format } from 'date-fns';
@@ -95,7 +95,7 @@ export function DashboardClientPage() {
         }
 
         if(currentReport) {
-            const tasks = await getTasksForDate(firestore, user.uid, currentReport.date);
+            const tasks = await getTasksForWorkday(firestore, user.uid, currentReport.date);
             setSelectedReportTasks(tasks);
         }
 
@@ -116,7 +116,7 @@ export function DashboardClientPage() {
   const handleDateSelect = async (report: DailyReport) => {
     setSelectedReport(report);
     if(user && firestore) {
-        const tasks = await getTasksForDate(firestore, user.uid, report.date);
+        const tasks = await getTasksForWorkday(firestore, user.uid, report.date);
         setSelectedReportTasks(tasks);
     }
   }

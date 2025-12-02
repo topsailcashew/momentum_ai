@@ -24,7 +24,7 @@ import { useUser, useFirestore } from '@/firebase';
 import {
   resetTodaysReport as resetTodaysReportInDb,
   updateTodaysReport as updateTodaysReportInDb,
-  getTasksForDate
+  getTasksForWorkday
 } from '@/lib/data-firestore';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Separator } from '../ui/separator';
@@ -53,7 +53,7 @@ export function DailyReportCard() {
 
   React.useEffect(() => {
     if (firestore && userId && todaysReport) {
-        getTasksForDate(firestore, userId, todaysReport.date).then(setTodaysTasks);
+        getTasksForWorkday(firestore, userId, todaysReport.date).then(setTodaysTasks);
     }
   }, [firestore, userId, todaysReport]);
 

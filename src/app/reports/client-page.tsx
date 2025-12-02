@@ -7,7 +7,7 @@ import { FileText, Mail } from 'lucide-react';
 import type { DailyReport, Task } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
-import { getReports, getTasksForDate } from '@/lib/data-firestore';
+import { getReports, getTasksForWorkday } from '@/lib/data-firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
@@ -51,7 +51,7 @@ export function ReportsClientPage() {
         }
 
         if(currentReport) {
-            const tasks = await getTasksForDate(firestore, user.uid, currentReport.date);
+            const tasks = await getTasksForWorkday(firestore, user.uid, currentReport.date);
             setSelectedReportTasks(tasks);
         }
 
@@ -73,7 +73,7 @@ export function ReportsClientPage() {
   const handleDateSelect = async (report: DailyReport) => {
     setSelectedReport(report);
     if(user && firestore) {
-        const tasks = await getTasksForDate(firestore, user.uid, report.date);
+        const tasks = await getTasksForWorkday(firestore, user.uid, report.date);
         setSelectedReportTasks(tasks);
     }
   }

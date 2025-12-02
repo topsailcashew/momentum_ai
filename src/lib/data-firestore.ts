@@ -339,7 +339,7 @@ export async function getTodaysReport(db: Firestore, userId: string): Promise<Da
     const reportRef = doc(db, 'users', userId, 'reports', today);
     const reportSnap = await getDoc(reportRef);
 
-    const tasks = await getTasksForDate(db, userId, today);
+    const tasks = await getTasksForWorkday(db, userId, today);
     
     const defaultReport: DailyReport = {
         date: today,
@@ -391,6 +391,59 @@ export async function getWorkdayTasks(db: Firestore, userId: string, date: strin
   const q = query(workdayCol, where('date', '==', date));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WorkdayTask));
+}
+
+/**
+ * Gets all tasks that were assigned to a specific workday with their full details.
+ * This joins workday-tasks with actual task data (regular + recurring).
+ */
+export async function getTasksForWorkday(db: Firestore, userId: string, date: string): Promise<Task[]> {
+  // Get workday tasks for this date
+  const workdayTasks = await getWorkdayTasks(db, userId, date);
+
+  // Get all regular and recurring tasks
+  const [regularTasks, recurringTasks] = await Promise.all([
+    getTasks(db, userId),
+    getRecurringTasks(db, userId)
+  ]);
+
+  // Join workday tasks with actual task details
+  const tasksWithDetails = workdayTasks.map(wt => {
+    if (wt.taskType === 'regular') {
+      const regularTask = regularTasks.find(t => t.id === wt.taskId);
+      return regularTask || null;
+    } else if (wt.taskType === 'recurring') {
+      const recurringTask = recurringTasks.find(rt => rt.id === wt.taskId);
+      if (recurringTask) {
+        // Check if the recurring task was completed on this specific date
+        const completedOnDate = recurringTask.lastCompleted
+          ? format(new Date(recurringTask.lastCompleted), 'yyyy-MM-dd') === date
+          : false;
+
+        // Convert recurring task to Task format
+        return {
+          id: recurringTask.id,
+          userId: recurringTask.userId,
+          name: recurringTask.name,
+          category: recurringTask.category ?? 'personal',
+          energyLevel: recurringTask.energyLevel ?? 'Medium',
+          completed: completedOnDate,
+          completedAt: completedOnDate ? recurringTask.lastCompleted : null,
+          createdAt: recurringTask.createdAt,
+          projectId: recurringTask.projectId,
+          deadline: recurringTask.deadline,
+          collaboration: recurringTask.collaboration,
+          details: recurringTask.details,
+          priority: recurringTask.priority,
+          score: undefined,
+        } as Task;
+      }
+      return null;
+    }
+    return null;
+  }).filter((t): t is Task => t !== null);
+
+  return tasksWithDetails;
 }
 
 export async function addWorkdayTask(
