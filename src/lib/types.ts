@@ -14,11 +14,16 @@ export interface Task {
   completedAt: string | null;
   createdAt: string;
   projectId?: string;
+  ministryId?: string;
+  owner?: string;
+  startDate?: string;
   deadline?: string;
   collaboration?: string;
   details?: string;
   score?: number; // AI-generated score
   priority?: EisenhowerMatrix;
+  status?: 'not-started' | 'in-progress' | 'completed' | 'blocked';
+  notes?: string;
 }
 
 export interface Category {
@@ -45,6 +50,12 @@ export interface Project {
     userId: string;
     name: string;
     priority: ProjectPriority;
+    ministryId?: string;
+    owner?: string;
+    startDate?: string;
+    dueDate?: string;
+    status?: 'not-started' | 'in-progress' | 'completed' | 'on-hold';
+    description?: string;
 }
 
 export interface RecurringTask {
@@ -57,10 +68,15 @@ export interface RecurringTask {
   lastCompleted: string | null;
   createdAt: string;
   projectId?: string;
+  ministryId?: string;
+  owner?: string;
+  startDate?: string;
   deadline?: string;
   collaboration?: string;
   details?: string;
   priority?: EisenhowerMatrix;
+  status?: 'not-started' | 'in-progress' | 'completed' | 'blocked';
+  notes?: string;
 }
 
 export interface WorkdayTask {
@@ -95,3 +111,70 @@ export const ScoreAndSuggestTasksInputSchema = z.object({
   completedTasks: z.array(z.custom<Task>()).describe('A list of recently completed tasks to learn from.'),
 });
 export type ScoreAndSuggestTasksInput = z.infer<typeof ScoreAndSuggestTasksInputSchema>;
+
+// Ministry Types
+export interface Ministry {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  color?: string;
+}
+
+export interface StrategicPlan {
+  id: string;
+  ministryId: string;
+  userId: string;
+  title: string;
+  visionStatement?: string;
+  missionStatement?: string;
+  startDate?: string;
+  endDate?: string;
+  pdfUrl?: string;
+  pdfFileName?: string;
+  extractedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StrategicGoal {
+  id: string;
+  planId: string;
+  ministryId: string;
+  userId: string;
+  title: string;
+  description?: string;
+  targetDate?: string;
+  status: 'not-started' | 'in-progress' | 'completed' | 'on-hold';
+  priority: 'high' | 'medium' | 'low';
+  progress: number; // 0-100
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StrategicMetric {
+  id: string;
+  goalId: string;
+  planId: string;
+  ministryId: string;
+  userId: string;
+  name: string;
+  currentValue: number;
+  targetValue: number;
+  unit: string;
+  lastUpdated: string;
+}
+
+export interface Milestone {
+  id: string;
+  goalId: string;
+  planId: string;
+  ministryId: string;
+  userId: string;
+  title: string;
+  dueDate: string;
+  completed: boolean;
+  completedAt?: string;
+  description?: string;
+}

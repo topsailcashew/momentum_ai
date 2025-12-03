@@ -62,11 +62,14 @@ describe('ProjectClientPage', () => {
       categories: [],
       recurringTasks: [],
       energyLog: [],
+      ministries: [],
       todayEnergy: undefined,
       latestMomentum: undefined,
       todaysReport: null,
       loading: false,
       error: null,
+      selectedMinistryId: null,
+      setSelectedMinistryId: vi.fn(),
       setTasks: vi.fn(),
       setProjects: mockSetProjects,
       setRecurringTasks: vi.fn(),
@@ -74,6 +77,8 @@ describe('ProjectClientPage', () => {
       setTodayEnergy: vi.fn(),
       setLatestMomentum: vi.fn(),
       refetchData: vi.fn(),
+      filteredTasks: [],
+      filteredProjects: mockProjects,
     });
 
     render(<ProjectClientPage />);

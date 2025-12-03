@@ -14,7 +14,7 @@ import {
   setDoc,
   Firestore,
 } from 'firebase/firestore';
-import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, RecurringTask, DailyReport, WorkdayTask, EisenhowerMatrix } from './types';
+import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, RecurringTask, DailyReport, WorkdayTask, EisenhowerMatrix, Ministry, StrategicPlan, StrategicGoal, StrategicMetric, Milestone } from './types';
 import { format, isSameDay, parseISO, subDays } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -540,4 +540,179 @@ export function createUserProfile(db: Firestore, userId: string, data: { email: 
         });
         errorEmitter.emit('permission-error', permissionError);
     });
+}
+
+// Ministry Functions
+export async function getMinistries(db: Firestore, userId: string): Promise<Ministry[]> {
+  const ministriesCol = collection(db, 'users', userId, 'ministries');
+  const snapshot = await getDocs(ministriesCol);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ministry));
+}
+
+export async function getMinistry(db: Firestore, userId: string, ministryId: string): Promise<Ministry | null> {
+  const ministryRef = doc(db, 'users', userId, 'ministries', ministryId);
+  const snapshot = await getDoc(ministryRef);
+  return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } as Ministry : null;
+}
+
+export async function addMinistry(db: Firestore, userId: string, ministryData: Omit<Ministry, 'id' | 'userId' | 'createdAt'>): Promise<Ministry> {
+  const ministriesCol = collection(db, 'users', userId, 'ministries');
+  const newMinistryData = {
+    ...ministryData,
+    userId,
+    createdAt: new Date().toISOString(),
+  };
+  const docRef = await addDoc(ministriesCol, newMinistryData);
+  return { id: docRef.id, ...newMinistryData };
+}
+
+export function updateMinistry(db: Firestore, userId: string, ministryId: string, updates: Partial<Omit<Ministry, 'id' | 'userId' | 'createdAt'>>): Promise<void> {
+  const ministryRef = doc(db, 'users', userId, 'ministries', ministryId);
+  return updateDoc(ministryRef, updates);
+}
+
+export function deleteMinistry(db: Firestore, userId: string, ministryId: string): Promise<void> {
+  const ministryRef = doc(db, 'users', userId, 'ministries', ministryId);
+  return deleteDoc(ministryRef);
+}
+
+// Strategic Plan Functions
+export async function getStrategicPlans(db: Firestore, userId: string, ministryId?: string): Promise<StrategicPlan[]> {
+  const plansCol = collection(db, 'users', userId, 'strategic-plans');
+  let q = query(plansCol);
+  if (ministryId) {
+    q = query(plansCol, where('ministryId', '==', ministryId));
+  }
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StrategicPlan));
+}
+
+export async function getStrategicPlan(db: Firestore, userId: string, planId: string): Promise<StrategicPlan | null> {
+  const planRef = doc(db, 'users', userId, 'strategic-plans', planId);
+  const snapshot = await getDoc(planRef);
+  return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } as StrategicPlan : null;
+}
+
+export async function addStrategicPlan(db: Firestore, userId: string, planData: Omit<StrategicPlan, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<StrategicPlan> {
+  const plansCol = collection(db, 'users', userId, 'strategic-plans');
+  const now = new Date().toISOString();
+  const newPlanData = {
+    ...planData,
+    userId,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const docRef = await addDoc(plansCol, newPlanData);
+  return { id: docRef.id, ...newPlanData };
+}
+
+export function updateStrategicPlan(db: Firestore, userId: string, planId: string, updates: Partial<Omit<StrategicPlan, 'id' | 'userId' | 'createdAt'>>): Promise<void> {
+  const planRef = doc(db, 'users', userId, 'strategic-plans', planId);
+  return updateDoc(planRef, { ...updates, updatedAt: new Date().toISOString() });
+}
+
+export function deleteStrategicPlan(db: Firestore, userId: string, planId: string): Promise<void> {
+  const planRef = doc(db, 'users', userId, 'strategic-plans', planId);
+  return deleteDoc(planRef);
+}
+
+// Strategic Goal Functions
+export async function getStrategicGoals(db: Firestore, userId: string, planId?: string, ministryId?: string): Promise<StrategicGoal[]> {
+  const goalsCol = collection(db, 'users', userId, 'strategic-goals');
+  let q = query(goalsCol);
+  if (planId) {
+    q = query(goalsCol, where('planId', '==', planId));
+  } else if (ministryId) {
+    q = query(goalsCol, where('ministryId', '==', ministryId));
+  }
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StrategicGoal));
+}
+
+export async function addStrategicGoal(db: Firestore, userId: string, goalData: Omit<StrategicGoal, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<StrategicGoal> {
+  const goalsCol = collection(db, 'users', userId, 'strategic-goals');
+  const now = new Date().toISOString();
+  const newGoalData = {
+    ...goalData,
+    userId,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const docRef = await addDoc(goalsCol, newGoalData);
+  return { id: docRef.id, ...newGoalData };
+}
+
+export function updateStrategicGoal(db: Firestore, userId: string, goalId: string, updates: Partial<Omit<StrategicGoal, 'id' | 'userId' | 'createdAt'>>): Promise<void> {
+  const goalRef = doc(db, 'users', userId, 'strategic-goals', goalId);
+  return updateDoc(goalRef, { ...updates, updatedAt: new Date().toISOString() });
+}
+
+export function deleteStrategicGoal(db: Firestore, userId: string, goalId: string): Promise<void> {
+  const goalRef = doc(db, 'users', userId, 'strategic-goals', goalId);
+  return deleteDoc(goalRef);
+}
+
+// Strategic Metric Functions
+export async function getStrategicMetrics(db: Firestore, userId: string, goalId?: string): Promise<StrategicMetric[]> {
+  const metricsCol = collection(db, 'users', userId, 'strategic-metrics');
+  let q = query(metricsCol);
+  if (goalId) {
+    q = query(metricsCol, where('goalId', '==', goalId));
+  }
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StrategicMetric));
+}
+
+export async function addStrategicMetric(db: Firestore, userId: string, metricData: Omit<StrategicMetric, 'id' | 'userId' | 'lastUpdated'>): Promise<StrategicMetric> {
+  const metricsCol = collection(db, 'users', userId, 'strategic-metrics');
+  const newMetricData = {
+    ...metricData,
+    userId,
+    lastUpdated: new Date().toISOString(),
+  };
+  const docRef = await addDoc(metricsCol, newMetricData);
+  return { id: docRef.id, ...newMetricData };
+}
+
+export function updateStrategicMetric(db: Firestore, userId: string, metricId: string, updates: Partial<Omit<StrategicMetric, 'id' | 'userId'>>): Promise<void> {
+  const metricRef = doc(db, 'users', userId, 'strategic-metrics', metricId);
+  return updateDoc(metricRef, { ...updates, lastUpdated: new Date().toISOString() });
+}
+
+export function deleteStrategicMetric(db: Firestore, userId: string, metricId: string): Promise<void> {
+  const metricRef = doc(db, 'users', userId, 'strategic-metrics', metricId);
+  return deleteDoc(metricRef);
+}
+
+// Milestone Functions
+export async function getMilestones(db: Firestore, userId: string, goalId?: string, planId?: string): Promise<Milestone[]> {
+  const milestonesCol = collection(db, 'users', userId, 'milestones');
+  let q = query(milestonesCol);
+  if (goalId) {
+    q = query(milestonesCol, where('goalId', '==', goalId));
+  } else if (planId) {
+    q = query(milestonesCol, where('planId', '==', planId));
+  }
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Milestone));
+}
+
+export async function addMilestone(db: Firestore, userId: string, milestoneData: Omit<Milestone, 'id' | 'userId'>): Promise<Milestone> {
+  const milestonesCol = collection(db, 'users', userId, 'milestones');
+  const newMilestoneData = {
+    ...milestoneData,
+    userId,
+  };
+  const docRef = await addDoc(milestonesCol, newMilestoneData);
+  return { id: docRef.id, ...newMilestoneData };
+}
+
+export function updateMilestone(db: Firestore, userId: string, milestoneId: string, updates: Partial<Omit<Milestone, 'id' | 'userId'>>): Promise<void> {
+  const milestoneRef = doc(db, 'users', userId, 'milestones', milestoneId);
+  return updateDoc(milestoneRef, updates);
+}
+
+export function deleteMilestone(db: Firestore, userId: string, milestoneId: string): Promise<void> {
+  const milestoneRef = doc(db, 'users', userId, 'milestones', milestoneId);
+  return deleteDoc(milestoneRef);
 }

@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Activity, Gauge, PanelLeft, FolderKanban, Sun, Moon, Repeat, CalendarDays, FileText, LogOut, User as UserIcon, Calendar } from 'lucide-react';
+import { Activity, Gauge, PanelLeft, FolderKanban, Sun, Moon, Repeat, CalendarDays, FileText, LogOut, User as UserIcon, Calendar, Church } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -145,6 +145,18 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                   <Link href="/projects">
                     <FolderKanban />
                     <span>Projects</span>
+                  </Link>
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith('/ministries')}
+                  tooltip="Ministries"
+                >
+                  <Link href="/ministries">
+                    <Church />
+                    <span>Ministries</span>
                   </Link>
                 </SidebarMenuButton>
             </SidebarMenuItem>
