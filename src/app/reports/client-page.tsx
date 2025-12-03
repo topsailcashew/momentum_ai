@@ -15,6 +15,7 @@ import { DateCard } from '@/components/reports/date-card';
 import { VisualReportCard } from '@/components/reports/visual-report-card';
 import { generateEmailReportAction } from '../actions';
 import { EmailPreviewDialog } from '@/components/reports/email-preview-dialog';
+import { collection, onSnapshot } from 'firebase/firestore';
 
 export function ReportsClientPage() {
   const { user, isUserLoading: userLoading } = useUser();
@@ -32,50 +33,83 @@ export function ReportsClientPage() {
 
   const { toast } = useToast();
 
-  const fetchReportsAndTasks = React.useCallback(async () => {
-    if (user && firestore) {
-      setIsFetching(true);
-      try {
-        const reportsData = await getReports(firestore, user.uid);
-        const reportsArray = Object.values(reportsData).sort((a, b) => b.date.localeCompare(a.date));
-        setReports(reportsArray);
-
-        let currentReport = selectedReport;
-        if (!currentReport && reportsArray.length > 0) {
-          currentReport = reportsArray[0];
-          setSelectedReport(reportsArray[0]);
-        } else if (currentReport) {
-            const updatedSelected = reportsArray.find(r => r.date === currentReport!.date);
-            currentReport = updatedSelected || reportsArray[0] || null;
-            setSelectedReport(currentReport);
-        }
-
-        if(currentReport) {
-            const tasks = await getTasksForWorkday(firestore, user.uid, currentReport.date);
-            setSelectedReportTasks(tasks);
-        }
-
-      } catch (error) {
-        console.error("Error fetching reports:", error);
-        toast({ variant: 'destructive', title: 'Could not load reports.' });
-      } finally {
-        setIsFetching(false);
-      }
+  // Set up real-time listener for reports
+  React.useEffect(() => {
+    if (!user || !firestore) {
+      setIsFetching(false);
+      return;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    setIsFetching(true);
+    const reportsCol = collection(firestore, 'users', user.uid, 'reports');
+
+    const unsubscribe = onSnapshot(reportsCol, (snapshot) => {
+      const reportsData = snapshot.docs.map(doc => ({ ...doc.data() } as DailyReport));
+      const reportsArray = reportsData.sort((a, b) => b.date.localeCompare(a.date));
+      setReports(reportsArray);
+
+      // Auto-select the first report if none is selected
+      if (!selectedReport && reportsArray.length > 0) {
+        setSelectedReport(reportsArray[0]);
+      } else if (selectedReport) {
+        // Update selected report if it still exists
+        const updatedSelected = reportsArray.find(r => r.date === selectedReport.date);
+        if (updatedSelected) {
+          setSelectedReport(updatedSelected);
+        } else if (reportsArray.length > 0) {
+          setSelectedReport(reportsArray[0]);
+        } else {
+          setSelectedReport(null);
+        }
+      }
+
+      setIsFetching(false);
+    }, (error) => {
+      console.error("Error listening to reports:", error);
+      toast({ variant: 'destructive', title: 'Could not load reports.' });
+      setIsFetching(false);
+    });
+
+    return () => unsubscribe();
   }, [user, firestore, toast]);
 
+  // Set up real-time listener for tasks of the selected report
   React.useEffect(() => {
-    fetchReportsAndTasks();
-  }, [fetchReportsAndTasks]);
+    if (!selectedReport || !user || !firestore) return;
 
+    // We need to listen to both workday-tasks and the actual tasks/recurring-tasks
+    // For simplicity, we'll refetch when either collection changes
+    const tasksCol = collection(firestore, 'users', user.uid, 'tasks');
+    const recurringTasksCol = collection(firestore, 'users', user.uid, 'recurring-tasks');
+    const workdayTasksCol = collection(firestore, 'users', user.uid, 'workday-tasks');
 
-  const handleDateSelect = async (report: DailyReport) => {
-    setSelectedReport(report);
-    if(user && firestore) {
-        const tasks = await getTasksForWorkday(firestore, user.uid, report.date);
+    const fetchTasks = async () => {
+      try {
+        const tasks = await getTasksForWorkday(firestore, user.uid, selectedReport.date);
         setSelectedReportTasks(tasks);
-    }
+      } catch (error) {
+        console.error("Error fetching tasks for workday:", error);
+      }
+    };
+
+    // Initial fetch
+    fetchTasks();
+
+    // Listen to changes in all three collections
+    const unsubTasks = onSnapshot(tasksCol, () => fetchTasks());
+    const unsubRecurring = onSnapshot(recurringTasksCol, () => fetchTasks());
+    const unsubWorkday = onSnapshot(workdayTasksCol, () => fetchTasks());
+
+    return () => {
+      unsubTasks();
+      unsubRecurring();
+      unsubWorkday();
+    };
+  }, [selectedReport, user, firestore]);
+
+
+  const handleDateSelect = (report: DailyReport) => {
+    setSelectedReport(report);
   }
   
   const handleGenerateEmail = async () => {
