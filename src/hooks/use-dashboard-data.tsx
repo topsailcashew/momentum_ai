@@ -13,6 +13,7 @@ import {
 } from '@/lib/data-firestore';
 import { useUser, useFirestore } from '@/firebase';
 import type { Task, Category, Project, DailyReport, EnergyLog, MomentumScore, RecurringTask } from '@/lib/types';
+import { collection, onSnapshot, query, orderBy, limit as firestoreLimit } from 'firebase/firestore';
 
 interface DashboardDataContextType {
   tasks: Task[];
@@ -56,32 +57,20 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       setLoading(true);
       try {
         const [
-          tasksData, 
-          projectsData, 
-          categoriesData, 
-          todayEnergyData, 
-          latestMomentumData, 
+          categoriesData,
+          todayEnergyData,
+          latestMomentumData,
           reportData,
-          recurringTasksData,
-          energyLogData,
         ] = await Promise.all([
-          getTasks(firestore, user.uid),
-          getProjects(firestore, user.uid),
           getCategories(),
           getTodayEnergy(firestore, user.uid),
           getLatestMomentum(firestore, user.uid),
           getTodaysReport(firestore, user.uid),
-          getRecurringTasks(firestore, user.uid),
-          getEnergyLog(firestore, user.uid),
         ]);
-        setTasks(tasksData);
-        setProjects(projectsData);
         setCategories(categoriesData);
         setTodayEnergy(todayEnergyData);
         setLatestMomentum(latestMomentumData);
         setTodaysReport(reportData);
-        setRecurringTasks(recurringTasksData);
-        setEnergyLog(energyLogData);
       } catch (error: any) {
         console.error("Error fetching dashboard data:", error);
         setError(error);
@@ -91,6 +80,58 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     } else if (!user) {
       setLoading(false);
     }
+  }, [user, firestore]);
+
+  // Set up real-time listeners for tasks, projects, recurring tasks, and energy log
+  React.useEffect(() => {
+    if (!user || !firestore) return;
+
+    const unsubscribers: (() => void)[] = [];
+
+    // Listen to tasks
+    const tasksCol = collection(firestore, 'users', user.uid, 'tasks');
+    const unsubTasks = onSnapshot(tasksCol, (snapshot) => {
+      const tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
+      setTasks(tasksData);
+    }, (error) => {
+      console.error("Error listening to tasks:", error);
+      setError(error);
+    });
+    unsubscribers.push(unsubTasks);
+
+    // Listen to projects
+    const projectsCol = collection(firestore, 'users', user.uid, 'projects');
+    const unsubProjects = onSnapshot(projectsCol, (snapshot) => {
+      const projectsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+      setProjects(projectsData);
+    }, (error) => {
+      console.error("Error listening to projects:", error);
+    });
+    unsubscribers.push(unsubProjects);
+
+    // Listen to recurring tasks
+    const recurringTasksCol = collection(firestore, 'users', user.uid, 'recurring-tasks');
+    const unsubRecurring = onSnapshot(recurringTasksCol, (snapshot) => {
+      const recurringTasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as RecurringTask));
+      setRecurringTasks(recurringTasksData);
+    }, (error) => {
+      console.error("Error listening to recurring tasks:", error);
+    });
+    unsubscribers.push(unsubRecurring);
+
+    // Listen to energy log
+    const energyLogCol = collection(firestore, 'users', user.uid, 'energy-log');
+    const unsubEnergyLog = onSnapshot(energyLogCol, (snapshot) => {
+      const energyLogData = snapshot.docs.map(doc => doc.data() as EnergyLog);
+      setEnergyLog(energyLogData);
+    }, (error) => {
+      console.error("Error listening to energy log:", error);
+    });
+    unsubscribers.push(unsubEnergyLog);
+
+    return () => {
+      unsubscribers.forEach(unsub => unsub());
+    };
   }, [user, firestore]);
 
   React.useEffect(() => {
