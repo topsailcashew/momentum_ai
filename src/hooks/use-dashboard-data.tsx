@@ -12,7 +12,7 @@ import {
   getEnergyLog,
 } from '@/lib/data-firestore';
 import { useUser, useFirestore } from '@/firebase';
-import type { Task, Category, Project, DailyReport, EnergyLog, MomentumScore, RecurringTask } from '@/lib/types';
+import type { Task, Category, Project, DailyReport, EnergyLog, MomentumScore, RecurringTask, Ministry } from '@/lib/types';
 import { collection, onSnapshot, query, orderBy, limit as firestoreLimit } from 'firebase/firestore';
 
 interface DashboardDataContextType {
@@ -21,11 +21,14 @@ interface DashboardDataContextType {
   categories: Category[];
   recurringTasks: RecurringTask[];
   energyLog: EnergyLog[];
+  ministries: Ministry[];
   todayEnergy?: EnergyLog;
   latestMomentum?: MomentumScore;
   todaysReport: DailyReport | null;
   loading: boolean;
   error: Error | null;
+  selectedMinistryId: string | null;
+  setSelectedMinistryId: React.Dispatch<React.SetStateAction<string | null>>;
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
   setRecurringTasks: React.Dispatch<React.SetStateAction<RecurringTask[]>>;
@@ -33,6 +36,8 @@ interface DashboardDataContextType {
   setTodayEnergy: React.Dispatch<React.SetStateAction<EnergyLog | undefined>>;
   setLatestMomentum: React.Dispatch<React.SetStateAction<MomentumScore | undefined>>;
   refetchData: () => void;
+  filteredTasks: Task[];
+  filteredProjects: Project[];
 }
 
 const DashboardDataContext = React.createContext<DashboardDataContextType | undefined>(undefined);
@@ -46,11 +51,13 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [recurringTasks, setRecurringTasks] = React.useState<RecurringTask[]>([]);
   const [energyLog, setEnergyLog] = React.useState<EnergyLog[]>([]);
+  const [ministries, setMinistries] = React.useState<Ministry[]>([]);
   const [todayEnergy, setTodayEnergy] = React.useState<EnergyLog | undefined>(undefined);
   const [latestMomentum, setLatestMomentum] = React.useState<MomentumScore | undefined>(undefined);
   const [todaysReport, setTodaysReport] = React.useState<DailyReport | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<Error | null>(null);
+  const [selectedMinistryId, setSelectedMinistryId] = React.useState<string | null>(null);
 
   const fetchAllData = React.useCallback(async () => {
     if (user && firestore) {
@@ -129,6 +136,16 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     });
     unsubscribers.push(unsubEnergyLog);
 
+    // Listen to ministries
+    const ministriesCol = collection(firestore, 'users', user.uid, 'ministries');
+    const unsubMinistries = onSnapshot(ministriesCol, (snapshot) => {
+      const ministriesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Ministry));
+      setMinistries(ministriesData);
+    }, (error) => {
+      console.error("Error listening to ministries:", error);
+    });
+    unsubscribers.push(unsubMinistries);
+
     return () => {
       unsubscribers.forEach(unsub => unsub());
     };
@@ -140,24 +157,40 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     }
   }, [user, fetchAllData]);
 
+  // Filtered data based on selected ministry
+  const filteredTasks = React.useMemo(() => {
+    if (!selectedMinistryId) return tasks;
+    return tasks.filter(task => task.ministryId === selectedMinistryId);
+  }, [tasks, selectedMinistryId]);
+
+  const filteredProjects = React.useMemo(() => {
+    if (!selectedMinistryId) return projects;
+    return projects.filter(project => project.ministryId === selectedMinistryId);
+  }, [projects, selectedMinistryId]);
+
   const value = {
     tasks,
     projects,
     categories,
     recurringTasks,
     energyLog,
+    ministries,
     todayEnergy,
     latestMomentum,
     todaysReport,
     loading,
     error,
+    selectedMinistryId,
+    setSelectedMinistryId,
     setTasks,
     setProjects,
     setRecurringTasks,
     setTodaysReport,
     setTodayEnergy,
     setLatestMomentum,
-    refetchData: fetchAllData
+    refetchData: fetchAllData,
+    filteredTasks,
+    filteredProjects,
   };
 
   return <DashboardDataContext.Provider value={value}>{children}</DashboardDataContext.Provider>;

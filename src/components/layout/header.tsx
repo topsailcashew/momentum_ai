@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
+import { MinistrySelector } from '@/components/ministries/ministry-selector';
 
 export function Header() {
   const [currentTime, setCurrentTime] = React.useState<Date>(new Date());
@@ -59,7 +60,8 @@ export function Header() {
         </p>
       </div>
       <div className="flex items-start gap-4 flex-1 justify-end">
-        <form onSubmit={handleSearch} className="relative w-full max-w-2xl">
+        <MinistrySelector />
+        <form onSubmit={handleSearch} className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search tasks, projects..."
