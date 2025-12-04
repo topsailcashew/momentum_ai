@@ -14,7 +14,7 @@ import {
   setDoc,
   Firestore,
 } from 'firebase/firestore';
-import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, RecurringTask, DailyReport, WorkdayTask, EisenhowerMatrix, Ministry, StrategicPlan, StrategicGoal, StrategicMetric, Milestone } from './types';
+import type { Task, Category, EnergyLog, MomentumScore, EnergyLevel, Project, RecurringTask, DailyReport, WorkdayTask, EisenhowerMatrix, Ministry, StrategicPlan, StrategicGoal, StrategicMetric, Milestone, Notification } from './types';
 import { format, isSameDay, parseISO, subDays } from 'date-fns';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -729,4 +729,89 @@ export function updateMilestone(db: Firestore, userId: string, milestoneId: stri
 export function deleteMilestone(db: Firestore, userId: string, milestoneId: string): Promise<void> {
   const milestoneRef = doc(db, 'users', userId, 'milestones', milestoneId);
   return deleteDoc(milestoneRef);
+}
+
+// Notification Functions
+export async function createNotification(
+  db: Firestore,
+  userId: string,
+  notification: Omit<Notification, 'id' | 'userId' | 'createdAt' | 'read'>
+): Promise<Notification> {
+  const notificationsCol = collection(db, 'users', userId, 'notifications');
+  const newNotificationData: Omit<Notification, 'id'> = {
+    ...notification,
+    userId,
+    read: false,
+    createdAt: new Date().toISOString(),
+  };
+
+  const docRef = await addDoc(notificationsCol, newNotificationData);
+  return { id: docRef.id, ...newNotificationData };
+}
+
+export async function getNotifications(
+  db: Firestore,
+  userId: string,
+  limitCount: number = 20
+): Promise<Notification[]> {
+  const notificationsCol = collection(db, 'users', userId, 'notifications');
+  const q = query(
+    notificationsCol,
+    orderBy('createdAt', 'desc'),
+    limit(limitCount)
+  );
+
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+}
+
+export async function getUnreadNotifications(
+  db: Firestore,
+  userId: string,
+  limitCount: number = 20
+): Promise<Notification[]> {
+  const notificationsCol = collection(db, 'users', userId, 'notifications');
+  const q = query(
+    notificationsCol,
+    where('read', '==', false),
+    orderBy('createdAt', 'desc'),
+    limit(limitCount)
+  );
+
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+}
+
+export async function markNotificationAsRead(
+  db: Firestore,
+  userId: string,
+  notificationId: string
+): Promise<void> {
+  const notificationRef = doc(db, 'users', userId, 'notifications', notificationId);
+  return updateDoc(notificationRef, { read: true });
+}
+
+export async function markAllNotificationsAsRead(
+  db: Firestore,
+  userId: string
+): Promise<void> {
+  const notificationsCol = collection(db, 'users', userId, 'notifications');
+  const q = query(notificationsCol, where('read', '==', false));
+  const snapshot = await getDocs(q);
+
+  const batch = writeBatch(db);
+  snapshot.docs.forEach(doc => {
+    batch.update(doc.ref, { read: true });
+  });
+
+  await batch.commit();
+}
+
+export async function deleteNotification(
+  db: Firestore,
+  userId: string,
+  notificationId: string
+): Promise<void> {
+  const notificationRef = doc(db, 'users', userId, 'notifications', notificationId);
+  return deleteDoc(notificationRef);
 }
