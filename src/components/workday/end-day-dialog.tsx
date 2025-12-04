@@ -88,6 +88,7 @@ export function EndDayDialog({
           incompletedTaskIds: incompleteTasks.map(t => t.id),
           goals: workdayTasks.length,
           completed: completedTasks.length,
+          endTime: new Date().toISOString(),
         });
 
         toast({

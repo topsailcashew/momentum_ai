@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { MinistrySelector } from '@/components/ministries/ministry-selector';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 export function Header() {
   const [currentTime, setCurrentTime] = React.useState<Date>(new Date());
@@ -70,6 +71,7 @@ export function Header() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </form>
+        <NotificationBell />
       </div>
     </header>
   );

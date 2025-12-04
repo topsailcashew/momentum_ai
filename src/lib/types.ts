@@ -178,3 +178,25 @@ export interface Milestone {
   completedAt?: string;
   description?: string;
 }
+
+// Notification Types
+export type NotificationType =
+  | 'task_deadline'
+  | 'end_day_reminder'
+  | 'recurring_task'
+  | 'milestone_achieved'
+  | 'incomplete_tasks'
+  | 'weekly_planning';
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  actionUrl?: string;
+  read: boolean;
+  createdAt: string;
+  relatedTaskId?: string;
+  relatedProjectId?: string;
+}
