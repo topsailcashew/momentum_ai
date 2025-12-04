@@ -466,6 +466,20 @@ export async function addWorkdayTask(
   };
 
   const docRef = await addDoc(workdayCol, newWorkdayTask);
+
+  // Set startTime for today's report if this is the first task added
+  try {
+    const currentReport = await getTodaysReport(db, userId);
+    if (!currentReport.startTime) {
+      await updateTodaysReport(db, userId, {
+        startTime: new Date().toISOString(),
+      });
+    }
+  } catch (error) {
+    console.error('Error setting startTime:', error);
+    // Don't fail the task addition if startTime update fails
+  }
+
   return { id: docRef.id, ...newWorkdayTask };
 }
 
