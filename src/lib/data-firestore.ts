@@ -571,11 +571,19 @@ export async function getMinistry(db: Firestore, userId: string, ministryId: str
 
 export async function addMinistry(db: Firestore, userId: string, ministryData: Omit<Ministry, 'id' | 'userId' | 'createdAt'>): Promise<Ministry> {
   const ministriesCol = collection(db, 'users', userId, 'ministries');
-  const newMinistryData = {
+  const newMinistryData: any = {
     ...ministryData,
     userId,
     createdAt: new Date().toISOString(),
   };
+
+  // Remove undefined fields to avoid Firestore errors
+  Object.keys(newMinistryData).forEach(key => {
+    if (newMinistryData[key] === undefined) {
+      delete newMinistryData[key];
+    }
+  });
+
   const docRef = await addDoc(ministriesCol, newMinistryData);
   return { id: docRef.id, ...newMinistryData };
 }
