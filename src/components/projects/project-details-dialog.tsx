@@ -39,10 +39,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { Project, Task } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 const projectFormSchema = z.object({
   name: z.string().min(2, 'Project name must be at least 2 characters.'),
   priority: z.enum(['Low', 'Medium', 'High']),
+  ministryId: z.string().optional(),
 });
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
@@ -59,17 +61,27 @@ interface ProjectDetailsDialogProps {
 
 export function ProjectDetailsDialog({ project, tasks, open, onOpenChange, onDelete, onUpdate, isPending }: ProjectDetailsDialogProps) {
   const [isEditing, setIsEditing] = React.useState(false);
+  const { ministries } = useDashboardData();
 
   const completedTasks = tasks.filter(t => t.completed);
   const openTasks = tasks.filter(t => !t.completed);
 
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
-    defaultValues: { name: project.name, priority: project.priority || 'Medium' },
+    defaultValues: {
+      name: project.name,
+      priority: project.priority || 'Medium',
+      ministryId: project.ministryId || 'none'
+    },
   });
 
   const handleUpdateProject = (data: ProjectFormValues) => {
-    onUpdate(project.id, data);
+    const updates: Partial<Project> = {
+      name: data.name,
+      priority: data.priority,
+      ministryId: data.ministryId === 'none' ? undefined : data.ministryId, // Handle 'none' as removal
+    };
+    onUpdate(project.id, updates);
     setIsEditing(false);
   };
 
@@ -79,7 +91,11 @@ export function ProjectDetailsDialog({ project, tasks, open, onOpenChange, onDel
 
   React.useEffect(() => {
     if (project) {
-      form.reset({ name: project.name, priority: project.priority || 'Medium' });
+      form.reset({
+        name: project.name,
+        priority: project.priority || 'Medium',
+        ministryId: project.ministryId || 'none'
+      });
     }
   }, [project, form]);
 
@@ -138,6 +154,32 @@ export function ProjectDetailsDialog({ project, tasks, open, onOpenChange, onDel
                           <SelectItem value="Low">Low</SelectItem>
                           <SelectItem value="Medium">Medium</SelectItem>
                           <SelectItem value="High">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="ministryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ministry (Optional)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || 'none'}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a ministry" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {ministries.map(ministry => (
+                            <SelectItem key={ministry.id} value={ministry.id}>
+                              {ministry.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />

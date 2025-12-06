@@ -24,6 +24,8 @@ export interface Task {
   priority?: EisenhowerMatrix;
   status?: 'not-started' | 'in-progress' | 'completed' | 'blocked';
   notes?: string;
+  focusedTimeMs?: number; // NEW
+  lastFocusedAt?: string; // NEW
 }
 
 export interface Category {
@@ -46,16 +48,16 @@ export interface MomentumScore {
 }
 
 export interface Project {
-    id: string;
-    userId: string;
-    name: string;
-    priority: ProjectPriority;
-    ministryId?: string;
-    owner?: string;
-    startDate?: string;
-    dueDate?: string;
-    status?: 'not-started' | 'in-progress' | 'completed' | 'on-hold';
-    description?: string;
+  id: string;
+  userId: string;
+  name: string;
+  priority: ProjectPriority;
+  ministryId?: string;
+  owner?: string;
+  startDate?: string;
+  dueDate?: string;
+  status?: 'not-started' | 'in-progress' | 'completed' | 'on-hold';
+  description?: string;
 }
 
 export interface RecurringTask {
@@ -77,6 +79,8 @@ export interface RecurringTask {
   priority?: EisenhowerMatrix;
   status?: 'not-started' | 'in-progress' | 'completed' | 'blocked';
   notes?: string;
+  focusedTimeMs?: number; // NEW
+  lastFocusedAt?: string; // NEW
 }
 
 export interface WorkdayTask {
@@ -87,6 +91,8 @@ export interface WorkdayTask {
   taskType: 'regular' | 'recurring';
   notes: string | null; // Notes added at end of day
   addedAt: string; // ISO timestamp
+  timeSpentMs?: number; // NEW: Time spent on this specific workday instance
+  completedAt?: string; // NEW: ISO - when marked complete today
 }
 
 export interface DailyReport {
@@ -100,6 +106,19 @@ export interface DailyReport {
   taskNotes?: Record<string, string>; // Map of taskId to notes
   completedTaskIds?: string[];
   incompletedTaskIds?: string[];
+  workdayStartTime?: string; // NEW: ISO - set ONLY by morning modal
+  workdayEndTime?: string; // EXISTING: Set by end day dialog (redundant with endTime?) keep consistent
+  currentFocusedTaskId?: string; // NEW: Currently focused task
+  currentFocusedTaskType?: 'regular' | 'recurring'; // NEW
+  focusStartedAt?: string; // NEW: ISO - when current focus began
+  energyLevel?: EnergyLevel; // NEW: Set in morning modal
+  dailyGoalsText?: string; // NEW: User's written goals from morning modal
+}
+
+export interface UserPreferences {
+  timerChimesEnabled: boolean;
+  notificationsEnabled: boolean;
+  hasSeenMorningModal: string; // YYYY-MM-DD
 }
 
 export const ScoreAndSuggestTasksInputSchema = z.object({

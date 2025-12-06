@@ -19,12 +19,17 @@ import { useToast } from '@/hooks/use-toast';
 import { PomodoroContext } from '../dashboard/pomodoro-provider';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
-import { updateTask, updateRecurringTask, calculateAndSaveMomentumScore, getWorkdayTasks, removeWorkdayTask } from '@/lib/data-firestore';
+import { updateTask, updateRecurringTask, calculateAndSaveMomentumScore, getWorkdayTasks, removeWorkdayTask, updateWorkdayTaskNotes } from '@/lib/data-firestore';
 import { onClientWrite, onTaskCompleted } from '@/app/actions';
 import { format, isToday, parseISO } from 'date-fns';
 import { AddTasksDialog } from './add-tasks-dialog';
 import { EndDayDialog } from './end-day-dialog';
+import dynamic from 'next/dynamic';
 import { AdaptiveActionMenu } from '@/components/ui/adaptive-action-menu';
+import { FocusLockModal } from './focus-lock-modal';
+import { useAudio } from '@/hooks/use-audio';
+
+const TaskCompletionModal = dynamic(() => import('./task-completion-modal').then(mod => ({ default: mod.TaskCompletionModal })), { ssr: false });
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
   Low: ZapOff,
@@ -39,6 +44,13 @@ const priorityColors: Record<EisenhowerMatrix, string> = {
   'Not Urgent & Not Important': 'text-gray-500',
 };
 
+type WorkdayTaskWithDetails = Task & {
+  workdayTaskId: string;
+  workdayNotes: string | null;
+  taskType: 'regular' | 'recurring';
+  timeSpentMs?: number;
+};
+
 export function WorkdayTasksCard() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -51,6 +63,11 @@ export function WorkdayTasksCard() {
   const [showEndDayDialog, setShowEndDayDialog] = React.useState(false);
   const { toast } = useToast();
   const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
+  const { play } = useAudio();
+
+  const [focusLockOpen, setFocusLockOpen] = React.useState(false);
+  const [pendingFocusTask, setPendingFocusTask] = React.useState<Task | null>(null);
+  const [completionModalTask, setCompletionModalTask] = React.useState<WorkdayTaskWithDetails | null>(null);
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -101,14 +118,30 @@ export function WorkdayTasksCard() {
           details: recurringTask.details,
           priority: recurringTask.priority,
           taskType: 'recurring' as const,
+          focusedTimeMs: recurringTask.focusedTimeMs,
         };
       }
     }
 
-    return task ? { ...task, workdayTaskId: wt.id, workdayNotes: wt.notes } : null;
-  }).filter((t): t is Task & { workdayTaskId: string; workdayNotes: string | null; taskType: 'regular' | 'recurring' } => t !== null);
+    if (!task) return null;
+
+    return {
+      ...task,
+      workdayTaskId: wt.id,
+      workdayNotes: wt.notes,
+      timeSpentMs: wt.timeSpentMs
+    } as WorkdayTaskWithDetails;
+  }).filter((t): t is WorkdayTaskWithDetails => t !== null);
 
   const handleComplete = (id: string, completed: boolean, taskType: 'regular' | 'recurring') => {
+    if (completed) {
+      play('taskComplete');
+      const task = workdayTasksWithDetails.find(t => t.id === id);
+      if (task) {
+        setCompletionModalTask(task);
+      }
+    }
+
     if (taskType === 'regular') {
       let originalTasksState: Task[] = [];
 
@@ -128,6 +161,10 @@ export function WorkdayTasksCard() {
           if (completed) {
             await calculateAndSaveMomentumScore(firestore, userId);
             await onTaskCompleted(userId);
+            // If the completed task was focused, clear focus
+            if (focusedTask?.id === id) {
+              setFocusedTask(null);
+            }
           } else {
             await onClientWrite();
           }
@@ -161,6 +198,9 @@ export function WorkdayTasksCard() {
             await updateRecurringTask(firestore, userId, id, { lastCompleted: new Date().toISOString() });
             await calculateAndSaveMomentumScore(firestore, userId);
             await onTaskCompleted(userId);
+            if (focusedTask?.id === id) {
+              setFocusedTask(null);
+            }
           } else {
             // Un-complete by setting lastCompleted to null
             await updateRecurringTask(firestore, userId, id, { lastCompleted: null });
@@ -175,6 +215,30 @@ export function WorkdayTasksCard() {
           setRecurringTasks(originalRecurringTasksState);
         }
       });
+    }
+  };
+
+  const handleTaskClick = (task: Task) => {
+    if (focusedTask && focusedTask.id === task.id) {
+      // Already focused, do nothing or maybe show detail modal (future)
+      return;
+    }
+
+    if (focusedTask && !focusedTask.completed) {
+      // Another incomplete task is focused -> Warn user
+      setPendingFocusTask(task);
+      setFocusLockOpen(true);
+    } else {
+      // No focus or previous focus completed -> Switch context
+      setFocusedTask(task);
+    }
+  };
+
+  const handleForceSwitch = () => {
+    if (pendingFocusTask) {
+      setFocusedTask(pendingFocusTask);
+      setPendingFocusTask(null);
+      setFocusLockOpen(false);
     }
   };
 
@@ -259,23 +323,28 @@ export function WorkdayTasksCard() {
                     const priorityColor = task.priority ? priorityColors[task.priority] : 'text-gray-500';
 
                     return (
-                      <div key={task.id} className={cn(
-                        "flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors relative group",
-                        isAligned && !isFocused && "bg-primary/10 border border-primary/30",
-                        isFocused && "bg-accent/20 border border-accent"
-                      )}>
-                        <Checkbox
-                          id={`task-${task.id}`}
-                          checked={task.completed}
-                          onCheckedChange={(checked) => handleComplete(task.id, !!checked, task.taskType)}
-                          disabled={isPending}
-                          className="mt-1"
-                        />
+                      <div
+                        key={task.id}
+                        onClick={() => handleTaskClick(task)}
+                        className={cn(
+                          "flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors relative group cursor-pointer",
+                          isAligned && !isFocused && "bg-primary/10 border border-primary/30",
+                          isFocused && "bg-accent/20 border-2 border-accent shadow-sm"
+                        )}>
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            id={`task-${task.id}`}
+                            checked={task.completed}
+                            onCheckedChange={(checked) => handleComplete(task.id, !!checked, task.taskType)}
+                            disabled={isPending}
+                            className="mt-1"
+                          />
+                        </div>
                         <div className="flex-grow min-w-0">
-                          <label htmlFor={`task-${task.id}`} className="font-semibold text-sm sm:text-base block break-words cursor-pointer">
+                          <label htmlFor={`task-${task.id}`} className="font-bold text-sm sm:text-base block break-words cursor-pointer pointer-events-none">
                             {task.name}
                           </label>
-                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground mt-1.5">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground mt-1.5 pointer-events-none">
                             <Badge variant="secondary" className="capitalize text-xs">{getCategoryName(task.category ?? 'personal')}</Badge>
                             <div className="flex items-center gap-1 whitespace-nowrap">
                               <Icon className="size-3 flex-shrink-0" />
@@ -298,15 +367,19 @@ export function WorkdayTasksCard() {
                                 </TooltipContent>
                               </Tooltip>
                             )}
+                            {/* Cumulative Focus Time Display could go here in future */}
                           </div>
                         </div>
-                        <div className="flex sm:absolute sm:top-1/2 sm:-translate-y-1/2 sm:right-2 sm:opacity-0 sm:group-hover:opacity-100 md:transition-opacity bg-background/80 backdrop-blur-sm rounded-md p-1 mt-2 sm:mt-0">
+                        <div className="flex sm:absolute sm:top-1/2 sm:-translate-y-1/2 sm:right-2 sm:opacity-0 sm:group-hover:opacity-100 md:transition-opacity bg-background/80 backdrop-blur-sm rounded-md p-1 mt-2 sm:mt-0" onClick={(e) => e.stopPropagation()}>
                           <AdaptiveActionMenu
                             actions={[
                               {
                                 label: "Start Pomodoro",
                                 icon: <PlayCircle className="size-3.5 sm:size-4" />,
-                                onClick: () => setFocusedTask(task),
+                                onClick: () => {
+                                  // Start Pomodoro action essentially just focuses the task, so we can reuse logic or call setFocusedTask
+                                  setFocusedTask(task);
+                                },
                               },
                               {
                                 label: "Remove from today",
@@ -335,13 +408,15 @@ export function WorkdayTasksCard() {
 
                     return (
                       <div key={task.id} className="flex items-start gap-3 p-3 rounded-lg bg-background/50 opacity-75">
-                        <Checkbox
-                          id={`task-${task.id}`}
-                          checked={true}
-                          onCheckedChange={(checked) => handleComplete(task.id, !!checked, task.taskType)}
-                          disabled={isPending}
-                          className="mt-1"
-                        />
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            id={`task-${task.id}`}
+                            checked={true}
+                            onCheckedChange={(checked) => handleComplete(task.id, !!checked, task.taskType)}
+                            disabled={isPending}
+                            className="mt-1"
+                          />
+                        </div>
                         <div className="flex-grow min-w-0">
                           <label htmlFor={`task-${task.id}`} className="font-semibold text-sm block break-words line-through text-muted-foreground cursor-pointer">
                             {task.name}
@@ -399,6 +474,47 @@ export function WorkdayTasksCard() {
         onOpenChange={setShowEndDayDialog}
         workdayTasks={workdayTasksWithDetails}
         onComplete={() => setWorkdayTasks([])}
+      />
+
+      <FocusLockModal
+        open={focusLockOpen}
+        onOpenChange={setFocusLockOpen}
+        currentTaskName={focusedTask?.name || ''}
+        onStayFocused={() => {
+          setPendingFocusTask(null);
+          setFocusLockOpen(false);
+        }}
+        onForceSwitch={handleForceSwitch}
+      />
+
+      <TaskCompletionModal
+        open={!!completionModalTask}
+        onOpenChange={(open) => !open && setCompletionModalTask(null)}
+        taskName={completionModalTask?.name ?? ''}
+        timeSpentMs={completionModalTask?.timeSpentMs}
+        onSaveNotes={async (notes) => {
+          if (completionModalTask && notes.trim()) {
+            try {
+              await updateWorkdayTaskNotes(firestore, userId, completionModalTask.workdayTaskId, notes);
+              setWorkdayTasks(prev => prev.map(t =>
+                t.id === completionModalTask.workdayTaskId ? { ...t, notes } : t
+              ));
+              toast({
+                title: 'Notes saved',
+                description: 'Your completion notes have been saved.',
+              });
+            } catch (error) {
+              console.error('Failed to save notes', error);
+              toast({
+                variant: 'destructive',
+                title: 'Error',
+                description: 'Failed to save notes.',
+              });
+            }
+          }
+          setCompletionModalTask(null);
+        }}
+        onSkip={() => setCompletionModalTask(null)}
       />
     </>
   );
