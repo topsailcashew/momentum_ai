@@ -5,31 +5,42 @@
 @layer base {
   :root {
     --radius: 1rem;
-    --background: 240 5% 96%; /* Lighter gray for a softer look */
-    --foreground: 216 93% 14%; /* Oxford Blue */
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 216 93% 14%; /* Oxford Blue */
-    --popover: 0 0% 100%; /* White */
-    --popover-foreground: 216 93% 14%; /* Oxford Blue */
-    --primary: 23 90% 55%; /* Pumpkin */
+    --background: 240 5% 96%;
+    /* Lighter gray for a softer look */
+    --foreground: 216 93% 14%;
+    /* Oxford Blue */
+    --card: 0 0% 100%;
+    /* White */
+    --card-foreground: 216 93% 14%;
+    /* Oxford Blue */
+    --popover: 0 0% 100%;
+    /* White */
+    --popover-foreground: 216 93% 14%;
+    /* Oxford Blue */
+    --primary: 23 90% 55%;
+    /* Pumpkin */
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 5% 92%; /* Slightly darker gray for secondary elements */
+    --secondary: 240 5% 92%;
+    /* Slightly darker gray for secondary elements */
     --secondary-foreground: 240 5% 20%;
     --muted: 240 5% 94%;
     --muted-foreground: 240 4% 46%;
-    --accent: 23 90% 55%; /* Pumpkin */
+    --accent: 23 90% 55%;
+    /* Pumpkin */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 88%;
     --input: 240 5.9% 90%;
-    --ring: 23 90% 55%; /* Pumpkin */
+    --ring: 23 90% 55%;
+    /* Pumpkin */
     --chart-1: 23 90% 55%;
     --chart-2: 23 90% 65%;
     --chart-3: 23 90% 75%;
     --chart-4: 23 90% 85%;
     --chart-5: 23 90% 95%;
-    --sidebar-background: 216 93% 10%; /* Dark blue for sidebar */
+    --sidebar-background: 216 93% 10%;
+    /* Dark blue for sidebar */
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 23 90% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -42,25 +53,31 @@
   }
 
   .dark {
-    --background: 216 93% 14%; /* Oxford Blue */
-    --foreground: 0 0% 95%; /* White Smoke */
-    --card: 216 93% 14%; /* Oxford Blue */
+    --background: 216 93% 14%;
+    /* Oxford Blue */
+    --foreground: 0 0% 95%;
+    /* White Smoke */
+    --card: 216 93% 14%;
+    /* Oxford Blue */
     --card-foreground: 0 0% 95%;
     --popover: 216 93% 14%;
     --popover-foreground: 0 0% 95%;
-    --primary: 23 90% 55%; /* Pumpkin */
+    --primary: 23 90% 55%;
+    /* Pumpkin */
     --primary-foreground: 0 0% 100%;
     --secondary: 216 93% 20%;
     --secondary-foreground: 0 0% 100%;
     --muted: 216 93% 17%;
     --muted-foreground: 0 0% 70%;
-    --accent: 23 90% 55%; /* Pumpkin */
+    --accent: 23 90% 55%;
+    /* Pumpkin */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 216 93% 20%;
     --input: 216 93% 20%;
-    --ring: 23 90% 55%; /* Pumpkin */
+    --ring: 23 90% 55%;
+    /* Pumpkin */
     --sidebar-background: 216 93% 10% / 0.7;
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 23 90% 55%;
@@ -76,16 +93,76 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  h1 {
+    @apply text-3xl font-bold tracking-tight;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-xl font-semibold;
+  }
+
+  h4 {
+    @apply text-lg font-medium;
+  }
+}
+
+@layer utilities {
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  .card-interactive {
+    @apply transition-transform duration-200 active:scale-[0.98] cursor-pointer touch-manipulation;
+  }
+
+  .animate-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.05);
     opacity: 0.8;

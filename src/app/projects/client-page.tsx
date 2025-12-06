@@ -154,7 +154,7 @@ export function ProjectClientPage() {
               <Card
                 key={project.id}
                 onClick={() => setSelectedProject(project)}
-                className="cursor-pointer hover:border-primary/50 transition-colors"
+                className="card-interactive hover:border-primary/50 transition-all"
               >
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">

@@ -10,6 +10,8 @@ import { FirebaseClientProvider } from '@/firebase';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppProvider } from '@/components/app-layout';
 import { AuthProvider } from '@/components/auth-provider';
+import { OfflineBanner } from '@/components/offline-banner';
+import { WelcomeDialog } from '@/components/onboarding/welcome-dialog';
 
 const fontSans = FontSans({
   subsets: ['latin'],
@@ -45,6 +47,8 @@ export default function RootLayout({
               <AuthProvider>
                 <PomodoroProvider>
                   <AppProvider>
+                    <OfflineBanner />
+                    <WelcomeDialog />
                     {children}
                   </AppProvider>
                 </PomodoroProvider>

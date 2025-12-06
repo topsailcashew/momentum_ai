@@ -24,6 +24,7 @@ import { onClientWrite, onTaskCompleted } from '@/app/actions';
 import { format, isToday, parseISO } from 'date-fns';
 import { AddTasksDialog } from './add-tasks-dialog';
 import { EndDayDialog } from './end-day-dialog';
+import { AdaptiveActionMenu } from '@/components/ui/adaptive-action-menu';
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
   Low: ZapOff,
@@ -299,37 +300,22 @@ export function WorkdayTasksCard() {
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => setFocusedTask(task)}
-                              >
-                                <PlayCircle className="size-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Start Pomodoro</p>
-                            </TooltipContent>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                                onClick={() => handleRemoveFromWorkday(task.workdayTaskId)}
-                              >
-                                <X className="size-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Remove from today</p>
-                            </TooltipContent>
-                          </Tooltip>
+                        <div className="flex sm:absolute sm:top-1/2 sm:-translate-y-1/2 sm:right-2 sm:opacity-0 sm:group-hover:opacity-100 md:transition-opacity bg-background/80 backdrop-blur-sm rounded-md p-1 mt-2 sm:mt-0">
+                          <AdaptiveActionMenu
+                            actions={[
+                              {
+                                label: "Start Pomodoro",
+                                icon: <PlayCircle className="size-3.5 sm:size-4" />,
+                                onClick: () => setFocusedTask(task),
+                              },
+                              {
+                                label: "Remove from today",
+                                icon: <X className="size-3.5 sm:size-4" />,
+                                onClick: () => handleRemoveFromWorkday(task.workdayTaskId),
+                                variant: "destructive"
+                              }
+                            ]}
+                          />
                         </div>
                       </div>
                     );
