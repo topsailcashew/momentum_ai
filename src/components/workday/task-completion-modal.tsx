@@ -47,6 +47,11 @@ export function TaskCompletionModal({
     const [notes, setNotes] = React.useState('');
     const { width, height } = useWindowSizeCustom();
     const [showConfetti, setShowConfetti] = React.useState(false);
+    const [isMounted, setIsMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     React.useEffect(() => {
         if (open) {
@@ -61,7 +66,11 @@ export function TaskCompletionModal({
 
     return (
         <>
-            {showConfetti && <Confetti width={width} height={height} recycle={false} numberOfPieces={500} gravity={0.2} />}
+            {/* Temporarily disabled to test hydration
+            <div suppressHydrationWarning>
+                {isMounted && showConfetti && <Confetti width={width} height={height} recycle={false} numberOfPieces={500} gravity={0.2} />}
+            </div>
+            */}
             <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>

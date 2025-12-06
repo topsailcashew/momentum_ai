@@ -285,6 +285,20 @@ service cloud.firestore {
     }
 
     /**
+     * @description Rules for the /users/{userId}/preferences/{docId} collection.
+     * @path /users/{userId}/preferences/{docId}
+     * @purpose Stores user preferences like morning plan settings, notification preferences, etc.
+     * @allow (get, create, update) - User can read and modify their own preferences
+     */
+    match /users/{userId}/preferences/{docId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+    }
+
+    /**
      * @description Rules for the /users/{userId}/private collection.
      * @path /users/{userId}/private/{docId}
      * @purpose Stores sensitive user data like Google Calendar tokens

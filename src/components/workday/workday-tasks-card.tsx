@@ -24,10 +24,12 @@ import { onClientWrite, onTaskCompleted } from '@/app/actions';
 import { format, isToday, parseISO } from 'date-fns';
 import { AddTasksDialog } from './add-tasks-dialog';
 import { EndDayDialog } from './end-day-dialog';
-import { TaskCompletionModal } from './task-completion-modal';
+import dynamic from 'next/dynamic';
 import { AdaptiveActionMenu } from '@/components/ui/adaptive-action-menu';
 import { FocusLockModal } from './focus-lock-modal';
 import { useAudio } from '@/hooks/use-audio';
+
+const TaskCompletionModal = dynamic(() => import('./task-completion-modal').then(mod => ({ default: mod.TaskCompletionModal })), { ssr: false });
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
   Low: ZapOff,
