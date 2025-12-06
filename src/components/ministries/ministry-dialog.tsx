@@ -1,7 +1,16 @@
-'use client';
+"use client";
+import { Loader2 } from 'lucide-react';
 
 import * as React from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  ResponsiveModal,
+  ResponsiveModalContent,
+  ResponsiveModalHeader,
+  ResponsiveModalTitle,
+  ResponsiveModalDescription,
+  ResponsiveModalFooter,
+  ResponsiveModalClose,
+} from '@/components/ui/responsive-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -88,50 +97,56 @@ export function MinistryDialog({ open, onOpenChange, ministry, onSuccess }: Mini
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{ministry ? 'Edit Ministry' : 'Create New Ministry'}</DialogTitle>
-          <DialogDescription>
+    <ResponsiveModal open={open} onOpenChange={onOpenChange}>
+      <ResponsiveModalContent className="sm:max-w-lg max-h-[90vh] flex flex-col p-0 gap-0">
+        <ResponsiveModalHeader className="p-6 pb-2 flex-none">
+          <ResponsiveModalTitle>{ministry ? 'Edit Ministry' : 'Create New Ministry'}</ResponsiveModalTitle>
+          <ResponsiveModalDescription>
             {ministry ? 'Update your ministry details.' : 'Add a new ministry to organize your projects and tasks.'}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Ministry Name *</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Youth Ministry, Worship Team"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description of this ministry..."
-              rows={3}
-            />
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
+          </ResponsiveModalDescription>
+        </ResponsiveModalHeader>
+        <div className="flex-1 overflow-y-auto p-6 py-2">
+          <form id="ministry-form" onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Ministry Name *</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., Youth Ministry, Worship Team"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Brief description of this ministry..."
+                rows={3}
+              />
+            </div>
+          </form>
+        </div>
+        <ResponsiveModalFooter className="p-6 pt-2 flex-none">
+          <div className="flex justify-end gap-3 w-full">
+            <ResponsiveModalClose asChild>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+            </ResponsiveModalClose>
+            <Button type="submit" form="ministry-form" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isSubmitting ? 'Saving...' : ministry ? 'Update' : 'Create'}
             </Button>
           </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveModalFooter>
+      </ResponsiveModalContent>
+    </ResponsiveModal>
   );
 }

@@ -18,6 +18,9 @@ import {
   SidebarFooter,
   SidebarRail,
   SidebarProvider,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { useTheme } from 'next-themes';
@@ -69,14 +72,14 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
       setOpen(false);
     }
   }, [pathname, isMobile, setOpen]);
-  
+
   const handleSignOut = async () => {
     const auth = getAuth();
     await signOut(auth);
     toast({ title: "Signed out successfully." });
     router.push('/login');
   };
-  
+
   if (isUserLoading && !isAuthPage) {
     return <LoadingScreen />;
   }
@@ -111,131 +114,152 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           </Link>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarMenu className="mt-4">
-            <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/'}
-                  tooltip="Workday"
-                >
-                  <Link href="/">
-                    <CalendarDays />
-                    <span>Workday</span>
-                  </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/dashboard'}
-                  tooltip="Reports"
-                >
-                  <Link href="/dashboard">
-                    <Gauge />
-                    <span>Reports</span>
-                  </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/projects'}
-                  tooltip="Projects"
-                >
-                  <Link href="/projects">
-                    <FolderKanban />
-                    <span>Projects</span>
-                  </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname.startsWith('/ministries')}
-                  tooltip="Ministries"
-                >
-                  <Link href="/ministries">
-                    <Church />
-                    <span>Ministries</span>
-                  </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/recurring'}
-                  tooltip="Recurring"
-                >
-                  <Link href="/recurring">
-                    <Repeat />
-                    <span>Recurring</span>
-                  </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/weekly-planner'}
-                  tooltip="Weekly Planner"
-                >
-                  <Link href="/weekly-planner">
-                    <Activity />
-                    <span>Weekly Planner</span>
-                  </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === '/calendar'}
-                  tooltip="Calendar"
-                >
-                  <Link href="/calendar">
-                    <Calendar />
-                    <span>Calendar</span>
-                  </Link>
-                </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <SidebarGroup>
+            <SidebarGroupLabel>Focus</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === '/'}
+                    tooltip="Workday"
+                  >
+                    <Link href="/">
+                      <CalendarDays />
+                      <span>Workday</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === '/weekly-planner'}
+                    tooltip="Weekly Planner"
+                  >
+                    <Link href="/weekly-planner">
+                      <Activity />
+                      <span>Weekly Planner</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === '/calendar'}
+                    tooltip="Calendar"
+                  >
+                    <Link href="/calendar">
+                      <Calendar />
+                      <span>Calendar</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>Organize</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === '/projects'}
+                    tooltip="Projects"
+                  >
+                    <Link href="/projects">
+                      <FolderKanban />
+                      <span>Projects</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname.startsWith('/ministries')}
+                    tooltip="Ministries"
+                  >
+                    <Link href="/ministries">
+                      <Church />
+                      <span>Ministries</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === '/recurring'}
+                    tooltip="Recurring"
+                  >
+                    <Link href="/recurring">
+                      <Repeat />
+                      <span>Recurring</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>Insights</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === '/dashboard'}
+                    tooltip="Reports"
+                  >
+                    <Link href="/dashboard">
+                      <Gauge />
+                      <span>Reports</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         </SidebarContent>
         <SidebarFooter className="mt-auto">
-             <div className="flex items-center gap-2">
-                <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="group-data-[collapsible=icon]:size-8 hover:bg-transparent focus-visible:ring-0"
-                  >
-                    <Avatar className="size-full">
-                       {user?.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || 'User'} />}
-                        <AvatarFallback>
-                            {user?.displayName?.charAt(0) || 'U'}
-                        </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="end">
-                    <DropdownMenuItem onClick={() => router.push('/profile')}>
-                      <UserIcon />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
-                    {theme === 'light' ? <Moon /> : <Sun />}
-                    <span>Toggle Theme</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOut />
-                      <span>Sign Out</span>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-                </DropdownMenu>
-                 <div className="flex flex-col text-left group-data-[collapsible=icon]:hidden">
-                    <p className="text-sm font-semibold">{user?.displayName}</p>
-                    <p className="text-xs text-muted-foreground">{user?.email}</p>
-                </div>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="group-data-[collapsible=icon]:size-8 hover:bg-transparent focus-visible:ring-0"
+                >
+                  <Avatar className="size-full">
+                    {user?.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName || 'User'} />}
+                    <AvatarFallback>
+                      {user?.displayName?.charAt(0) || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="end">
+                <DropdownMenuItem onClick={() => router.push('/profile')}>
+                  <UserIcon />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+                  {theme === 'light' ? <Moon /> : <Sun />}
+                  <span>Toggle Theme</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut />
+                  <span>Sign Out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <div className="flex flex-col text-left group-data-[collapsible=icon]:hidden">
+              <p className="text-sm font-semibold">{user?.displayName}</p>
+              <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
+          </div>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
@@ -249,8 +273,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           </SidebarTrigger>
         </header>
         <Header />
-        <div className="p-4 md:p-6 lg:p-8">
-            {children}
+        <div className="p-4 md:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {children}
         </div>
       </SidebarInset>
     </>
@@ -259,13 +283,13 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-    return (
-        <SidebarProvider>
-            <DashboardDataProvider>
-                <AppLayoutContent>
-                    {children}
-                </AppLayoutContent>
-            </DashboardDataProvider>
-        </SidebarProvider>
-    )
+  return (
+    <SidebarProvider>
+      <DashboardDataProvider>
+        <AppLayoutContent>
+          {children}
+        </AppLayoutContent>
+      </DashboardDataProvider>
+    </SidebarProvider>
+  )
 }
