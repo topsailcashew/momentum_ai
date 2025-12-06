@@ -14,9 +14,9 @@ export const getProjectProgress = (projectId: string, tasks: Task[]) => {
   if (totalTasks === 0) {
     return { percentage: 0, text: "0/0", data: [], totalTasks: 0, completedTasks: 0 };
   }
-  
+
   const percentage = Math.round((completedTasks / totalTasks) * 100);
-  
+
   return {
     percentage,
     text: `${completedTasks}/${totalTasks}`,
@@ -25,3 +25,13 @@ export const getProjectProgress = (projectId: string, tasks: Task[]) => {
     completedTasks
   };
 };
+
+export function formatTime(milliseconds: number | undefined): string {
+  if (milliseconds === undefined || milliseconds === null) return "0m";
+  const totalMinutes = Math.floor(milliseconds / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours === 0) return `${minutes}m`;
+  return `${hours}h ${minutes}m`;
+}
