@@ -13,7 +13,7 @@ import type { Task, Category, EnergyLevel, Project, EisenhowerMatrix } from '@/l
 import { cn } from '@/lib/utils';
 import { Zap, ZapOff, Battery, Target, ListTodo, Folder, PlayCircle, Shield, Edit } from 'lucide-react';
 import { PriorityBadge } from '@/components/ui/priority-badge';
-import { StateTransitionDropdown } from '@/components/collaboration';
+import { StateTransitionDropdown, StateTransitionCard } from '@/components/collaboration';
 import { useTaskState } from '@/hooks/use-task-state';
 import {
     Select,
@@ -59,7 +59,7 @@ export function TaskList() {
     const [editingTask, setEditingTask] = React.useState<Task | null>(null);
     const { toast } = useToast();
     const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
-    const { updateTaskState } = useTaskState();
+    const { updateTaskState, isUpdating } = useTaskState();
 
     const handleComplete = (id: string, completed: boolean) => {
         let originalTasksState: Task[] = [];
@@ -226,12 +226,13 @@ export function TaskList() {
                                     const priorityColor = task.priority ? priorityColors[task.priority] : 'text-gray-500';
 
                                     return (
-                                        <div key={task.id} className={cn(
-                                            "flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors relative group animate-slide-up",
-                                            isAligned && !isFocused && "bg-primary/10 border border-primary/30",
-                                            isFocused && "bg-accent/20 border border-accent"
-                                        )}>
-                                            <Checkbox
+                                        <StateTransitionCard key={task.id} isTransitioning={isUpdating}>
+                                            <div className={cn(
+                                                "flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors relative group animate-slide-up",
+                                                isAligned && !isFocused && "bg-primary/10 border border-primary/30",
+                                                isFocused && "bg-accent/20 border border-accent"
+                                            )}>
+                                                <Checkbox
                                                 id={`task-${task.id}`}
                                                 checked={task.completed}
                                                 onCheckedChange={(checked) => handleComplete(task.id, !!checked)}
@@ -282,7 +283,8 @@ export function TaskList() {
                                                     ]}
                                                 />
                                             </div>
-                                        </div>
+                                            </div>
+                                        </StateTransitionCard>
                                     );
                                 })}
                             </TooltipProvider>
