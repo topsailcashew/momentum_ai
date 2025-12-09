@@ -11,7 +11,8 @@
  * is stored in subcollections under /users/{userId}.
  *
  * Key Security Decisions:
- * - Users can only access their own data.
+ * - Users can only access their own data, unless they are part of a team and accessing
+ *   data within a shared ministry.
  * - There are no admin roles.
  * - Listing all users is disallowed.
  *
@@ -48,7 +49,16 @@ service cloud.firestore {
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
-    
+
+    /**
+     * @description Helper function to check if user is a member of a team.
+     * @param {string} teamId - The ID of the team to check.
+     * @returns {boolean} True if the authenticated user is in the team's members list.
+     */
+    function isTeamMember(teamId) {
+      return isSignedIn() && get(/databases/$(database)/documents/teams/$(teamId)).data.members[request.auth.uid] != null;
+    }
+
     /**
      * @description Rules for the pomodoroStates/{userId} collection.
      * @path /pomodoroStates/{userId}
@@ -79,16 +89,20 @@ service cloud.firestore {
      * @description Rules for the /users/{userId}/tasks/{taskId} collection.
      * @path /users/{userId}/tasks/{taskId}
      * @allow (create) - A user can create a task if the userId matches their auth UID and state is valid.
-     * @allow (get, list) - A user can read their own tasks.
-     * @allow (update) - A user can update their own tasks or tasks assigned to them, with valid state transitions.
+     * @allow (get, list) - A user can read their own tasks, or tasks in a shared ministry.
+     * @allow (update) - A user can update their own tasks or tasks assigned to them.
      * @allow (delete) - A user can delete their own tasks.
-     * @deny (create) - A user cannot create a task with a userId that does not match their auth UID.
-     * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's tasks.
      * @principle Enforces document ownership and validates state fields for collaboration features.
      */
     match /users/{userId}/tasks/{taskId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      // User can read their own tasks OR tasks that belong to a project within a ministry
+      // they are a member of. This requires checking the project's ministryId.
+      allow get: if isOwner(userId) ||
+                   (isSignedIn() && resource.data.projectId != null &&
+                    get(/databases/$(database)/documents/users/$(resource.data.userId)/projects/$(resource.data.projectId)).data.ministryId != null &&
+                    isTeamMember(get(/databases/$(database)/documents/users/$(resource.data.userId)/projects/$(resource.data.projectId)).data.ministryId)
+                   );
+      allow list: if isOwner(userId); // Listing remains owner-only for security and performance.
       allow create: if isOwner(userId) &&
         request.resource.data.userId == userId &&
         request.resource.data.state in ['ready', 'in_progress', 'waiting', 'review', 'done'] &&
@@ -105,8 +119,6 @@ service cloud.firestore {
      * @path /users/{userId}/categories/{categoryId}
      * @allow (create) - A user can create a category if the userId matches their auth UID.
      * @allow (get, list, update, delete) - A user can read, list, update, or delete their own categories.
-     * @deny (create) - A user cannot create a category with a userId that does not match their auth UID.
-     * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's categories.
      * @principle Enforces document ownership for all operations on category documents.
      */
     match /users/{userId}/categories/{categoryId} {
@@ -146,8 +158,6 @@ service cloud.firestore {
      * @path /users/{userId}/streaks/{streakId}
      * @allow (create) - A user can create a streak if the userId matches their auth UID.
      * @allow (get, list, update, delete) - A user can read, list, update, or delete their own streaks.
-     * @deny (create) - A user cannot create a streak with a userId that does not match their auth UID.
-     * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's streaks.
      * @principle Enforces document ownership for all operations on streak documents.
      */
     match /users/{userId}/streaks/{streakId} {
@@ -161,19 +171,18 @@ service cloud.firestore {
     /**
      * @description Rules for the /users/{userId}/projects/{projectId} collection.
      * @path /users/{userId}/projects/{projectId}
-     * @allow (create) - A user can create a project if the userId matches their auth UID.
-     * @allow (get, list, update, delete) - A user can read, list, update, or delete their own projects.
-     * @deny (create) - A user cannot create a project with a userId that does not match their auth UID.
-     * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's projects.
+     * @allow (get, list) - A user can read/list their own projects.
+     * @allow (create, update, delete) - A user can manage their own projects.
      * @principle Enforces document ownership for all operations on project documents.
      */
     match /users/{userId}/projects/{projectId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      allow get, list: if isOwner(userId) ||
+                        (isSignedIn() && resource.data.ministryId != null && isTeamMember(resource.data.ministryId));
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
       allow delete: if isExistingOwner(userId);
     }
+
 
     /**
      * @description Rules for the /users/{userId}/reports/{reportId} collection.
@@ -214,17 +223,16 @@ service cloud.firestore {
     /**
      * @description Rules for the /users/{userId}/ministries/{ministryId} collection.
      * @path /users/{userId}/ministries/{ministryId}
-     * @allow (create) - A user can create a ministry if the userId matches their auth UID.
-     * @allow (get, list, update, delete) - A user can read, list, update, or delete their own ministries.
+     * @allow (get, list, create, update, delete) - A user can manage their own ministries.
      * @principle Enforces document ownership for all operations on ministry documents.
      */
     match /users/{userId}/ministries/{ministryId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
+        allow get, list: if isOwner(userId) || (isSignedIn() && isTeamMember(ministryId));
         allow create: if isOwner(userId) && request.resource.data.userId == userId;
         allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
         allow delete: if isExistingOwner(userId);
     }
+
 
     /**
      * @description Rules for the /users/{userId}/strategic-plans/{planId} collection.
@@ -289,8 +297,7 @@ service cloud.firestore {
     /**
      * @description Rules for the /users/{userId}/notifications/{notificationId} collection.
      * @path /users/{userId}/notifications/{notificationId}
-     * @allow (create) - A user can create a notification if the userId matches their auth UID.
-     * @allow (get, list, update, delete) - A user can read, list, update, or delete their own notifications.
+     * @allow (get, list, create, update, delete) - A user can manage their own notifications.
      * @principle Enforces document ownership for all operations on notification documents.
      */
     match /users/{userId}/notifications/{notificationId} {
@@ -320,7 +327,6 @@ service cloud.firestore {
      * @path /users/{userId}/private/{docId}
      * @purpose Stores sensitive user data like Google Calendar tokens
      * @security Only accessible by the user owner, never publicly readable
-     * @note This is a special collection for storing OAuth tokens and other private credentials
      */
     match /users/{userId}/private/{docId} {
         allow get: if isOwner(userId);
@@ -328,15 +334,6 @@ service cloud.firestore {
         allow create: if isOwner(userId);
         allow update: if isOwner(userId);
         allow delete: if isOwner(userId);
-    }
-
-    /**
-     * @description Helper function to check if user is a member of a team.
-     * @param {map} teamData - The team document data.
-     * @returns {boolean} True if the authenticated user is in the team's members list.
-     */
-    function isTeamMember(teamData) {
-      return isSignedIn() && request.auth.uid in teamData.members;
     }
 
     /**
@@ -348,13 +345,12 @@ service cloud.firestore {
      * @principle Enables team collaboration while maintaining creator control.
      */
     match /teams/{teamId} {
-      allow read: if isSignedIn() && isTeamMember(resource.data);
-      allow create: if isSignedIn() &&
-        request.resource.data.createdBy == request.auth.uid;
-      allow update: if isSignedIn() &&
-        resource.data.createdBy == request.auth.uid;
-      allow delete: if isSignedIn() &&
-        resource.data.createdBy == request.auth.uid;
+      allow read: if isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/teams/$(teamId)).data.members;
+      allow create: if isSignedIn() && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
     }
   }
 }
+
+    
