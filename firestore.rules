@@ -48,6 +48,15 @@ service cloud.firestore {
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
+    
+    /**
+     * @description Rules for the pomodoroStates/{userId} collection.
+     * @path /pomodoroStates/{userId}
+     * @allow (get, create, update, delete) - A user can manage their own pomodoro state document.
+     */
+    match /pomodoroStates/{userId} {
+      allow read, write: if isOwner(userId);
+    }
 
     /**
      * @description Rules for the /users/{userId} collection.
