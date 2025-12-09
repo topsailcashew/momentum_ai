@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { TaskState, StateHistoryEntry, WaitingInfo } from '@/types/task-state';
 
 export type EnergyLevel = 'Low' | 'Medium' | 'High';
 export type ProjectPriority = 'Low' | 'Medium' | 'High';
@@ -26,6 +27,19 @@ export interface Task {
   notes?: string;
   focusedTimeMs?: number; // NEW
   lastFocusedAt?: string; // NEW
+
+  // NEW STATE FIELDS
+  state: TaskState;
+  stateHistory: StateHistoryEntry[];
+
+  // ENHANCED COLLABORATION FIELDS
+  assignedTo?: string; // User ID
+  assignedToName?: string; // Cached display name
+  assignedToPhotoURL?: string; // Cached avatar
+
+  waitingOn?: WaitingInfo;
+
+  blockedTasks?: string[]; // Task IDs that are waiting on this one
 }
 
 export interface Category {
