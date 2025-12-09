@@ -13,6 +13,9 @@ import type { Task, Category, EnergyLevel, Project, EisenhowerMatrix } from '@/l
 import { cn } from '@/lib/utils';
 import { Zap, ZapOff, Battery, Target, ListTodo, Folder, PlayCircle, Shield, Edit } from 'lucide-react';
 import { PriorityBadge } from '@/components/ui/priority-badge';
+import { StateTransitionDropdown, StateTransitionCard, BlockingIndicator } from '@/components/collaboration';
+import { useTaskState } from '@/hooks/use-task-state';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     Select,
     SelectContent,
@@ -57,6 +60,7 @@ export function TaskList() {
     const [editingTask, setEditingTask] = React.useState<Task | null>(null);
     const { toast } = useToast();
     const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
+    const { updateTaskState, isUpdating } = useTaskState();
 
     const handleComplete = (id: string, completed: boolean) => {
         let originalTasksState: Task[] = [];
@@ -154,6 +158,10 @@ export function TaskList() {
         });
     };
 
+    const handleStateChange = async (taskId: string, newState: import('@/types').TaskState, waitingInfo?: Omit<import('@/types').WaitingInfo, 'blockedAt'>) => {
+        await updateTaskState(taskId, userId, newState, undefined, waitingInfo);
+    };
+
 
     const getCategoryName = (categoryId: string) => {
         return categories.find(c => c.id === categoryId)?.name ?? categoryId;
@@ -219,12 +227,13 @@ export function TaskList() {
                                     const priorityColor = task.priority ? priorityColors[task.priority] : 'text-gray-500';
 
                                     return (
-                                        <div key={task.id} className={cn(
-                                            "flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors relative group animate-slide-up",
-                                            isAligned && !isFocused && "bg-primary/10 border border-primary/30",
-                                            isFocused && "bg-accent/20 border border-accent"
-                                        )}>
-                                            <Checkbox
+                                        <StateTransitionCard key={task.id} isTransitioning={isUpdating}>
+                                            <div className={cn(
+                                                "flex items-start gap-3 p-3 rounded-lg bg-background hover:bg-secondary/50 transition-colors relative group animate-slide-up",
+                                                isAligned && !isFocused && "bg-primary/10 border border-primary/30",
+                                                isFocused && "bg-accent/20 border border-accent"
+                                            )}>
+                                                <Checkbox
                                                 id={`task-${task.id}`}
                                                 checked={task.completed}
                                                 onCheckedChange={(checked) => handleComplete(task.id, !!checked)}
@@ -236,6 +245,11 @@ export function TaskList() {
                                                     {task.name}
                                                 </label>
                                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground mt-1.5">
+                                                    <StateTransitionDropdown
+                                                        currentState={task.state || 'ready'}
+                                                        onStateChange={(newState) => handleStateChange(task.id, newState)}
+                                                        onWaitingInfoProvided={(info) => handleStateChange(task.id, 'waiting', info)}
+                                                    />
                                                     {task.category && <Badge variant="secondary" className="capitalize text-xs">{getCategoryName(task.category)}</Badge>}
                                                     {task.energyLevel && Icon && (
                                                         <div className="flex items-center gap-1 whitespace-nowrap">
@@ -253,7 +267,26 @@ export function TaskList() {
                                                     {task.priority && (
                                                         <PriorityBadge priority={task.priority.split(' ')[0]} />
                                                     )}
+                                                    {task.blockedTasks && task.blockedTasks.length > 0 && (
+                                                        <BlockingIndicator blockedCount={task.blockedTasks.length} />
+                                                    )}
                                                 </div>
+                                                {task.state === 'waiting' && task.waitingOn && (
+                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+                                                        <Avatar className="size-5">
+                                                            {task.waitingOn.userPhotoURL && (
+                                                                <AvatarImage
+                                                                    src={task.waitingOn.userPhotoURL}
+                                                                    alt={task.waitingOn.userName}
+                                                                />
+                                                            )}
+                                                            <AvatarFallback className="text-[10px]">
+                                                                {task.waitingOn.userName.charAt(0)}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <span>⏸️ Waiting on {task.waitingOn.userName}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex sm:absolute sm:top-1/2 sm:-translate-y-1/2 sm:right-2 sm:opacity-0 sm:group-hover:opacity-100 md:transition-opacity bg-background/80 backdrop-blur-sm rounded-md p-1 mt-2 sm:mt-0">
                                                 <AdaptiveActionMenu
@@ -271,7 +304,8 @@ export function TaskList() {
                                                     ]}
                                                 />
                                             </div>
-                                        </div>
+                                            </div>
+                                        </StateTransitionCard>
                                     );
                                 })}
                             </TooltipProvider>

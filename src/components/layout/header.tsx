@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { MinistrySelector } from '@/components/ministries/ministry-selector';
 import { NotificationBell } from '@/components/notifications/notification-bell';
+import { TeamSelector } from '@/components/team';
 
 export function Header() {
   const [currentTime, setCurrentTime] = React.useState<Date>(new Date());
@@ -61,6 +62,7 @@ export function Header() {
         </p>
       </div>
       <div className="flex items-start gap-4 flex-1 justify-end">
+        <TeamSelector />
         <MinistrySelector />
         <form onSubmit={handleSearch} className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

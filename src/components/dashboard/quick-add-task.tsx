@@ -22,6 +22,8 @@ export function QuickAddTask({ onAdd, isPending, placeholder = "Add a task... (p
       onAdd({
         userId: '', // Will be set by the parent
         name: taskName.trim(),
+        state: 'ready', // NEW: Default state
+        stateHistory: [], // NEW: Empty history
       });
       setTaskName('');
     }
