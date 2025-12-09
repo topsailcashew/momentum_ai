@@ -13,6 +13,8 @@ import type { Task, Category, EnergyLevel, Project, EisenhowerMatrix } from '@/l
 import { cn } from '@/lib/utils';
 import { Zap, ZapOff, Battery, Target, ListTodo, Folder, PlayCircle, Shield, Edit } from 'lucide-react';
 import { PriorityBadge } from '@/components/ui/priority-badge';
+import { StateTransitionDropdown } from '@/components/collaboration';
+import { useTaskState } from '@/hooks/use-task-state';
 import {
     Select,
     SelectContent,
@@ -57,6 +59,7 @@ export function TaskList() {
     const [editingTask, setEditingTask] = React.useState<Task | null>(null);
     const { toast } = useToast();
     const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
+    const { updateTaskState } = useTaskState();
 
     const handleComplete = (id: string, completed: boolean) => {
         let originalTasksState: Task[] = [];
@@ -154,6 +157,10 @@ export function TaskList() {
         });
     };
 
+    const handleStateChange = async (taskId: string, newState: import('@/types').TaskState) => {
+        await updateTaskState(taskId, userId, newState);
+    };
+
 
     const getCategoryName = (categoryId: string) => {
         return categories.find(c => c.id === categoryId)?.name ?? categoryId;
@@ -236,6 +243,10 @@ export function TaskList() {
                                                     {task.name}
                                                 </label>
                                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted-foreground mt-1.5">
+                                                    <StateTransitionDropdown
+                                                        currentState={task.state || 'ready'}
+                                                        onStateChange={(newState) => handleStateChange(task.id, newState)}
+                                                    />
                                                     {task.category && <Badge variant="secondary" className="capitalize text-xs">{getCategoryName(task.category)}</Badge>}
                                                     {task.energyLevel && Icon && (
                                                         <div className="flex items-center gap-1 whitespace-nowrap">
