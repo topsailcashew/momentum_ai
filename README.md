@@ -63,6 +63,18 @@ Got weekly check-ins or monthly reviews? Add them once, and they'll auto-reset. 
 
 See all 7 days in a grid. Add tasks to specific dates. Spot which days are gonna be chaotic and which are chill. Balance your week like a pro.
 
+### Team Collaboration (NEW!)
+
+Work together without the chaos:
+
+- **State-driven task cards** → Visual workflow: Ready, In Progress, Waiting, Review, Done
+- **Async coordination** → Mark tasks as blocked, hand off to teammates, track dependencies
+- **Smart blocking indicators** → See who's waiting on you, prioritize unblocking teammates
+- **Team momentum dashboard** → Visibility into team energy, activity, and blockers
+- **Playful micro-interactions** → Delightful animations that make collaboration feel natural
+
+**Built for small teams (2-10 people)** who want to stay coordinated without constant meetings.
+
 ## The Vibe ✨
 
 **Encouraging, not guilt-tripping.** When you end your day, our AI writes a report that celebrates wins and acknowledges challenges without making you feel like garbage.
