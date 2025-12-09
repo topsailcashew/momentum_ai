@@ -13,8 +13,9 @@ import type { Task, Category, EnergyLevel, Project, EisenhowerMatrix } from '@/l
 import { cn } from '@/lib/utils';
 import { Zap, ZapOff, Battery, Target, ListTodo, Folder, PlayCircle, Shield, Edit } from 'lucide-react';
 import { PriorityBadge } from '@/components/ui/priority-badge';
-import { StateTransitionDropdown, StateTransitionCard } from '@/components/collaboration';
+import { StateTransitionDropdown, StateTransitionCard, BlockingIndicator } from '@/components/collaboration';
 import { useTaskState } from '@/hooks/use-task-state';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     Select,
     SelectContent,
@@ -157,8 +158,8 @@ export function TaskList() {
         });
     };
 
-    const handleStateChange = async (taskId: string, newState: import('@/types').TaskState) => {
-        await updateTaskState(taskId, userId, newState);
+    const handleStateChange = async (taskId: string, newState: import('@/types').TaskState, waitingInfo?: Omit<import('@/types').WaitingInfo, 'blockedAt'>) => {
+        await updateTaskState(taskId, userId, newState, undefined, waitingInfo);
     };
 
 
@@ -247,6 +248,7 @@ export function TaskList() {
                                                     <StateTransitionDropdown
                                                         currentState={task.state || 'ready'}
                                                         onStateChange={(newState) => handleStateChange(task.id, newState)}
+                                                        onWaitingInfoProvided={(info) => handleStateChange(task.id, 'waiting', info)}
                                                     />
                                                     {task.category && <Badge variant="secondary" className="capitalize text-xs">{getCategoryName(task.category)}</Badge>}
                                                     {task.energyLevel && Icon && (
@@ -265,7 +267,26 @@ export function TaskList() {
                                                     {task.priority && (
                                                         <PriorityBadge priority={task.priority.split(' ')[0]} />
                                                     )}
+                                                    {task.blockedTasks && task.blockedTasks.length > 0 && (
+                                                        <BlockingIndicator blockedCount={task.blockedTasks.length} />
+                                                    )}
                                                 </div>
+                                                {task.state === 'waiting' && task.waitingOn && (
+                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+                                                        <Avatar className="size-5">
+                                                            {task.waitingOn.userPhotoURL && (
+                                                                <AvatarImage
+                                                                    src={task.waitingOn.userPhotoURL}
+                                                                    alt={task.waitingOn.userName}
+                                                                />
+                                                            )}
+                                                            <AvatarFallback className="text-[10px]">
+                                                                {task.waitingOn.userName.charAt(0)}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <span>⏸️ Waiting on {task.waitingOn.userName}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex sm:absolute sm:top-1/2 sm:-translate-y-1/2 sm:right-2 sm:opacity-0 sm:group-hover:opacity-100 md:transition-opacity bg-background/80 backdrop-blur-sm rounded-md p-1 mt-2 sm:mt-0">
                                                 <AdaptiveActionMenu
