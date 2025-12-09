@@ -1,7 +1,7 @@
 
-import nextPlugin from '@next/eslint-plugin-next';
+const nextPlugin = require('@next/eslint-plugin-next');
 
-export default [
+module.exports = [
   {
     files: ['**/*.ts', '**/*.tsx'],
     plugins: {
