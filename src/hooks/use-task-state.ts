@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { doc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
-import { TaskState, StateHistoryEntry } from '@/types';
+import { TaskState, StateHistoryEntry, WaitingInfo } from '@/types';
 import { useUser, useFirestore } from '@/firebase';
 import { useToast } from './use-toast';
 
@@ -17,7 +17,8 @@ export function useTaskState() {
     taskId: string,
     userId: string,
     newState: TaskState,
-    note?: string
+    note?: string,
+    waitingInfo?: Omit<WaitingInfo, 'blockedAt'>
   ): Promise<void> => {
     if (!user) {
       toast({
@@ -40,10 +41,23 @@ export function useTaskState() {
         ...(note && { note }),
       };
 
-      await updateDoc(taskRef, {
+      const updates: any = {
         state: newState,
         stateHistory: arrayUnion(historyEntry),
-      });
+      };
+
+      // Add waiting info if provided
+      if (newState === 'waiting' && waitingInfo) {
+        updates.waitingOn = {
+          ...waitingInfo,
+          blockedAt: serverTimestamp(),
+        };
+      } else if (newState !== 'waiting') {
+        // Clear waiting info when leaving waiting state
+        updates.waitingOn = null;
+      }
+
+      await updateDoc(taskRef, updates);
 
       toast({
         title: 'State updated',
