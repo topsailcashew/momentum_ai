@@ -69,17 +69,25 @@ service cloud.firestore {
     /**
      * @description Rules for the /users/{userId}/tasks/{taskId} collection.
      * @path /users/{userId}/tasks/{taskId}
-     * @allow (create) - A user can create a task if the userId matches their auth UID.
-     * @allow (get, list, update, delete) - A user can read, list, update, or delete their own tasks.
+     * @allow (create) - A user can create a task if the userId matches their auth UID and state is valid.
+     * @allow (get, list) - A user can read their own tasks.
+     * @allow (update) - A user can update their own tasks or tasks assigned to them, with valid state transitions.
+     * @allow (delete) - A user can delete their own tasks.
      * @deny (create) - A user cannot create a task with a userId that does not match their auth UID.
      * @deny (get, list, update, delete) - A user cannot read, list, update, or delete another user's tasks.
-     * @principle Enforces document ownership for all operations on task documents.
+     * @principle Enforces document ownership and validates state fields for collaboration features.
      */
     match /users/{userId}/tasks/{taskId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow create: if isOwner(userId) &&
+        request.resource.data.userId == userId &&
+        request.resource.data.state in ['ready', 'in_progress', 'waiting', 'review', 'done'] &&
+        request.resource.data.stateHistory is list;
+      allow update: if (isOwner(userId) ||
+        (isSignedIn() && request.auth.uid == resource.data.assignedTo)) &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.state in ['ready', 'in_progress', 'waiting', 'review', 'done'];
       allow delete: if isExistingOwner(userId);
     }
 
@@ -311,6 +319,33 @@ service cloud.firestore {
         allow create: if isOwner(userId);
         allow update: if isOwner(userId);
         allow delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Helper function to check if user is a member of a team.
+     * @param {map} teamData - The team document data.
+     * @returns {boolean} True if the authenticated user is in the team's members list.
+     */
+    function isTeamMember(teamData) {
+      return isSignedIn() && request.auth.uid in teamData.members;
+    }
+
+    /**
+     * @description Rules for the /teams/{teamId} collection.
+     * @path /teams/{teamId}
+     * @allow (read) - Team members can read their team data.
+     * @allow (create) - Any authenticated user can create a team.
+     * @allow (update) - Only the team creator can update team data.
+     * @principle Enables team collaboration while maintaining creator control.
+     */
+    match /teams/{teamId} {
+      allow read: if isSignedIn() && isTeamMember(resource.data);
+      allow create: if isSignedIn() &&
+        request.resource.data.createdBy == request.auth.uid;
+      allow update: if isSignedIn() &&
+        resource.data.createdBy == request.auth.uid;
+      allow delete: if isSignedIn() &&
+        resource.data.createdBy == request.auth.uid;
     }
   }
 }
