@@ -29,15 +29,18 @@ export function NotificationBell() {
   React.useEffect(() => {
     if (user && firestore) {
       const notificationsCol = collection(firestore, 'users', user.uid, 'notifications');
+      // Simplified query to avoid needing a composite index.
+      // We fetch the latest notifications and then filter for unread ones on the client.
       const q = query(
         notificationsCol,
-        where('read', '==', false),
         orderBy('createdAt', 'desc'),
-        limit(10)
+        limit(20) // Fetch a bit more to find unread ones
       );
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        const unread = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+        const allRecent = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+        const unread = allRecent.filter(n => !n.read);
+        
         setNotifications(unread);
         setUnreadCount(unread.length);
       });
