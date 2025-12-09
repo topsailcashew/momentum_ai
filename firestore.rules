@@ -56,7 +56,8 @@ service cloud.firestore {
      * @returns {boolean} True if the authenticated user is in the team's members list.
      */
     function isTeamMember(teamId) {
-      return isSignedIn() && get(/databases/$(database)/documents/teams/$(teamId)).data.members[request.auth.uid] != null;
+      return isSignedIn() && exists(/databases/$(database)/documents/teams/$(teamId)) &&
+             get(/databases/$(database)/documents/teams/$(teamId)).data.members.hasAny([request.auth.uid]);
     }
 
     /**
@@ -99,8 +100,8 @@ service cloud.firestore {
       // they are a member of. This requires checking the project's ministryId.
       allow get: if isOwner(userId) ||
                    (isSignedIn() && resource.data.projectId != null &&
-                    get(/databases/$(database)/documents/users/$(resource.data.userId)/projects/$(resource.data.projectId)).data.ministryId != null &&
-                    isTeamMember(get(/databases/$(database)/documents/users/$(resource.data.userId)/projects/$(resource.data.projectId)).data.ministryId)
+                    get(/databases/$(database)/documents/users/$(userId)/projects/$(resource.data.projectId)).data.ministryId != null &&
+                    isTeamMember(get(/databases/$(database)/documents/users/$(userId)/projects/$(resource.data.projectId)).data.ministryId)
                    );
       allow list: if isOwner(userId); // Listing remains owner-only for security and performance.
       allow create: if isOwner(userId) &&
@@ -171,7 +172,7 @@ service cloud.firestore {
     /**
      * @description Rules for the /users/{userId}/projects/{projectId} collection.
      * @path /users/{userId}/projects/{projectId}
-     * @allow (get, list) - A user can read/list their own projects.
+     * @allow (get, list) - A user can read/list their own projects or projects in a shared ministry.
      * @allow (create, update, delete) - A user can manage their own projects.
      * @principle Enforces document ownership for all operations on project documents.
      */
@@ -223,7 +224,8 @@ service cloud.firestore {
     /**
      * @description Rules for the /users/{userId}/ministries/{ministryId} collection.
      * @path /users/{userId}/ministries/{ministryId}
-     * @allow (get, list, create, update, delete) - A user can manage their own ministries.
+     * @allow (get, list) - A user can read/list their own ministries or ministries they are a team member of.
+     * @allow (create, update, delete) - A user can manage their own ministries.
      * @principle Enforces document ownership for all operations on ministry documents.
      */
     match /users/{userId}/ministries/{ministryId} {
@@ -352,5 +354,4 @@ service cloud.firestore {
     }
   }
 }
-
     
