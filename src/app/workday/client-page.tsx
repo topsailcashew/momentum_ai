@@ -10,23 +10,26 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { PomodoroContext } from '@/components/dashboard/pomodoro-provider';
+import { MorningPlanModal } from '@/components/workday/morning-plan-modal';
+import { useMorningPlan } from '@/hooks/use-morning-plan';
 
 export function WorkdayClientPage() {
   const { user, isUserLoading: userLoading } = useUser();
   const { loading: dataLoading } = useDashboardData();
   const { isTimerActive } = React.useContext(PomodoroContext);
+  const { shouldShow, setShouldShow } = useMorningPlan();
 
   if (userLoading || dataLoading || !user) {
     return (
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Skeleton className="h-64" />
-            <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
         </div>
         <Skeleton className="h-96" />
-         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Skeleton className="h-64" />
-            <Skeleton className="h-64" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
         </div>
       </div>
     );
@@ -50,6 +53,8 @@ export function WorkdayClientPage() {
         <YouTubePlayer isTimerActive={isTimerActive} />
         <ProjectOverview />
       </div>
+
+      <MorningPlanModal open={shouldShow} onOpenChange={setShouldShow} />
     </div>
   );
 }
