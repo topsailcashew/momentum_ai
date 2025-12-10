@@ -115,8 +115,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           </Link>
         </SidebarHeader>
         <SidebarContent>
+          {/* Planning Section */}
           <SidebarGroup>
-            <SidebarGroupLabel>Focus</SidebarGroupLabel>
+            <SidebarGroupLabel>Planning</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
@@ -159,8 +160,14 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             </SidebarGroupContent>
           </SidebarGroup>
 
+          {/* Visual Separator */}
+          <div className="px-3 py-2">
+            <div className="h-px bg-sidebar-border" />
+          </div>
+
+          {/* Tasks Section */}
           <SidebarGroup>
-            <SidebarGroupLabel>Organize</SidebarGroupLabel>
+            <SidebarGroupLabel>Tasks</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
@@ -203,8 +210,14 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             </SidebarGroupContent>
           </SidebarGroup>
 
+          {/* Visual Separator */}
+          <div className="px-3 py-2">
+            <div className="h-px bg-sidebar-border" />
+          </div>
+
+          {/* Analytics Section */}
           <SidebarGroup>
-            <SidebarGroupLabel>Insights</SidebarGroupLabel>
+            <SidebarGroupLabel>Analytics</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
