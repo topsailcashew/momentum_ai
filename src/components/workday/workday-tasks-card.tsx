@@ -119,6 +119,8 @@ export function WorkdayTasksCard() {
           priority: recurringTask.priority,
           taskType: 'recurring' as const,
           focusedTimeMs: recurringTask.focusedTimeMs,
+          state: completedToday ? 'done' : 'ready',
+          stateHistory: [],
         };
       }
     }

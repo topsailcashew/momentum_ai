@@ -528,6 +528,8 @@ export async function getAllAvailableTasks(db: Firestore, userId: string): Promi
     details: rt.details,
     priority: rt.priority,
     source: 'recurring' as const,
+    state: 'ready' as const,
+    stateHistory: [],
   }));
 
   const regularWithSource = regularTasks.map(t => ({ ...t, source: 'regular' as const }));
