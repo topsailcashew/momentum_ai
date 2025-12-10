@@ -34,7 +34,7 @@ export function MinistryDetailClientPage() {
 
   // Listen to ministry
   React.useEffect(() => {
-    if (!user || !firestore || !ministryId) {
+    if (!user || !firestore || !ministryId || userLoading) {
       setLoading(false);
       return;
     }
@@ -54,11 +54,11 @@ export function MinistryDetailClientPage() {
     });
 
     return () => unsubscribe();
-  }, [user, firestore, ministryId]);
+  }, [user, firestore, ministryId, userLoading]);
 
   // Listen to strategic plans
   React.useEffect(() => {
-    if (!user || !firestore || !ministryId) return;
+    if (!user || !firestore || !ministryId || userLoading) return;
 
     const plansCol = collection(firestore, 'users', user.uid, 'strategic-plans');
     const q = query(plansCol, where('ministryId', '==', ministryId));
@@ -69,11 +69,11 @@ export function MinistryDetailClientPage() {
     });
 
     return () => unsubscribe();
-  }, [user, firestore, ministryId]);
+  }, [user, firestore, ministryId, userLoading]);
 
   // Listen to goals
   React.useEffect(() => {
-    if (!user || !firestore || !ministryId) return;
+    if (!user || !firestore || !ministryId || userLoading) return;
 
     const goalsCol = collection(firestore, 'users', user.uid, 'strategic-goals');
     const q = query(goalsCol, where('ministryId', '==', ministryId));
@@ -84,11 +84,11 @@ export function MinistryDetailClientPage() {
     });
 
     return () => unsubscribe();
-  }, [user, firestore, ministryId]);
+  }, [user, firestore, ministryId, userLoading]);
 
   // Listen to projects
   React.useEffect(() => {
-    if (!user || !firestore || !ministryId) return;
+    if (!user || !firestore || !ministryId || userLoading) return;
 
     const projectsCol = collection(firestore, 'users', user.uid, 'projects');
     const q = query(projectsCol, where('ministryId', '==', ministryId));
@@ -99,11 +99,11 @@ export function MinistryDetailClientPage() {
     });
 
     return () => unsubscribe();
-  }, [user, firestore, ministryId]);
+  }, [user, firestore, ministryId, userLoading]);
 
   // Listen to tasks
   React.useEffect(() => {
-    if (!user || !firestore || !ministryId) return;
+    if (!user || !firestore || !ministryId || userLoading) return;
 
     const tasksCol = collection(firestore, 'users', user.uid, 'tasks');
     const q = query(tasksCol, where('ministryId', '==', ministryId));
@@ -114,7 +114,7 @@ export function MinistryDetailClientPage() {
     });
 
     return () => unsubscribe();
-  }, [user, firestore, ministryId]);
+  }, [user, firestore, ministryId, userLoading]);
 
   React.useEffect(() => {
     if (!userLoading && !user) {

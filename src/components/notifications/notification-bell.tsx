@@ -18,7 +18,7 @@ import { format, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
 export function NotificationBell() {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
@@ -27,7 +27,8 @@ export function NotificationBell() {
 
   // Set up real-time listener for notifications
   React.useEffect(() => {
-    if (user && firestore) {
+    // Wait until user is fully loaded before setting up listeners
+    if (user && firestore && !isUserLoading) {
       const notificationsCol = collection(firestore, 'users', user.uid, 'notifications');
       // Simplified query to avoid needing a composite index.
       // We fetch the latest notifications and then filter for unread ones on the client.
@@ -47,7 +48,7 @@ export function NotificationBell() {
 
       return unsubscribe;
     }
-  }, [user, firestore]);
+  }, [user, firestore, isUserLoading]);
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!firestore || !user) return;

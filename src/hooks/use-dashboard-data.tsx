@@ -43,7 +43,7 @@ interface DashboardDataContextType {
 const DashboardDataContext = React.createContext<DashboardDataContextType | undefined>(undefined);
 
 export function DashboardDataProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
   const [tasks, setTasks] = React.useState<Task[]>([]);
@@ -60,7 +60,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
   const [selectedMinistryId, setSelectedMinistryId] = React.useState<string | null>(null);
 
   const fetchAllData = React.useCallback(async () => {
-    if (user && firestore) {
+    if (user && firestore && !isUserLoading) {
       setLoading(true);
       try {
         const [
@@ -84,14 +84,15 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       } finally {
         setLoading(false);
       }
-    } else if (!user) {
+    } else if (!user && !isUserLoading) {
       setLoading(false);
     }
-  }, [user, firestore]);
+  }, [user, firestore, isUserLoading]);
 
   // Set up real-time listeners for tasks, projects, recurring tasks, and energy log
   React.useEffect(() => {
-    if (!user || !firestore) return;
+    // Wait until user is fully loaded and authenticated before setting up listeners
+    if (!user || !firestore || isUserLoading) return;
 
     const unsubscribers: (() => void)[] = [];
 
@@ -149,7 +150,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     return () => {
       unsubscribers.forEach(unsub => unsub());
     };
-  }, [user, firestore]);
+  }, [user, firestore, isUserLoading]);
 
   React.useEffect(() => {
     if (user) {

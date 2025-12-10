@@ -35,7 +35,7 @@ export function ReportsClientPage() {
 
   // Set up real-time listener for reports
   React.useEffect(() => {
-    if (!user || !firestore) {
+    if (!user || !firestore || userLoading) {
       setIsFetching(false);
       return;
     }
@@ -71,11 +71,11 @@ export function ReportsClientPage() {
     });
 
     return () => unsubscribe();
-  }, [user, firestore, toast]);
+  }, [user, firestore, toast, userLoading]);
 
   // Set up real-time listener for tasks of the selected report
   React.useEffect(() => {
-    if (!selectedReport || !user || !firestore) return;
+    if (!selectedReport || !user || !firestore || userLoading) return;
 
     // We need to listen to both workday-tasks and the actual tasks/recurring-tasks
     // For simplicity, we'll refetch when either collection changes
@@ -105,7 +105,7 @@ export function ReportsClientPage() {
       unsubRecurring();
       unsubWorkday();
     };
-  }, [selectedReport, user, firestore]);
+  }, [selectedReport, user, firestore, userLoading]);
 
 
   const handleDateSelect = (report: DailyReport) => {

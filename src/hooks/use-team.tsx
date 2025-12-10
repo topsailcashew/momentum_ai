@@ -15,7 +15,7 @@ interface TeamContextValue {
 const TeamContext = React.createContext<TeamContextValue | undefined>(undefined);
 
 export function TeamProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const [teams, setTeams] = React.useState<Team[]>([]);
   const [currentTeam, setCurrentTeam] = React.useState<Team | null>(null);
@@ -26,6 +26,11 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
       setTeams([]);
       setCurrentTeam(null);
       setIsLoading(false);
+      return;
+    }
+
+    // Wait until user is fully loaded before setting up listeners
+    if (isUserLoading) {
       return;
     }
 
@@ -55,7 +60,7 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [user?.uid, firestore]);
+  }, [user?.uid, firestore, isUserLoading]);
 
   return (
     <TeamContext.Provider
