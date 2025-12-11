@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { validateAIResponseWithFallback } from '@/ai/validation-helpers';
 
 const CalculateDailyMomentumScoreInputSchema = z.object({
   energyLevel: z.enum(['Low', 'Medium', 'High']).describe('The user\'s reported energy level for the day.'),
@@ -72,9 +73,19 @@ const calculateDailyMomentumScoreFlow = ai.defineFlow(
     const finalScore = Math.min(150, Math.round(baseScore + streakBonus));
 
     const {output} = await prompt(input);
+
+    // Validate the AI-generated summary with fallback
+    const validatedOutput = validateAIResponseWithFallback(
+      output,
+      CalculateDailyMomentumScoreOutputSchema,
+      { dailyScore: finalScore, summary: "Task-energy alignment summary unavailable." },
+      'calculateDailyMomentumScore'
+    );
+
+    // Use calculated score but validated summary
     return {
       dailyScore: finalScore,
-      summary: output?.summary || "Task-energy alignment summary unavailable.",
+      summary: validatedOutput.summary,
     };
   }
 );
