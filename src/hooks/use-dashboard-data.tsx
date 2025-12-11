@@ -7,7 +7,6 @@ import {
   getLatestMomentum,
   getCategories,
   getProjects,
-  getTodaysReport,
   getRecurringTasks,
   getEnergyLog,
 } from '@/lib/data-firestore';
