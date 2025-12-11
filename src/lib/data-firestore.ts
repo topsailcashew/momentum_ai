@@ -368,7 +368,8 @@ export async function getTasksForWorkday(db: Firestore, userId: string, date: st
   const tasksWithDetails = workdayTasks.map(wt => {
     if (wt.taskType === 'regular') {
       const regularTask = regularTasks.find(t => t.id === wt.taskId);
-      return regularTask || null;
+      // Merge workday-specific data like timeSpentMs
+      return regularTask ? { ...regularTask, timeSpentMs: wt.timeSpentMs } : null;
     } else if (wt.taskType === 'recurring') {
       const recurringTask = recurringTasks.find(rt => rt.id === wt.taskId);
       if (recurringTask) {
@@ -377,7 +378,7 @@ export async function getTasksForWorkday(db: Firestore, userId: string, date: st
           ? format(new Date(recurringTask.lastCompleted), 'yyyy-MM-dd') === date
           : false;
 
-        // Convert recurring task to Task format
+        // Convert recurring task to Task format and include workday-specific data
         return {
           id: recurringTask.id,
           userId: recurringTask.userId,
@@ -393,6 +394,7 @@ export async function getTasksForWorkday(db: Firestore, userId: string, date: st
           details: recurringTask.details,
           priority: recurringTask.priority,
           score: undefined,
+          timeSpentMs: wt.timeSpentMs,
         } as Task;
       }
       return null;

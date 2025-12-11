@@ -26,21 +26,35 @@ export function ReportTable({ tasks, report }: ReportTableProps) {
         }
     };
 
+    const formatTimeSpent = (timeSpentMs?: number) => {
+        if (!timeSpentMs) return '-';
+
+        const totalMinutes = Math.floor(timeSpentMs / 60000);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        if (hours > 0) {
+            return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+        }
+        return `${minutes}m`;
+    };
+
     return (
         <div className="rounded-md border">
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="w-[30%]">Task</TableHead>
-                        <TableHead className="w-[15%]">Status</TableHead>
-                        <TableHead className="w-[20%]">Collaborations</TableHead>
-                        <TableHead className="w-[35%]">Notes</TableHead>
+                        <TableHead className="w-[25%]">Task</TableHead>
+                        <TableHead className="w-[12%]">Status</TableHead>
+                        <TableHead className="w-[12%]">Time Spent</TableHead>
+                        <TableHead className="w-[18%]">Collaborations</TableHead>
+                        <TableHead className="w-[33%]">Notes</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {tasks.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                            <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
                                 No tasks recorded for this day.
                             </TableCell>
                         </TableRow>
@@ -53,6 +67,12 @@ export function ReportTable({ tasks, report }: ReportTableProps) {
                                 <TableRow key={task.id}>
                                     <TableCell className="font-medium">{task.name}</TableCell>
                                     <TableCell>{getStatusBadge(task)}</TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                            <Clock className="h-3 w-3" />
+                                            <span>{formatTimeSpent(task.timeSpentMs)}</span>
+                                        </div>
+                                    </TableCell>
                                     <TableCell>
                                         {task.collaboration ? (
                                             <div className="flex items-center gap-1 text-sm text-muted-foreground">

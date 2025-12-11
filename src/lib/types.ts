@@ -25,8 +25,9 @@ export interface Task {
   priority?: EisenhowerMatrix;
   status?: 'not-started' | 'in-progress' | 'completed' | 'blocked';
   notes?: string;
-  focusedTimeMs?: number; // NEW
+  focusedTimeMs?: number; // NEW - cumulative focused time across all instances
   lastFocusedAt?: string; // NEW
+  timeSpentMs?: number; // Time spent on specific workday instance (merged from WorkdayTask)
 
   // NEW STATE FIELDS
   state: TaskState;
