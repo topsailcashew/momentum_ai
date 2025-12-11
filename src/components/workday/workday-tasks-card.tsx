@@ -64,7 +64,7 @@ export function WorkdayTasksCard() {
   const [showAddDialog, setShowAddDialog] = React.useState(false);
   const [showEndDayDialog, setShowEndDayDialog] = React.useState(false);
   const { toast } = useToast();
-  const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
+  const { setFocusedTask, focusedTask, isTimerActive, setIsTimerActive } = React.useContext(PomodoroContext);
   const { play } = useAudio();
 
   const { completeRecurringTask } = useRecurringTaskCompletion({
@@ -80,9 +80,10 @@ export function WorkdayTasksCard() {
       setRecurringTasks(recurringTasks);
     },
     onSuccess: () => {
-      // Clear focus if the completed task was focused
+      // Clear focus and pause timer if the completed task was focused
       if (focusedTask && focusedTask.id) {
         setFocusedTask(null);
+        setIsTimerActive(false);
       }
     },
     calculateMomentumScore: true,
@@ -192,9 +193,10 @@ export function WorkdayTasksCard() {
               // Don't throw - momentum score is non-critical
             }
             await onTaskCompleted(userId);
-            // If the completed task was focused, clear focus
+            // If the completed task was focused, clear focus and pause timer
             if (focusedTask?.id === id) {
               setFocusedTask(null);
+              setIsTimerActive(false);
             }
           } else {
             await onClientWrite();
