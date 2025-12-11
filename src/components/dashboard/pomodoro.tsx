@@ -5,9 +5,11 @@ import { Play, Pause, RotateCcw, Target } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PomodoroContext } from './pomodoro-provider';
+import { useAudio } from '@/hooks/use-audio';
 
 export function Pomodoro() {
   const { focusedTask, isTimerActive, setIsTimerActive } = React.useContext(PomodoroContext);
+  const { play } = useAudio();
   const [minutes, setMinutes] = React.useState(25);
   const [seconds, setSeconds] = React.useState(0);
   const [sessionType, setSessionType] = React.useState<'Focus' | 'Break'>('Focus');
@@ -82,6 +84,7 @@ export function Pomodoro() {
           setSeconds(59);
         } else {
           // Timer finished
+          play('timerEnd');
           setIsTimerActive(false);
           if (sessionType === 'Focus') {
             setSessionType('Break');
@@ -100,6 +103,12 @@ export function Pomodoro() {
 
   const toggle = () => {
     if (!focusedTask) return;
+
+    // Play sound based on the new state
+    if (!isTimerActive) {
+      play('timerStart');
+    }
+
     setIsTimerActive(!isTimerActive);
   };
 

@@ -6,12 +6,14 @@ export interface AudioMap {
     timerStart: string;
     timerEnd: string;
     taskComplete: string;
+    notification: string;
 }
 
 const DEFAULT_SOUNDS: AudioMap = {
     timerStart: '/sounds/timer-start.mp3',
     timerEnd: '/sounds/timer-end.mp3',
     taskComplete: '/sounds/task-complete.mp3',
+    notification: '/sounds/notification.mp3',
 };
 
 export function useAudio() {
