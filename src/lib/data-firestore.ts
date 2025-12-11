@@ -52,6 +52,8 @@ export async function addTask(db: Firestore, userId: string, taskData: Omit<Task
     category: 'personal',
     energyLevel: 'Medium' as EnergyLevel,
     priority: 'Important & Not Urgent' as EisenhowerMatrix,
+    state: 'ready' as const,
+    stateHistory: [],
     ...taskData,
   };
 
@@ -60,6 +62,8 @@ export async function addTask(db: Firestore, userId: string, taskData: Omit<Task
     category: baseData.category ?? 'personal',
     energyLevel: baseData.energyLevel ?? 'Medium',
     priority: baseData.priority ?? 'Important & Not Urgent',
+    state: baseData.state ?? 'ready',
+    stateHistory: baseData.stateHistory ?? [],
     userId,
     completed: false,
     completedAt: null,
