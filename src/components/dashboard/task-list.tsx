@@ -83,8 +83,13 @@ export function TaskList() {
             try {
                 await updateTask(firestore, userId, id, { completed, completedAt: completed ? new Date().toISOString() : null });
                 if (completed) {
-                    // Now calculate momentum score on the client
-                    await calculateAndSaveMomentumScore(firestore, userId);
+                    // Calculate momentum score - wrap in try-catch to not block task completion
+                    try {
+                        await calculateAndSaveMomentumScore(firestore, userId);
+                    } catch (momentumError) {
+                        console.error('Failed to calculate momentum score:', momentumError);
+                        // Don't throw - momentum score is non-critical
+                    }
                     await onTaskCompleted(userId); // Revalidate paths
                 } else {
                     await onClientWrite(); // Just revalidate

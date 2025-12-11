@@ -55,8 +55,14 @@ export function useRecurringTaskCompletion(options: UseRecurringTaskCompletionOp
 
         // Perform additional actions based on completion state
         if (completed) {
+          // Calculate momentum score - wrap in try-catch to not block task completion
           if (calculateMomentumScore) {
-            await calculateAndSaveMomentumScore(firestore, userId);
+            try {
+              await calculateAndSaveMomentumScore(firestore, userId);
+            } catch (momentumError) {
+              console.error('Failed to calculate momentum score:', momentumError);
+              // Don't throw - momentum score is non-critical
+            }
           }
           await onTaskCompleted(userId);
         } else {
