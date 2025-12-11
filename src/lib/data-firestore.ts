@@ -131,6 +131,7 @@ export function setTodayEnergy(db: Firestore, userId: string, level: EnergyLevel
         requestResourceData: newLog,
       });
       errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
     });
 }
 
@@ -172,6 +173,7 @@ export function saveMomentumScore(db: Firestore, userId: string, scoreData: Omit
         requestResourceData: newScore,
       });
       errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
     });
 }
 
@@ -242,6 +244,7 @@ export function updateProject(db: Firestore, userId: string, projectId: string, 
         requestResourceData: updates,
       });
       errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
     });
 }
 
@@ -268,6 +271,7 @@ export async function deleteProject(db: Firestore, userId: string, projectId: st
       operation: 'delete',
     });
     errorEmitter.emit('permission-error', permissionError);
+    throw permissionError;
   }
 }
 
@@ -320,6 +324,7 @@ export function updateRecurringTask(db: Firestore, userId: string, taskId: strin
         requestResourceData: updates,
       });
       errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
     });
 }
 
@@ -548,6 +553,7 @@ export function updateUserProfile(db: Firestore, userId: string, updates: { disp
         requestResourceData: updates,
       });
       errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
     });
 }
 
@@ -565,6 +571,7 @@ export function createUserProfile(db: Firestore, userId: string, data: { email: 
         requestResourceData: profileData,
       });
       errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
     });
 }
 

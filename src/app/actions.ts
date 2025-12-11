@@ -55,13 +55,19 @@ export async function generateEmailReportAction(report: DailyReport, tasks: Task
     return emailBody;
 }
 
-export async function emailReportAction(report: DailyReport, emailBody: string, userName: string) {
+export async function emailReportAction(report: DailyReport, emailBody: string, userName: string, userEmail: string) {
     const resend = new Resend(process.env.RESEND_API_KEY);
+
+    // Validate email address
+    if (!userEmail || !userEmail.includes('@')) {
+        console.error('Invalid user email:', userEmail);
+        return { success: false, error: 'Invalid email address. Please update your profile.' };
+    }
 
     try {
         await resend.emails.send({
             from: 'Pace Pilot Reports <reports@resend.dev>',
-            to: 'nathaniel.senje@theoceanindar.org',
+            to: userEmail,
             subject: `Daily Work Report for ${report.date} from ${userName}`,
             html: emailBody,
         });

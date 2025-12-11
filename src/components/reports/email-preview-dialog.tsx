@@ -22,16 +22,17 @@ interface EmailPreviewDialogProps {
   report: DailyReport;
   emailBody: string;
   userName: string;
+  userEmail: string;
 }
 
-export function EmailPreviewDialog({ open, onOpenChange, report, emailBody, userName }: EmailPreviewDialogProps) {
+export function EmailPreviewDialog({ open, onOpenChange, report, emailBody, userName, userEmail }: EmailPreviewDialogProps) {
   const [isSending, setIsSending] = React.useState(false);
   const { toast } = useToast();
 
   const handleSendEmail = async () => {
     setIsSending(true);
     try {
-      const result = await emailReportAction(report, emailBody, userName);
+      const result = await emailReportAction(report, emailBody, userName, userEmail);
       if (result.success) {
         toast({ title: 'Email sent successfully!' });
         onOpenChange(false);

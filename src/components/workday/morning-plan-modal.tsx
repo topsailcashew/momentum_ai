@@ -153,7 +153,13 @@ export function MorningPlanModal({
                     return addWorkdayTask(firestore, user.uid, taskId, isRecurring ? 'recurring' : 'regular', today);
                 });
 
-                await Promise.all(existingTaskPromises);
+                const results = await Promise.allSettled(existingTaskPromises);
+
+                // Check for failures
+                const failures = results.filter(r => r.status === 'rejected');
+                if (failures.length > 0) {
+                    console.error('Some tasks failed to add:', failures);
+                }
 
                 // 3. Save daily intention if provided
                 if (intention.trim()) {
@@ -165,20 +171,22 @@ export function MorningPlanModal({
                 const prefsRef = doc(firestore, `users/${user.uid}/preferences/settings`);
                 await setDoc(prefsRef, { lastMorningPlanDate: today }, { merge: true });
 
+                const successfulExistingTasks = selectedTaskIds.size - failures.length;
+
                 toast({
                     title: "Good morning! ☀️",
-                    description: `Your workday has been planned with ${newTaskIds.length + selectedTaskIds.size} task(s). Let's make it a great one!`,
+                    description: `Your workday has been planned with ${newTaskIds.length + successfulExistingTasks} task(s). Let's make it a great one!`,
                 });
 
-                onOpenChange(false);
-
-                // Reset state
+                // Reset state BEFORE closing to prevent stale data flash
                 setCurrentStep(0);
                 setBrainDumpText('');
                 setExtractedData(null);
                 setExtractedTasks([]);
                 setIntention('');
                 setSelectedTaskIds(new Set());
+
+                onOpenChange(false);
             } catch (error) {
                 console.error('Morning plan submission error', error);
                 toast({

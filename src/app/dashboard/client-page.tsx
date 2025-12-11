@@ -430,6 +430,7 @@ export function DashboardClientPage() {
           report={selectedReport}
           emailBody={emailBody}
           userName={user?.displayName || 'User'}
+          userEmail={user?.email || ''}
         />
       )}
     </div>
