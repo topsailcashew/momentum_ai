@@ -13,7 +13,8 @@ import {
 } from '@/lib/data-firestore';
 import { useUser, useFirestore } from '@/firebase';
 import type { Task, Category, Project, DailyReport, EnergyLog, MomentumScore, RecurringTask, Ministry } from '@/lib/types';
-import { collection, onSnapshot, query, orderBy, limit as firestoreLimit } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit as firestoreLimit, doc } from 'firebase/firestore';
+import { format } from 'date-fns';
 
 interface DashboardDataContextType {
   tasks: Task[];
@@ -67,17 +68,15 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
           categoriesData,
           todayEnergyData,
           latestMomentumData,
-          reportData,
         ] = await Promise.all([
           getCategories(),
           getTodayEnergy(firestore, user.uid),
           getLatestMomentum(firestore, user.uid),
-          getTodaysReport(firestore, user.uid),
         ]);
         setCategories(categoriesData);
         setTodayEnergy(todayEnergyData);
         setLatestMomentum(latestMomentumData);
-        setTodaysReport(reportData);
+        // Note: todaysReport now handled by real-time listener
       } catch (error: any) {
         console.error("Error fetching dashboard data:", error);
         setError(error);
@@ -89,7 +88,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
     }
   }, [user, firestore, isUserLoading]);
 
-  // Set up real-time listeners for tasks, projects, recurring tasks, and energy log
+  // Set up real-time listeners for tasks, projects, recurring tasks, energy log, ministries, and today's report
   React.useEffect(() => {
     // Wait until user is fully loaded and authenticated before setting up listeners
     if (!user || !firestore || isUserLoading) return;
@@ -146,6 +145,30 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
       console.error("Error listening to ministries:", error);
     });
     unsubscribers.push(unsubMinistries);
+
+    // Listen to today's report
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const todaysReportRef = doc(firestore, 'users', user.uid, 'reports', today);
+    const unsubReport = onSnapshot(todaysReportRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const reportData = { ...snapshot.data() } as DailyReport;
+        setTodaysReport(reportData);
+      } else {
+        // If report doesn't exist, set a default empty report
+        setTodaysReport({
+          date: today,
+          userId: user.uid,
+          startTime: null,
+          endTime: null,
+          generatedReport: null,
+          goals: 0,
+          completed: 0,
+        });
+      }
+    }, (error) => {
+      console.error("Error listening to today's report:", error);
+    });
+    unsubscribers.push(unsubReport);
 
     return () => {
       unsubscribers.forEach(unsub => unsub());
