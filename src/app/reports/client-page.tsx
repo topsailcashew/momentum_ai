@@ -15,7 +15,10 @@ import { DateCard } from '@/components/reports/date-card';
 import { VisualReportCard } from '@/components/reports/visual-report-card';
 import { generateEmailReportAction } from '../actions';
 import { EmailPreviewDialog } from '@/components/reports/email-preview-dialog';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit as firestoreLimit } from 'firebase/firestore';
+
+const INITIAL_REPORTS_LIMIT = 30; // Load last 30 reports initially
+const LOAD_MORE_INCREMENT = 20; // Load 20 more when "Load More" is clicked
 
 export function ReportsClientPage() {
   const { user, isUserLoading: userLoading } = useUser();
@@ -30,10 +33,12 @@ export function ReportsClientPage() {
   const [isGeneratingEmail, setIsGeneratingEmail] = React.useState(false);
   const [emailBody, setEmailBody] = React.useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
+  const [reportsLimit, setReportsLimit] = React.useState(INITIAL_REPORTS_LIMIT);
+  const [hasMoreReports, setHasMoreReports] = React.useState(false);
 
   const { toast } = useToast();
 
-  // Set up real-time listener for reports
+  // Set up real-time listener for reports with pagination
   React.useEffect(() => {
     if (!user || !firestore || userLoading) {
       setIsFetching(false);
@@ -42,10 +47,20 @@ export function ReportsClientPage() {
 
     setIsFetching(true);
     const reportsCol = collection(firestore, 'users', user.uid, 'reports');
+    const q = query(
+      reportsCol,
+      orderBy('date', 'desc'),
+      firestoreLimit(reportsLimit + 1) // Fetch one extra to check if there are more
+    );
 
-    const unsubscribe = onSnapshot(reportsCol, (snapshot) => {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const reportsData = snapshot.docs.map(doc => ({ ...doc.data() } as DailyReport));
-      const reportsArray = reportsData.sort((a, b) => b.date.localeCompare(a.date));
+
+      // Check if there are more reports beyond our limit
+      setHasMoreReports(reportsData.length > reportsLimit);
+
+      // Only keep the requested limit (remove the extra one we fetched)
+      const reportsArray = reportsData.slice(0, reportsLimit).sort((a, b) => b.date.localeCompare(a.date));
       setReports(reportsArray);
 
       // Auto-select the first report if none is selected
@@ -71,7 +86,7 @@ export function ReportsClientPage() {
     });
 
     return () => unsubscribe();
-  }, [user, firestore, toast, userLoading]);
+  }, [user, firestore, toast, userLoading, reportsLimit, selectedReport]);
 
   // Set up real-time listener for tasks of the selected report
   React.useEffect(() => {
@@ -111,7 +126,11 @@ export function ReportsClientPage() {
   const handleDateSelect = (report: DailyReport) => {
     setSelectedReport(report);
   }
-  
+
+  const handleLoadMore = () => {
+    setReportsLimit(prev => prev + LOAD_MORE_INCREMENT);
+  }
+
   const handleGenerateEmail = async () => {
     if (!selectedReport || !user) return;
     setIsGeneratingEmail(true);
@@ -166,6 +185,13 @@ export function ReportsClientPage() {
                     <h3 className="font-semibold text-lg text-foreground">No reports generated yet</h3>
                     <p>Complete tasks and use the daily report card to create your first report.</p>
                 </div>
+            )}
+            {hasMoreReports && (
+              <div className="mt-4 flex justify-center">
+                <Button variant="outline" onClick={handleLoadMore}>
+                  Load Older Reports
+                </Button>
+              </div>
             )}
         </CardContent>
       </Card>
