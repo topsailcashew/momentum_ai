@@ -66,17 +66,22 @@ export async function addTask(db: Firestore, userId: string, taskData: Omit<Task
     createdAt: new Date().toISOString(),
   };
 
-  const docRef = await addDoc(tasksCol, newTaskData)
+  // Filter out undefined values (Firestore doesn't accept them)
+  const cleanedTaskData = Object.fromEntries(
+    Object.entries(newTaskData).filter(([_, value]) => value !== undefined)
+  );
+
+  const docRef = await addDoc(tasksCol, cleanedTaskData)
     .catch(async (serverError) => {
       const permissionError = new FirestorePermissionError({
         path: tasksCol.path,
         operation: 'create',
-        requestResourceData: newTaskData,
+        requestResourceData: cleanedTaskData,
       });
       errorEmitter.emit('permission-error', permissionError);
       throw permissionError;
     });
-  return { id: docRef.id, ...newTaskData };
+  return { id: docRef.id, ...cleanedTaskData };
 }
 
 export function updateTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<Task, 'id' | 'userId'>>): Promise<void> {
@@ -301,17 +306,23 @@ export async function addRecurringTask(db: Firestore, userId: string, taskData: 
     userId,
     createdAt: new Date().toISOString()
   };
-  const docRef = await addDoc(tasksCol, newTaskData)
+
+  // Filter out undefined values (Firestore doesn't accept them)
+  const cleanedTaskData = Object.fromEntries(
+    Object.entries(newTaskData).filter(([_, value]) => value !== undefined)
+  );
+
+  const docRef = await addDoc(tasksCol, cleanedTaskData)
     .catch(async (serverError) => {
       const permissionError = new FirestorePermissionError({
         path: tasksCol.path,
         operation: 'create',
-        requestResourceData: newTaskData,
+        requestResourceData: cleanedTaskData,
       });
       errorEmitter.emit('permission-error', permissionError);
       throw permissionError;
     });
-  return { id: docRef.id, ...newTaskData };
+  return { id: docRef.id, ...cleanedTaskData };
 }
 
 export function updateRecurringTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<RecurringTask, 'id' | 'userId'>>): Promise<void> {
