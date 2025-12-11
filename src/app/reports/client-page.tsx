@@ -10,12 +10,12 @@ import { useUser, useFirestore } from '@/firebase';
 import { getReports, getTasksForWorkday } from '@/lib/data-firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { DateCard } from '@/components/reports/date-card';
 import { VisualReportCard } from '@/components/reports/visual-report-card';
 import { generateEmailReportAction } from '../actions';
 import { EmailPreviewDialog } from '@/components/reports/email-preview-dialog';
 import { collection, onSnapshot, query, orderBy, limit as firestoreLimit } from 'firebase/firestore';
+import { format, parseISO } from 'date-fns';
 
 const INITIAL_REPORTS_LIMIT = 30; // Load last 30 reports initially
 const LOAD_MORE_INCREMENT = 20; // Load 20 more when "Load More" is clicked
@@ -175,71 +175,77 @@ export function ReportsClientPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-            <CardTitle>Reports History</CardTitle>
-            <CardDescription>Select a day to view its report.</CardDescription>
+    <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 h-[calc(100vh-180px)]">
+      {/* Sidebar - Reports List */}
+      <Card className="flex flex-col h-full lg:h-auto">
+        <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Reports History</CardTitle>
+            <CardDescription className="text-xs">Select a day to view details</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 overflow-hidden flex flex-col">
             {reports.length > 0 ? (
-                <Carousel opts={{ align: "start", dragFree: true }}>
-                    <CarouselContent className="-ml-2">
-                        {reports.map((report, index) => (
-                            <CarouselItem key={index} className="basis-auto pl-2 flex flex-col">
-                                <DateCard
-                                    report={report}
-                                    isSelected={selectedReport?.date === report.date}
-                                    onSelect={() => handleDateSelect(report)}
-                                />
-                            </CarouselItem>
-                        ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2" />
-                    <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2" />
-                </Carousel>
+                <>
+                  <div className="flex-1 overflow-y-auto space-y-2 pr-2 -mr-2">
+                    {reports.map((report, index) => (
+                      <DateCard
+                          key={report.date}
+                          report={report}
+                          isSelected={selectedReport?.date === report.date}
+                          onSelect={() => handleDateSelect(report)}
+                      />
+                    ))}
+                  </div>
+                  {hasMoreReports && (
+                    <div className="mt-4 pt-4 border-t">
+                      <Button
+                        variant="outline"
+                        onClick={handleLoadMore}
+                        className="w-full"
+                        size="sm"
+                      >
+                        Load Older Reports
+                      </Button>
+                    </div>
+                  )}
+                </>
             ) : (
-                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 bg-muted rounded-lg">
-                    <FileText className="size-12 mb-4"/>
-                    <h3 className="font-semibold text-lg text-foreground">No reports generated yet</h3>
-                    <p>Complete tasks and use the daily report card to create your first report.</p>
+                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-4">
+                    <FileText className="size-12 mb-4 opacity-50"/>
+                    <h3 className="font-semibold text-sm text-foreground">No reports yet</h3>
+                    <p className="text-xs mt-1">Complete tasks to create your first report.</p>
                 </div>
-            )}
-            {hasMoreReports && (
-              <div className="mt-4 flex justify-center">
-                <Button variant="outline" onClick={handleLoadMore}>
-                  Load Older Reports
-                </Button>
-              </div>
             )}
         </CardContent>
       </Card>
 
+      {/* Main Content - Report Details */}
       {selectedReport ? (
-        <Card>
-             <CardHeader>
+        <Card className="flex flex-col h-full overflow-hidden">
+             <CardHeader className="pb-3">
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                     <div>
-                        <CardTitle>Report Details</CardTitle>
-                        <CardDescription>A summary of your activities and stats for the selected day.</CardDescription>
+                        <CardTitle className="text-lg">Report for {format(parseISO(selectedReport.date), 'MMMM d, yyyy')}</CardTitle>
+                        <CardDescription className="text-xs">Daily activity summary</CardDescription>
                     </div>
-                     <Button onClick={handleGenerateEmail} disabled={isGeneratingEmail}>
+                     <Button onClick={handleGenerateEmail} disabled={isGeneratingEmail} size="sm">
                         <Mail className="mr-2 h-4 w-4" />
                         {isGeneratingEmail ? 'Generating...' : 'Email Report'}
                     </Button>
                 </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 overflow-y-auto">
                 <VisualReportCard report={selectedReport} tasks={selectedReportTasks} />
             </CardContent>
         </Card>
       ) : (
         !isFetching && reports.length > 0 && (
-             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 bg-muted rounded-lg">
-                <FileText className="size-16 mb-4"/>
-                <h3 className="font-semibold text-lg text-foreground">Select a report</h3>
-                <p>Choose a day from the history list above to see its details.</p>
-              </div>
+             <Card className="flex items-center justify-center h-full">
+               <CardContent className="text-center text-muted-foreground p-8">
+                  <FileText className="size-16 mb-4 mx-auto opacity-50"/>
+                  <h3 className="font-semibold text-lg text-foreground">Select a report</h3>
+                  <p className="text-sm mt-2">Choose a day from the list to view details.</p>
+                </CardContent>
+              </Card>
         )
       )}
 
