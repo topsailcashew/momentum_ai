@@ -74,6 +74,9 @@ export function DashboardClientPage() {
   const [emailBody, setEmailBody] = React.useState<string | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
 
+  // Cache for generated email bodies to avoid regenerating the same report
+  const emailCacheRef = React.useRef<Map<string, string>>(new Map());
+
   const getCategoryName = (id: string) => categories.find(c => c.id === id)?.name || 'N/A';
 
   const fetchReportsAndTasks = React.useCallback(async () => {
@@ -123,9 +126,25 @@ export function DashboardClientPage() {
 
   const handleGenerateEmail = async () => {
     if (!selectedReport || !user) return;
+
+    // Check cache first
+    const cacheKey = `${selectedReport.date}-${selectedReportTasks.length}`;
+    const cachedBody = emailCacheRef.current.get(cacheKey);
+
+    if (cachedBody) {
+      setEmailBody(cachedBody);
+      setIsPreviewOpen(true);
+      return;
+    }
+
+    // Generate new email if not cached
     setIsGeneratingEmail(true);
     try {
       const body = await generateEmailReportAction(selectedReport, selectedReportTasks, { displayName: user.displayName, email: user.email });
+
+      // Cache the generated email
+      emailCacheRef.current.set(cacheKey, body);
+
       setEmailBody(body);
       setIsPreviewOpen(true);
     } catch (e) {

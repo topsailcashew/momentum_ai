@@ -36,6 +36,9 @@ export function ReportsClientPage() {
   const [reportsLimit, setReportsLimit] = React.useState(INITIAL_REPORTS_LIMIT);
   const [hasMoreReports, setHasMoreReports] = React.useState(false);
 
+  // Cache for generated email bodies to avoid regenerating the same report
+  const emailCacheRef = React.useRef<Map<string, string>>(new Map());
+
   const { toast } = useToast();
 
   // Set up real-time listener for reports with pagination
@@ -133,9 +136,25 @@ export function ReportsClientPage() {
 
   const handleGenerateEmail = async () => {
     if (!selectedReport || !user) return;
+
+    // Check cache first
+    const cacheKey = `${selectedReport.date}-${selectedReportTasks.length}`;
+    const cachedBody = emailCacheRef.current.get(cacheKey);
+
+    if (cachedBody) {
+      setEmailBody(cachedBody);
+      setIsPreviewOpen(true);
+      return;
+    }
+
+    // Generate new email if not cached
     setIsGeneratingEmail(true);
     try {
       const body = await generateEmailReportAction(selectedReport, selectedReportTasks, { displayName: user.displayName, email: user.email });
+
+      // Cache the generated email
+      emailCacheRef.current.set(cacheKey, body);
+
       setEmailBody(body);
       setIsPreviewOpen(true);
     } catch (e) {
