@@ -10,6 +10,7 @@ import { EnergyInput } from './energy-input';
 import { SuggestionsDialog } from './suggestions-dialog';
 import { getSuggestedTasks } from '@/app/actions';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { useUser } from '@/firebase';
 
 interface ScoreAndSuggestTasksOutput {
   suggestedTasks: Task[];
@@ -18,6 +19,7 @@ interface ScoreAndSuggestTasksOutput {
 
 
 export function MomentumCard() {
+  const { user } = useUser();
   const {
     tasks,
     projects,
@@ -80,7 +82,7 @@ export function MomentumCard() {
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1">Day Streak</p>
                 </div>
             </div>
-            <EnergyInput userId={userId} />
+            {user && <EnergyInput userId={user.uid} />}
         </div>
 
         {suggestions.routineSuggestion && (

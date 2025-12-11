@@ -39,13 +39,6 @@ export async function getTasks(db: Firestore, userId: string): Promise<Task[]> {
   return taskList;
 }
 
-export async function getTasksForDate(db: Firestore, userId: string, date: string): Promise<Task[]> {
-  const tasksCol = collection(db, 'users', userId, 'tasks');
-  const taskSnapshot = await getDocs(tasksCol);
-  const taskList = taskSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Task));
-  return taskList.filter(task => task.createdAt && format(new Date(task.createdAt), 'yyyy-MM-dd') === date);
-}
-
 export async function addTask(db: Firestore, userId: string, taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>): Promise<Task> {
   const tasksCol = collection(db, 'users', userId, 'tasks');
 
@@ -130,13 +123,6 @@ export async function getTodayEnergy(db: Firestore, userId: string): Promise<Ene
 }
 
 // Momentum Score Functions
-export async function getMomentumHistory(db: Firestore, userId: string): Promise<MomentumScore[]> {
-  const momentumCol = collection(db, 'users', userId, 'momentum');
-  const q = query(momentumCol, orderBy('date', 'desc'));
-  const momentumSnapshot = await getDocs(q);
-  return momentumSnapshot.docs.map(doc => doc.data() as MomentumScore);
-}
-
 export async function getLatestMomentum(db: Firestore, userId: string): Promise<MomentumScore | undefined> {
   const momentumCol = collection(db, 'users', userId, 'momentum');
   const q = query(momentumCol, orderBy('date', 'desc'), limit(1));
@@ -467,16 +453,6 @@ export async function updateWorkdayTaskNotes(
 ): Promise<void> {
   const taskRef = doc(db, 'users', userId, 'workday-tasks', workdayTaskId);
   return updateDoc(taskRef, { notes });
-}
-
-export async function updateWorkdayTaskFields(
-  db: Firestore,
-  userId: string,
-  workdayTaskId: string,
-  updates: Partial<Omit<WorkdayTask, 'id' | 'userId' | 'taskId' | 'taskType' | 'date' | 'addedAt'>>
-): Promise<void> {
-  const taskRef = doc(db, 'users', userId, 'workday-tasks', workdayTaskId);
-  return updateDoc(taskRef, updates);
 }
 
 export async function getAllAvailableTasks(db: Firestore, userId: string): Promise<Array<Task & { source: 'regular' | 'recurring' }>> {
