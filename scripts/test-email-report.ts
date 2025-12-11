@@ -45,7 +45,9 @@ const mockTasks: Task[] = [
     completed: true,
     completedAt: '2024-11-18T14:30:00Z',
     createdAt: '2024-11-18T09:00:00Z',
-    priority: 'Urgent & Important'
+    priority: 'Urgent & Important',
+    state: 'done',
+    stateHistory: []
   },
   {
     id: 'task2',
@@ -57,7 +59,9 @@ const mockTasks: Task[] = [
     completedAt: '2024-11-18T11:00:00Z',
     createdAt: '2024-11-18T09:00:00Z',
     collaboration: 'Development Team',
-    priority: 'Important & Not Urgent'
+    priority: 'Important & Not Urgent',
+    state: 'done',
+    stateHistory: []
   },
   {
     id: 'task3',
@@ -69,7 +73,9 @@ const mockTasks: Task[] = [
     completedAt: null,
     createdAt: '2024-11-18T09:00:00Z',
     deadline: '2024-11-18T17:00:00Z',
-    priority: 'Urgent & Important'
+    priority: 'Urgent & Important',
+    state: 'ready',
+    stateHistory: []
   }
 ];
 
