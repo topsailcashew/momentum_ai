@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Mail } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import type { DailyReport, Task } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
@@ -12,8 +12,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { DateCard } from '@/components/reports/date-card';
 import { VisualReportCard } from '@/components/reports/visual-report-card';
-import { generateEmailReportAction } from '../actions';
-import { EmailPreviewDialog } from '@/components/reports/email-preview-dialog';
 import { collection, onSnapshot, query, orderBy, limit as firestoreLimit } from 'firebase/firestore';
 import { format, parseISO } from 'date-fns';
 
@@ -30,14 +28,8 @@ export function ReportsClientPage() {
   const [selectedReportTasks, setSelectedReportTasks] = React.useState<Task[]>([]);
 
   const [isFetching, setIsFetching] = React.useState(true);
-  const [isGeneratingEmail, setIsGeneratingEmail] = React.useState(false);
-  const [emailBody, setEmailBody] = React.useState<string | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
   const [reportsLimit, setReportsLimit] = React.useState(INITIAL_REPORTS_LIMIT);
   const [hasMoreReports, setHasMoreReports] = React.useState(false);
-
-  // Cache for generated email bodies to avoid regenerating the same report
-  const emailCacheRef = React.useRef<Map<string, string>>(new Map());
 
   const { toast } = useToast();
 
@@ -134,36 +126,6 @@ export function ReportsClientPage() {
     setReportsLimit(prev => prev + LOAD_MORE_INCREMENT);
   }
 
-  const handleGenerateEmail = async () => {
-    if (!selectedReport || !user) return;
-
-    // Check cache first
-    const cacheKey = `${selectedReport.date}-${selectedReportTasks.length}`;
-    const cachedBody = emailCacheRef.current.get(cacheKey);
-
-    if (cachedBody) {
-      setEmailBody(cachedBody);
-      setIsPreviewOpen(true);
-      return;
-    }
-
-    // Generate new email if not cached
-    setIsGeneratingEmail(true);
-    try {
-      const body = await generateEmailReportAction(selectedReport, selectedReportTasks, { displayName: user.displayName, email: user.email });
-
-      // Cache the generated email
-      emailCacheRef.current.set(cacheKey, body);
-
-      setEmailBody(body);
-      setIsPreviewOpen(true);
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Failed to generate email content.' });
-    } finally {
-      setIsGeneratingEmail(false);
-    }
-  };
-
 
   if (userLoading || dataLoading || isFetching || !user) {
     return (
@@ -222,16 +184,8 @@ export function ReportsClientPage() {
       {selectedReport ? (
         <Card className="flex flex-col h-full overflow-hidden">
              <CardHeader className="pb-3">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                    <div>
-                        <CardTitle className="text-lg">Report for {format(parseISO(selectedReport.date), 'MMMM d, yyyy')}</CardTitle>
-                        <CardDescription className="text-xs">Daily activity summary</CardDescription>
-                    </div>
-                     <Button onClick={handleGenerateEmail} disabled={isGeneratingEmail} size="sm">
-                        <Mail className="mr-2 h-4 w-4" />
-                        {isGeneratingEmail ? 'Generating...' : 'Email Report'}
-                    </Button>
-                </div>
+                <CardTitle className="text-lg">Report for {format(parseISO(selectedReport.date), 'MMMM d, yyyy')}</CardTitle>
+                <CardDescription className="text-xs">Daily activity summary</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto">
                 <VisualReportCard report={selectedReport} tasks={selectedReportTasks} />
@@ -247,17 +201,6 @@ export function ReportsClientPage() {
                 </CardContent>
               </Card>
         )
-      )}
-
-      {selectedReport && emailBody && (
-        <EmailPreviewDialog
-          open={isPreviewOpen}
-          onOpenChange={setIsPreviewOpen}
-          report={selectedReport}
-          emailBody={emailBody}
-          userName={user?.displayName || 'User'}
-          userEmail={user?.email || ''}
-        />
       )}
     </div>
   );
