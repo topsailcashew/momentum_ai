@@ -205,6 +205,7 @@ export function ReportsClientPage() {
           report={selectedReport}
           emailBody={emailBody}
           userName={user?.displayName || 'User'}
+          userEmail={user?.email || ''}
         />
       )}
     </div>

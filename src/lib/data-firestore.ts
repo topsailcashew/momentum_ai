@@ -66,17 +66,22 @@ export async function addTask(db: Firestore, userId: string, taskData: Omit<Task
     createdAt: new Date().toISOString(),
   };
 
-  const docRef = await addDoc(tasksCol, newTaskData)
+  // Filter out undefined values (Firestore doesn't accept them)
+  const cleanedTaskData = Object.fromEntries(
+    Object.entries(newTaskData).filter(([_, value]) => value !== undefined)
+  );
+
+  const docRef = await addDoc(tasksCol, cleanedTaskData)
     .catch(async (serverError) => {
       const permissionError = new FirestorePermissionError({
         path: tasksCol.path,
         operation: 'create',
-        requestResourceData: newTaskData,
+        requestResourceData: cleanedTaskData,
       });
       errorEmitter.emit('permission-error', permissionError);
       throw permissionError;
     });
-  return { id: docRef.id, ...newTaskData };
+  return { id: docRef.id, ...cleanedTaskData };
 }
 
 export function updateTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<Task, 'id' | 'userId'>>): Promise<void> {
@@ -131,6 +136,7 @@ export function setTodayEnergy(db: Firestore, userId: string, level: EnergyLevel
         requestResourceData: newLog,
       });
       errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
     });
 }
 
@@ -172,6 +178,7 @@ export function saveMomentumScore(db: Firestore, userId: string, scoreData: Omit
         requestResourceData: newScore,
       });
       errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
     });
 }
 
@@ -242,6 +249,7 @@ export function updateProject(db: Firestore, userId: string, projectId: string, 
         requestResourceData: updates,
       });
       errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
     });
 }
 
@@ -268,6 +276,7 @@ export async function deleteProject(db: Firestore, userId: string, projectId: st
       operation: 'delete',
     });
     errorEmitter.emit('permission-error', permissionError);
+    throw permissionError;
   }
 }
 
@@ -297,17 +306,23 @@ export async function addRecurringTask(db: Firestore, userId: string, taskData: 
     userId,
     createdAt: new Date().toISOString()
   };
-  const docRef = await addDoc(tasksCol, newTaskData)
+
+  // Filter out undefined values (Firestore doesn't accept them)
+  const cleanedTaskData = Object.fromEntries(
+    Object.entries(newTaskData).filter(([_, value]) => value !== undefined)
+  );
+
+  const docRef = await addDoc(tasksCol, cleanedTaskData)
     .catch(async (serverError) => {
       const permissionError = new FirestorePermissionError({
         path: tasksCol.path,
         operation: 'create',
-        requestResourceData: newTaskData,
+        requestResourceData: cleanedTaskData,
       });
       errorEmitter.emit('permission-error', permissionError);
       throw permissionError;
     });
-  return { id: docRef.id, ...newTaskData };
+  return { id: docRef.id, ...cleanedTaskData };
 }
 
 export function updateRecurringTask(db: Firestore, userId: string, taskId: string, updates: Partial<Omit<RecurringTask, 'id' | 'userId'>>): Promise<void> {
@@ -320,6 +335,7 @@ export function updateRecurringTask(db: Firestore, userId: string, taskId: strin
         requestResourceData: updates,
       });
       errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
     });
 }
 
@@ -548,6 +564,7 @@ export function updateUserProfile(db: Firestore, userId: string, updates: { disp
         requestResourceData: updates,
       });
       errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
     });
 }
 
@@ -565,6 +582,7 @@ export function createUserProfile(db: Firestore, userId: string, data: { email: 
         requestResourceData: profileData,
       });
       errorEmitter.emit('permission-error', permissionError);
+      throw permissionError;
     });
 }
 
