@@ -182,6 +182,8 @@ export function WorkdayTasksCard() {
       });
 
       startTransition(async () => {
+        if (!userId) return;
+
         try {
           await updateTask(firestore, userId, id, { completed, completedAt: completed ? new Date().toISOString() : null });
           if (completed) {
@@ -242,6 +244,8 @@ export function WorkdayTasksCard() {
 
   const handleRemoveFromWorkday = (workdayTaskId: string) => {
     startTransition(async () => {
+      if (!userId) return;
+
       try {
         await removeWorkdayTask(firestore, userId, workdayTaskId);
         setWorkdayTasks(prev => prev.filter(wt => wt.id !== workdayTaskId));
@@ -493,6 +497,8 @@ export function WorkdayTasksCard() {
         taskName={completionModalTask?.name ?? ''}
         timeSpentMs={completionModalTask?.timeSpentMs}
         onSaveNotes={async (notes) => {
+          if (!userId) return;
+
           if (completionModalTask && notes.trim()) {
             try {
               await updateWorkdayTaskNotes(firestore, userId, completionModalTask.workdayTaskId, notes);

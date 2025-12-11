@@ -1,0 +1,20 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <rect width="180" height="180" rx="40" fill="url(#gradient)"/>
+
+  <!-- Forward arrow/momentum symbol - scaled and centered -->
+  <path d="M56 90L90 56L90 73L126 73L126 107L90 107L90 124L56 90Z" fill="white" opacity="0.95"/>
+
+  <!-- Accent speed lines for momentum effect -->
+  <path d="M34 68L45 68" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+  <path d="M34 90L50 90" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+  <path d="M34 112L45 112" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+</svg>

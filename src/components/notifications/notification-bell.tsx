@@ -16,14 +16,17 @@ import { collection, onSnapshot, query, where, orderBy, limit } from 'firebase/f
 import { useRouter } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { useAudio } from '@/hooks/use-audio';
 
 export function NotificationBell() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
+  const { play } = useAudio();
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = React.useState(0);
   const [isOpen, setIsOpen] = React.useState(false);
+  const prevUnreadCountRef = React.useRef<number>(0);
 
   // Set up real-time listener for notifications
   React.useEffect(() => {
@@ -49,6 +52,15 @@ export function NotificationBell() {
       return unsubscribe;
     }
   }, [user, firestore, isUserLoading]);
+
+  // Play sound when new notification arrives
+  React.useEffect(() => {
+    // Only play sound if unread count increased (not on initial load or decrease)
+    if (prevUnreadCountRef.current > 0 && unreadCount > prevUnreadCountRef.current) {
+      play('notification');
+    }
+    prevUnreadCountRef.current = unreadCount;
+  }, [unreadCount, play]);
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!firestore || !user) return;
