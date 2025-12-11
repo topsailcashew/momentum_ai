@@ -47,7 +47,7 @@ export function TaskList() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { tasks: initialTasks, categories, projects, todayEnergy, setTasks: setAllTasks } = useDashboardData();
-  const userId = user!.uid;
+  const userId = user?.uid;
 
   const [isPending, startTransition] = useTransition();
   const [filter, setFilter] = React.useState<EnergyLevel | 'all'>('all');
@@ -56,6 +56,8 @@ export function TaskList() {
   const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
 
   const handleComplete = (id: string, completed: boolean) => {
+    if (!firestore || !userId) return;
+
     let originalTasksState: Task[] = [];
 
     // Optimistically update the UI
@@ -89,7 +91,7 @@ export function TaskList() {
   };
 
   const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'> | Partial<Omit<Task, 'id' | 'userId'>>) => {
-    if (!firestore) return;
+    if (!firestore || !userId) return;
     startTransition(async () => {
       try {
         const newTask = await addTask(firestore, userId, taskData as Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>);
@@ -110,7 +112,7 @@ export function TaskList() {
   }
 
   const handleUpdateTask = (taskId: string, taskData: Partial<Omit<Task, 'id'>>) => {
-    if (!firestore) return;
+    if (!firestore || !userId) return;
     startTransition(async () => {
       try {
         await updateTask(firestore, userId, taskId, taskData);
@@ -129,7 +131,7 @@ export function TaskList() {
   };
 
   const handleDeleteTask = (taskId: string) => {
-    if (!firestore) return;
+    if (!firestore || !userId) return;
     startTransition(async () => {
       try {
         await deleteTask(firestore, userId, taskId);

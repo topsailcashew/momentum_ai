@@ -10,7 +10,6 @@ import { EnergyInput } from './energy-input';
 import { SuggestionsDialog } from './suggestions-dialog';
 import { getSuggestedTasks } from '@/app/actions';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
-import { useUser } from '@/firebase';
 
 interface ScoreAndSuggestTasksOutput {
   suggestedTasks: Task[];
@@ -19,14 +18,12 @@ interface ScoreAndSuggestTasksOutput {
 
 
 export function MomentumCard() {
-  const { user } = useUser();
   const {
     tasks,
     projects,
     todayEnergy,
     latestMomentum,
   } = useDashboardData();
-  const userId = user!.uid;
 
   const [suggestions, setSuggestions] = React.useState<ScoreAndSuggestTasksOutput>({
     suggestedTasks: [],

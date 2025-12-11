@@ -55,7 +55,7 @@ export function WorkdayTasksCard() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { tasks: allTasks, recurringTasks, categories, projects, todayEnergy, setTasks: setAllTasks, setRecurringTasks } = useDashboardData();
-  const userId = user!.uid;
+  const userId = user?.uid;
 
   const [isPending, startTransition] = useTransition();
   const [workdayTasks, setWorkdayTasks] = React.useState<WorkdayTask[]>([]);
@@ -73,7 +73,7 @@ export function WorkdayTasksCard() {
 
   // Load workday tasks on mount
   React.useEffect(() => {
-    if (!firestore || !userId) return;
+    if (!firestore || !userId || !user) return;
 
     const loadWorkdayTasks = async () => {
       try {
