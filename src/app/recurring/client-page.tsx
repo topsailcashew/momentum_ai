@@ -21,8 +21,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser, useFirestore } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
-import { addRecurringTask, updateRecurringTask } from '@/lib/data-firestore';
+import { addRecurringTask } from '@/lib/data-firestore';
 import { onClientWrite } from '@/app/actions';
+import { useRecurringTaskCompletion } from '@/hooks/use-recurring-task-completion';
 
 export function RecurringTasksClientPage() {
   const { user, isUserLoading: userLoading } = useUser();
@@ -32,29 +33,23 @@ export function RecurringTasksClientPage() {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
-  const handleCompleteTask = (taskId: string) => {
-    if (!user || !firestore) return;
-    const optimisticUpdate = (currentTasks: RecurringTask[]) => currentTasks.map(task =>
-      task.id === taskId ? { ...task, lastCompleted: new Date().toISOString() } : task
-    );
-    setRecurringTasks(optimisticUpdate);
+  const { completeRecurringTask, isPending: isCompletionPending } = useRecurringTaskCompletion({
+    onOptimisticUpdate: (taskId, lastCompleted) => {
+      setRecurringTasks(currentTasks =>
+        currentTasks.map(task =>
+          task.id === taskId ? { ...task, lastCompleted } : task
+        )
+      );
+    },
+    onRevert: () => {
+      setRecurringTasks(initialTasks);
+    },
+    calculateMomentumScore: false, // Don't calculate momentum for standalone recurring page
+  });
 
-    startTransition(async () => {
-      try {
-        await updateRecurringTask(firestore, user.uid, taskId, { lastCompleted: new Date().toISOString() });
-        toast({ title: 'Task marked as complete!' });
-        await onClientWrite();
-      } catch (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Uh oh! Something went wrong.',
-          description: 'There was a problem completing the task. Reverting changes.',
-        });
-        // Revert optimistic update by refetching from global state
-        setRecurringTasks(initialTasks);
-      }
-    });
-  }
+  const handleCompleteTask = (taskId: string) => {
+    completeRecurringTask(taskId, true);
+  };
 
   const [showAddDialog, setShowAddDialog] = React.useState(false);
 
@@ -120,7 +115,7 @@ export function RecurringTasksClientPage() {
                   size="sm"
                   className="w-full"
                   onClick={() => handleCompleteTask(task.id)}
-                  disabled={isCompleted || isPending}
+                  disabled={isCompleted || isPending || isCompletionPending}
                 >
                   {isCompleted ? 'Completed' : 'Mark Completed'}
                 </Button>

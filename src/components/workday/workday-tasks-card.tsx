@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PomodoroContext } from '../dashboard/pomodoro-provider';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
-import { updateTask, updateRecurringTask, calculateAndSaveMomentumScore, getWorkdayTasks, removeWorkdayTask, updateWorkdayTaskNotes } from '@/lib/data-firestore';
+import { updateTask, calculateAndSaveMomentumScore, getWorkdayTasks, removeWorkdayTask, updateWorkdayTaskNotes } from '@/lib/data-firestore';
 import { onClientWrite, onTaskCompleted } from '@/app/actions';
 import { format, isToday, parseISO } from 'date-fns';
 import { AddTasksDialog } from './add-tasks-dialog';
@@ -29,6 +29,7 @@ import { AdaptiveActionMenu } from '@/components/ui/adaptive-action-menu';
 import { FocusLockModal } from './focus-lock-modal';
 import { useAudio } from '@/hooks/use-audio';
 import { useTaskFilters } from '@/hooks/use-task-filters';
+import { useRecurringTaskCompletion } from '@/hooks/use-recurring-task-completion';
 
 const TaskCompletionModal = dynamic(() => import('./task-completion-modal').then(mod => ({ default: mod.TaskCompletionModal })), { ssr: false });
 
@@ -65,6 +66,27 @@ export function WorkdayTasksCard() {
   const { toast } = useToast();
   const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
   const { play } = useAudio();
+
+  const { completeRecurringTask } = useRecurringTaskCompletion({
+    onOptimisticUpdate: (taskId, lastCompleted) => {
+      setRecurringTasks(currentTasks =>
+        currentTasks.map(task =>
+          task.id === taskId ? { ...task, lastCompleted } : task
+        )
+      );
+    },
+    onRevert: () => {
+      // Revert by refetching - the global state should handle this
+      setRecurringTasks(recurringTasks);
+    },
+    onSuccess: () => {
+      // Clear focus if the completed task was focused
+      if (focusedTask && focusedTask.id) {
+        setFocusedTask(null);
+      }
+    },
+    calculateMomentumScore: true,
+  });
 
   const [focusLockOpen, setFocusLockOpen] = React.useState(false);
   const [pendingFocusTask, setPendingFocusTask] = React.useState<Task | null>(null);
@@ -181,43 +203,8 @@ export function WorkdayTasksCard() {
         }
       });
     } else {
-      // Handle recurring tasks
-      let originalRecurringTasksState: typeof recurringTasks = [];
-
-      // Optimistically update the UI
-      setRecurringTasks(currentTasks => {
-        originalRecurringTasksState = currentTasks;
-        return currentTasks.map(task =>
-          task.id === id
-            ? { ...task, lastCompleted: completed ? new Date().toISOString() : null }
-            : task
-        );
-      });
-
-      startTransition(async () => {
-        try {
-          if (completed) {
-            // Update lastCompleted to now
-            await updateRecurringTask(firestore, userId, id, { lastCompleted: new Date().toISOString() });
-            await calculateAndSaveMomentumScore(firestore, userId);
-            await onTaskCompleted(userId);
-            if (focusedTask?.id === id) {
-              setFocusedTask(null);
-            }
-          } else {
-            // Un-complete by setting lastCompleted to null
-            await updateRecurringTask(firestore, userId, id, { lastCompleted: null });
-            await onClientWrite();
-          }
-        } catch (error) {
-          toast({
-            variant: 'destructive',
-            title: 'Uh oh! Something went wrong.',
-            description: 'There was a problem updating your recurring task. Reverting changes.',
-          });
-          setRecurringTasks(originalRecurringTasksState);
-        }
-      });
+      // Handle recurring tasks using centralized hook
+      completeRecurringTask(id, completed);
     }
   };
 
