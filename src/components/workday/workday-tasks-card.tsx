@@ -28,6 +28,7 @@ import dynamic from 'next/dynamic';
 import { AdaptiveActionMenu } from '@/components/ui/adaptive-action-menu';
 import { FocusLockModal } from './focus-lock-modal';
 import { useAudio } from '@/hooks/use-audio';
+import { useTaskFilters } from '@/hooks/use-task-filters';
 
 const TaskCompletionModal = dynamic(() => import('./task-completion-modal').then(mod => ({ default: mod.TaskCompletionModal })), { ssr: false });
 
@@ -272,8 +273,10 @@ export function WorkdayTasksCard() {
     return projects.find(p => p.id === projectId)?.name;
   };
 
-  const incompleteTasks = workdayTasksWithDetails.filter(task => !task.completed);
-  const completedTasks = workdayTasksWithDetails.filter(task => task.completed);
+  const { incompleteTasks, completedTasks } = useTaskFilters({
+    tasks: workdayTasksWithDetails,
+    includeCompleted: true
+  });
 
   return (
     <>

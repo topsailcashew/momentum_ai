@@ -35,6 +35,7 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
 import { addTask, deleteTask, updateTask, calculateAndSaveMomentumScore } from '@/lib/data-firestore';
 import { onClientWrite, onTaskCompleted } from '@/app/actions';
+import { useTaskFilters } from '@/hooks/use-task-filters';
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
     Low: ZapOff,
@@ -61,6 +62,7 @@ export function TaskList() {
     const { toast } = useToast();
     const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
     const { updateTaskState, isUpdating } = useTaskState();
+    const { filteredTasks } = useTaskFilters({ tasks: initialTasks, filterBy: filter, includeCompleted: false });
 
     const handleComplete = (id: string, completed: boolean) => {
         if (!firestore || !userId) return;
@@ -173,11 +175,6 @@ export function TaskList() {
     const getProjectName = (projectId: string) => {
         return projects.find(p => p.id === projectId)?.name;
     }
-
-    const filteredTasks = initialTasks.filter(task => {
-        if (filter === 'all') return !task.completed;
-        return task.energyLevel === filter && !task.completed;
-    });
 
     return (
         <>

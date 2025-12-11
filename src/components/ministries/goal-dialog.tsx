@@ -159,7 +159,7 @@ export function GoalDialog({ open, onOpenChange, ministry, strategicPlan, goal, 
             </div>
             <div className="space-y-2">
               <Label htmlFor="goal-status">Status</Label>
-              <Select value={status} onValueChange={(value: any) => setStatus(value)}>
+              <Select value={status} onValueChange={(value) => setStatus(value as 'not-started' | 'in-progress' | 'completed' | 'on-hold')}>
                 <SelectTrigger id="goal-status">
                   <SelectValue />
                 </SelectTrigger>
