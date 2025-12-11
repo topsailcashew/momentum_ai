@@ -52,6 +52,15 @@ export function EndDayDialog({
   };
 
   const handleGenerateReport = () => {
+    if (!user || !firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'User not authenticated. Please log in again.',
+      });
+      return;
+    }
+
     startTransition(async () => {
       try {
         // Prepare task data with notes
@@ -81,7 +90,7 @@ export function EndDayDialog({
         });
 
         // Save report to Firestore
-        await updateTodaysReport(firestore, user!.uid, {
+        await updateTodaysReport(firestore, user.uid, {
           generatedReport: reportResult.report,
           taskNotes: notes,
           completedTaskIds: completedTasks.map(t => t.id),

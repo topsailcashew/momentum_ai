@@ -148,6 +148,14 @@ export function AddTasksDialog({
 
   const handleAddTasks = () => {
     if (selectedTaskIds.size === 0) return;
+    if (!user || !firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'User not authenticated. Please log in again.',
+      });
+      return;
+    }
 
     startTransition(async () => {
       try {
@@ -158,7 +166,7 @@ export function AddTasksDialog({
           if (task) {
             const workdayTask = await addWorkdayTask(
               firestore,
-              user!.uid,
+              user.uid,
               taskId,
               task.source === 'recurring' ? 'recurring' : 'regular',
               today
@@ -186,6 +194,15 @@ export function AddTasksDialog({
   };
 
   const handleCreateAndAddTask = (data: TaskFormValues) => {
+    if (!user || !firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'User not authenticated. Please log in again.',
+      });
+      return;
+    }
+
     startTransition(async () => {
       try {
         // Create the task - build object without undefined values
@@ -222,7 +239,7 @@ export function AddTasksDialog({
           taskData.details = data.details;
         }
 
-        const newTask = await addTask(firestore, user!.uid, taskData as any);
+        const newTask = await addTask(firestore, user.uid, taskData as any);
 
         // Update local state
         setTasks((prev) => [...prev, newTask]);
@@ -230,7 +247,7 @@ export function AddTasksDialog({
         // Add to workday
         const workdayTask = await addWorkdayTask(
           firestore,
-          user!.uid,
+          user.uid,
           newTask.id,
           'regular',
           today

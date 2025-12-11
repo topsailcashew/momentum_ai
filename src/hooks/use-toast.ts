@@ -173,6 +173,12 @@ function toast({ ...props }: Toast) {
 
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
+  const stateRef = React.useRef(state)
+
+  // Keep ref updated
+  React.useEffect(() => {
+    stateRef.current = state
+  }, [state])
 
   React.useEffect(() => {
     listeners.push(setState)
@@ -181,8 +187,17 @@ function useToast() {
       if (index > -1) {
         listeners.splice(index, 1)
       }
+
+      // Cleanup: Clear all timeouts for this component's toasts
+      stateRef.current.toasts.forEach((toast) => {
+        const timeout = toastTimeouts.get(toast.id)
+        if (timeout) {
+          clearTimeout(timeout)
+          toastTimeouts.delete(toast.id)
+        }
+      })
     }
-  }, [state])
+  }, []) // Empty deps - only run once on mount/unmount
 
   return {
     ...state,

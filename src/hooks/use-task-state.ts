@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { doc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, serverTimestamp, type FieldValue } from 'firebase/firestore';
 import { TaskState, StateHistoryEntry, WaitingInfo } from '@/types';
 import { useUser, useFirestore } from '@/firebase';
 import { useToast } from './use-toast';
@@ -36,12 +36,16 @@ export function useTaskState() {
 
       const historyEntry: StateHistoryEntry = {
         state: newState,
-        timestamp: serverTimestamp() as any,
+        timestamp: serverTimestamp() as FieldValue,
         changedBy: user.uid,
         ...(note && { note }),
       };
 
-      const updates: any = {
+      const updates: {
+        state: TaskState;
+        stateHistory: FieldValue;
+        waitingOn?: WaitingInfo | null;
+      } = {
         state: newState,
         stateHistory: arrayUnion(historyEntry),
       };
@@ -50,7 +54,7 @@ export function useTaskState() {
       if (newState === 'waiting' && waitingInfo) {
         updates.waitingOn = {
           ...waitingInfo,
-          blockedAt: serverTimestamp(),
+          blockedAt: serverTimestamp() as FieldValue,
         };
       } else if (newState !== 'waiting') {
         // Clear waiting info when leaving waiting state

@@ -22,32 +22,33 @@ export function DateCard({ report, isSelected, onSelect }: DateCardProps) {
     <button
       onClick={onSelect}
       className={cn(
-        "flex w-40 flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent/10 h-full",
-        isSelected && "bg-primary text-primary-foreground border-primary/80 shadow-lg"
+        "flex w-full flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-all hover:bg-accent/10",
+        isSelected && "bg-primary text-primary-foreground border-primary/80 shadow-md"
       )}
     >
-      <div className="flex w-full flex-col gap-1">
-        <div className="flex items-center">
-          <div className="font-semibold">{format(parseISO(report.date), 'MMM d, yyyy')}</div>
-          {isReportToday && (
-            <div className="ml-auto">
-              <Badge variant={isSelected ? 'secondary' : 'default'}>Today</Badge>
-            </div>
-          )}
+      <div className="flex w-full items-center justify-between gap-2">
+        <div className="flex flex-col gap-0.5">
+          <div className="font-semibold text-sm">{format(parseISO(report.date), 'MMM d, yyyy')}</div>
+          <div className={cn("text-xs", isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+            {format(parseISO(report.date), 'EEEE')}
+          </div>
         </div>
-        <div className={cn("text-xs", isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
-          {format(parseISO(report.date), 'eeee')}
-        </div>
+        {isReportToday && (
+          <Badge variant={isSelected ? 'secondary' : 'default'} className="text-xs">Today</Badge>
+        )}
       </div>
-      <div className="flex-grow" />
-      <div className={cn("flex items-center gap-2 text-xs", isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
-        <div className="flex items-center gap-1">
-          <CheckCircle className="h-3 w-3" />
-          {report.completed} / {report.goals} done
-        </div>
+
+      <div className={cn("flex items-center gap-2 text-xs w-full", isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
+        <CheckCircle className="h-3 w-3" />
+        <span>{report.completed} / {report.goals} completed</span>
+        <span className="ml-auto font-medium">{Math.round(completionRate)}%</span>
       </div>
+
       <div className={cn("w-full rounded-full h-1.5", isSelected ? 'bg-primary-foreground/20' : 'bg-secondary')}>
-        <div className={cn("h-1.5 rounded-full", isSelected ? 'bg-primary-foreground' : 'bg-primary')} style={{ width: `${completionRate}%` }}></div>
+        <div
+          className={cn("h-1.5 rounded-full transition-all", isSelected ? 'bg-primary-foreground' : 'bg-primary')}
+          style={{ width: `${completionRate}%` }}
+        />
       </div>
     </button>
   );

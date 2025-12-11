@@ -35,6 +35,7 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
 import { addTask, deleteTask, updateTask, calculateAndSaveMomentumScore } from '@/lib/data-firestore';
 import { onClientWrite, onTaskCompleted } from '@/app/actions';
+import { useTaskFilters } from '@/hooks/use-task-filters';
 
 const energyIcons: Record<EnergyLevel, React.ElementType> = {
     Low: ZapOff,
@@ -53,7 +54,7 @@ export function TaskList() {
     const { user } = useUser();
     const firestore = useFirestore();
     const { tasks: initialTasks, categories, projects, todayEnergy, setTasks: setAllTasks } = useDashboardData();
-    const userId = user!.uid;
+    const userId = user?.uid;
 
     const [isPending, startTransition] = useTransition();
     const [filter, setFilter] = React.useState<EnergyLevel | 'all'>('all');
@@ -61,8 +62,11 @@ export function TaskList() {
     const { toast } = useToast();
     const { setFocusedTask, focusedTask } = React.useContext(PomodoroContext);
     const { updateTaskState, isUpdating } = useTaskState();
+    const { filteredTasks } = useTaskFilters({ tasks: initialTasks, filterBy: filter, includeCompleted: false });
 
     const handleComplete = (id: string, completed: boolean) => {
+        if (!firestore || !userId) return;
+
         let originalTasksState: Task[] = [];
 
         // Optimistically update the UI
@@ -79,8 +83,13 @@ export function TaskList() {
             try {
                 await updateTask(firestore, userId, id, { completed, completedAt: completed ? new Date().toISOString() : null });
                 if (completed) {
-                    // Now calculate momentum score on the client
-                    await calculateAndSaveMomentumScore(firestore, userId);
+                    // Calculate momentum score - wrap in try-catch to not block task completion
+                    try {
+                        await calculateAndSaveMomentumScore(firestore, userId);
+                    } catch (momentumError) {
+                        console.error('Failed to calculate momentum score:', momentumError);
+                        // Don't throw - momentum score is non-critical
+                    }
                     await onTaskCompleted(userId); // Revalidate paths
                 } else {
                     await onClientWrite(); // Just revalidate
@@ -98,7 +107,7 @@ export function TaskList() {
     };
 
     const handleCreateTask = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'> | Partial<Omit<Task, 'id' | 'userId'>>) => {
-        if (!firestore) return;
+        if (!firestore || !userId) return;
         startTransition(async () => {
             try {
                 const newTask = await addTask(firestore, userId, taskData as Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'>);
@@ -119,7 +128,7 @@ export function TaskList() {
     }
 
     const handleUpdateTask = (taskId: string, taskData: Partial<Omit<Task, 'id'>>) => {
-        if (!firestore) return;
+        if (!firestore || !userId) return;
         startTransition(async () => {
             try {
                 await updateTask(firestore, userId, taskId, taskData);
@@ -139,7 +148,7 @@ export function TaskList() {
     };
 
     const handleDeleteTask = (taskId: string) => {
-        if (!firestore) return;
+        if (!firestore || !userId) return;
         startTransition(async () => {
             try {
                 await deleteTask(firestore, userId, taskId);
@@ -159,6 +168,7 @@ export function TaskList() {
     };
 
     const handleStateChange = async (taskId: string, newState: import('@/types').TaskState, waitingInfo?: Omit<import('@/types').WaitingInfo, 'blockedAt'>) => {
+        if (!userId) return;
         await updateTaskState(taskId, userId, newState, undefined, waitingInfo);
     };
 
@@ -170,11 +180,6 @@ export function TaskList() {
     const getProjectName = (projectId: string) => {
         return projects.find(p => p.id === projectId)?.name;
     }
-
-    const filteredTasks = initialTasks.filter(task => {
-        if (filter === 'all') return !task.completed;
-        return task.energyLevel === filter && !task.completed;
-    });
 
     return (
         <>

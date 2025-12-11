@@ -39,7 +39,7 @@ export function DailyReportCard() {
     setTodaysReport,
     loading: dataLoading,
   } = useDashboardData();
-  const userId = user!.uid;
+  const userId = user?.uid;
 
   const [clientFormattedTimes, setClientFormattedTimes] = React.useState({
     startTime: 'Not set',
@@ -59,7 +59,7 @@ export function DailyReportCard() {
 
 
   const handleReset = React.useCallback(() => {
-    if (!firestore) return;
+    if (!firestore || !userId) return;
     const previousReport = todaysReport;
 
     // Optimistically update the UI
@@ -101,7 +101,7 @@ export function DailyReportCard() {
   }, [todaysReport, handleReset]);
 
   const handleTimeTracking = (action: 'start' | 'end') => {
-    if (!firestore) return;
+    if (!firestore || !userId) return;
 
     const now = new Date();
     const nowISO = now.toISOString();

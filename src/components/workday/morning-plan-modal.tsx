@@ -127,26 +127,18 @@ export function MorningPlanModal({
 
                 // 1. Create new tasks from brain dump if any
                 for (const extractedTask of extractedTasks.filter(t => t.included)) {
-                    // Build task data, excluding undefined values (Firestore doesn't accept undefined)
-                    const taskData: any = {
+                    // Build task data with proper typing
+                    const taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'> = {
                         name: extractedTask.name,
                         energyLevel: extractedTask.energyLevel as EnergyLevel,
                         category: extractedTask.category,
                         priority: extractedTask.priority as EisenhowerMatrix,
-                        state: 'ready',
+                        state: 'ready' as const,
                         stateHistory: [],
+                        ...(extractedTask.suggestedProjectId && { projectId: extractedTask.suggestedProjectId }),
+                        ...(extractedTask.details && { details: extractedTask.details }),
+                        ...(extractedTask.deadline && { deadline: extractedTask.deadline }),
                     };
-
-                    // Only add optional fields if they have values
-                    if (extractedTask.suggestedProjectId) {
-                        taskData.projectId = extractedTask.suggestedProjectId;
-                    }
-                    if (extractedTask.details) {
-                        taskData.details = extractedTask.details;
-                    }
-                    if (extractedTask.deadline) {
-                        taskData.deadline = extractedTask.deadline;
-                    }
 
                     const newTask = await addTask(firestore, user.uid, taskData);
 

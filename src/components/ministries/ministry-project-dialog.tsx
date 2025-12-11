@@ -176,7 +176,7 @@ export function MinistryProjectDialog({ open, onOpenChange, ministry, project, o
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="project-priority">Priority</Label>
-              <Select value={priority} onValueChange={(value: any) => setPriority(value)}>
+              <Select value={priority} onValueChange={(value) => setPriority(value as 'Low' | 'Medium' | 'High')}>
                 <SelectTrigger id="project-priority">
                   <SelectValue />
                 </SelectTrigger>
@@ -189,7 +189,7 @@ export function MinistryProjectDialog({ open, onOpenChange, ministry, project, o
             </div>
             <div className="space-y-2">
               <Label htmlFor="project-status">Status</Label>
-              <Select value={status} onValueChange={(value: any) => setStatus(value)}>
+              <Select value={status} onValueChange={(value) => setStatus(value as 'not-started' | 'in-progress' | 'completed' | 'on-hold')}>
                 <SelectTrigger id="project-status">
                   <SelectValue />
                 </SelectTrigger>

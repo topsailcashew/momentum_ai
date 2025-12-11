@@ -10,6 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { validateAIResponseWithFallback } from '@/ai/validation-helpers';
 
 const GenerateEndOfDayReportInputSchema = z.object({
   completedTasks: z.array(
@@ -91,9 +92,16 @@ const generateEndOfDayReportFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    if (!output) {
-      return { report: 'Unable to generate report. Please try again.' };
-    }
-    return output;
+
+    // Validate AI response with fallback
+    const fallback: GenerateEndOfDayReportOutput = {
+      report: 'Unable to generate report. Please try again.'
+    };
+    return validateAIResponseWithFallback(
+      output,
+      GenerateEndOfDayReportOutputSchema,
+      fallback,
+      'generateEndOfDayReport'
+    );
   }
 );

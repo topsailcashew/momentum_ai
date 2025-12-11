@@ -11,6 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import type { EnergyLevel, EisenhowerMatrix } from '@/lib/types';
+import { validateAIResponseWithFallback } from '@/ai/validation-helpers';
 
 const ProcessBrainDumpInputSchema = z.object({
   brainDumpText: z.string().describe('The unstructured text containing thoughts, tasks, and goals.'),
@@ -99,10 +100,13 @@ const processBrainDumpFlow = ai.defineFlow(
   async input => {
     const {output} = await prompt(input);
 
-    // Provide fallback empty arrays if AI doesn't return anything
-    return {
-      goals: output?.goals || [],
-      tasks: output?.tasks || [],
-    };
+    // Validate AI response with fallback for safety
+    const fallback: ProcessBrainDumpOutput = { goals: [], tasks: [] };
+    return validateAIResponseWithFallback(
+      output,
+      ProcessBrainDumpOutputSchema,
+      fallback,
+      'processBrainDump'
+    );
   }
 );

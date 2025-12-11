@@ -26,7 +26,6 @@ export function MomentumCard() {
     todayEnergy,
     latestMomentum,
   } = useDashboardData();
-  const userId = user!.uid;
 
   const [suggestions, setSuggestions] = React.useState<ScoreAndSuggestTasksOutput>({
     suggestedTasks: [],
@@ -83,7 +82,7 @@ export function MomentumCard() {
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1">Day Streak</p>
                 </div>
             </div>
-            <EnergyInput userId={userId} />
+            {user && <EnergyInput userId={user.uid} />}
         </div>
 
         {suggestions.routineSuggestion && (
