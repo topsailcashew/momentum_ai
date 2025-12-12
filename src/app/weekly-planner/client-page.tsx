@@ -5,11 +5,12 @@ import { useTransition } from 'react';
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, parseISO, addWeeks, subWeeks } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DayColumn } from '@/components/weekly-planner/day-column';
+import { BrainDumpDialog } from '@/components/weekly-planner/brain-dump-dialog';
 import type { Task } from '@/lib/types';
 import { TaskFormDialog } from '@/components/dashboard/task-form-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PlusCircle, ChevronLeft, ChevronRight, Brain } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
@@ -24,6 +25,7 @@ export function WeeklyPlannerClientPage() {
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [isPending, startTransition] = useTransition();
   const [showTaskDialog, setShowTaskDialog] = React.useState(false);
+  const [showBrainDumpDialog, setShowBrainDumpDialog] = React.useState(false);
   const [selectedDeadline, setSelectedDeadline] = React.useState<Date | null>(null);
   const { toast } = useToast();
 
@@ -72,7 +74,11 @@ export function WeeklyPlannerClientPage() {
       setSelectedDeadline(null);
     }
   };
-  
+
+  const handleBrainDumpTasksCreated = (createdTasks: Task[]) => {
+    setTasks(prevTasks => [...prevTasks, ...createdTasks]);
+  };
+
   const goToPreviousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
   const goToNextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
   const goToToday = () => setCurrentDate(new Date());
@@ -104,10 +110,16 @@ export function WeeklyPlannerClientPage() {
                         </Button>
                     </div>
                 </div>
-                <Button className="w-full sm:w-auto" onClick={() => setShowTaskDialog(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Task
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <Button variant="outline" className="w-full sm:w-auto" onClick={() => setShowBrainDumpDialog(true)}>
+                        <Brain className="mr-2 h-4 w-4" />
+                        Brain Dump
+                    </Button>
+                    <Button className="w-full sm:w-auto" onClick={() => setShowTaskDialog(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Task
+                    </Button>
+                </div>
             </div>
         </CardHeader>
         <CardContent>
@@ -131,6 +143,14 @@ export function WeeklyPlannerClientPage() {
             open={showTaskDialog}
             onOpenChange={handleDialogOpenChange}
             defaultDeadline={selectedDeadline}
+        />
+
+        <BrainDumpDialog
+            open={showBrainDumpDialog}
+            onOpenChange={setShowBrainDumpDialog}
+            onTasksCreated={handleBrainDumpTasksCreated}
+            projects={projects}
+            currentWeekStart={currentDate}
         />
     </Card>
   );
