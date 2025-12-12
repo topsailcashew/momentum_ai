@@ -53,7 +53,11 @@ type WorkdayTaskWithDetails = Task & {
   timeSpentMs?: number;
 };
 
-export function WorkdayTasksCard() {
+interface WorkdayTasksCardProps {
+  onTaskCompleted?: () => void;
+}
+
+export function WorkdayTasksCard({ onTaskCompleted }: WorkdayTasksCardProps = {}) {
   const { user } = useUser();
   const firestore = useFirestore();
   const { tasks: allTasks, recurringTasks, categories, projects, todayEnergy, setTasks: setAllTasks, setRecurringTasks } = useDashboardData();
@@ -85,6 +89,8 @@ export function WorkdayTasksCard() {
         setFocusedTask(null);
         setIsTimerActive(false);
       }
+      // Trigger energy check after task completion
+      onTaskCompleted?.();
     },
     calculateMomentumScore: true,
   });
@@ -200,6 +206,8 @@ export function WorkdayTasksCard() {
               setFocusedTask(null);
               setIsTimerActive(false);
             }
+            // Trigger energy check after task completion
+            onTaskCompleted?.();
           } else {
             await onClientWrite();
           }
