@@ -5,9 +5,10 @@ import { useTransition } from 'react';
 import { TrendingUp, BrainCircuit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import type { Task } from '@/lib/types';
+import type { Task, EnergyLevel } from '@/lib/types';
 import { EnergyInput } from './energy-input';
 import { SuggestionsDialog } from './suggestions-dialog';
+import { EnergyBatteryIcon } from '@/components/workday/energy-battery-icon';
 import { getSuggestedTasks } from '@/app/actions';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser } from '@/firebase';
@@ -17,8 +18,11 @@ interface ScoreAndSuggestTasksOutput {
   routineSuggestion?: string;
 }
 
+interface MomentumCardProps {
+  currentEnergy?: EnergyLevel | null;
+}
 
-export function MomentumCard() {
+export function MomentumCard({ currentEnergy }: MomentumCardProps) {
   const { user } = useUser();
   const {
     tasks,
@@ -70,6 +74,11 @@ export function MomentumCard() {
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
+        {/* Current Energy Display */}
+        <div className="p-3 rounded-lg bg-secondary/30 border border-primary/10">
+          <EnergyBatteryIcon energyLevel={currentEnergy} showLabel={true} />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center justify-around text-center p-4 sm:p-5 rounded-lg bg-secondary/30">
                 <div>

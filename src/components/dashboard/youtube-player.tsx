@@ -23,6 +23,8 @@ declare global {
 
 interface YouTubePlayerProps {
   isTimerActive: boolean;
+  currentEnergy?: string | null;
+  compact?: boolean;
 }
 
 interface MusicGenre {
@@ -30,6 +32,7 @@ interface MusicGenre {
   name: string;
   playlistId: string;
   description: string;
+  energyLevel?: string;
 }
 
 const MUSIC_GENRES: MusicGenre[] = [
@@ -38,28 +41,32 @@ const MUSIC_GENRES: MusicGenre[] = [
     name: 'Jazz',
     playlistId: 'PLRk72bN9cpOY5FRwXYpkDYe2PfalxLY10',
     description: 'Smooth jazz for focus',
+    energyLevel: 'Low',
   },
   {
     id: 'lofi',
     name: 'Lo-Fi',
     playlistId: 'PLOzDu-MXXLljymo0oXEkTSLKf5TqxY-JN',
     description: 'Chill lo-fi hip hop beats',
+    energyLevel: 'Medium',
   },
   {
     id: 'synthwave',
     name: 'Synth Wave',
     playlistId: 'PLOtNYlNIGer0jmWpFtTWqMkfP56iuZg1w',
     description: 'Retro synth wave vibes',
+    energyLevel: 'High',
   },
   {
     id: 'chilltrap',
     name: 'Chill Trap',
     playlistId: 'PLDb-Ft6VaSqKkDDqOAakiUp9W6PHjs594',
     description: 'Relaxing trap music',
+    energyLevel: 'Medium',
   },
 ];
 
-export function YouTubePlayer({ isTimerActive }: YouTubePlayerProps) {
+export function YouTubePlayer({ isTimerActive, currentEnergy, compact = false }: YouTubePlayerProps) {
   const [player, setPlayer] = React.useState<any>(null);
   const [isAPIReady, setIsAPIReady] = React.useState(false);
   const [isPlayerReady, setIsPlayerReady] = React.useState(false);

@@ -63,15 +63,11 @@ export function WorkdayClientPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Energy Level Display */}
-      <Card className="p-4">
-        <EnergyBatteryIcon energyLevel={currentEnergy} showLabel={true} />
-      </Card>
-
-      {/* Top Row: Momentum & Pomodoro */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        <MomentumCard />
+      {/* Top Row: Momentum+Energy, Pomodoro, Music Player */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <MomentumCard currentEnergy={currentEnergy} />
         <Pomodoro />
+        <YouTubePlayer isTimerActive={isTimerActive} currentEnergy={currentEnergy} compact={true} />
       </div>
 
       {/* Main Content: Workday Tasks */}
@@ -79,11 +75,8 @@ export function WorkdayClientPage() {
         <WorkdayTasksCard onTaskCompleted={requestEnergyCheck} />
       </div>
 
-      {/* Music Player & Projects Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <YouTubePlayer isTimerActive={isTimerActive} currentEnergy={currentEnergy} />
-        <ProjectOverview />
-      </div>
+      {/* Projects Overview */}
+      <ProjectOverview />
 
       <MorningPlanModal open={shouldShow} onOpenChange={setShouldShow} />
 
