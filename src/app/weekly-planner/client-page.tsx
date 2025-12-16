@@ -88,7 +88,7 @@ export function WeeklyPlannerClientPage() {
   }
 
   return (
-    <Card>
+    <Card className="h-[calc(100vh-8rem)] flex flex-col">
         <CardHeader>
             <div className="flex flex-col gap-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -122,8 +122,8 @@ export function WeeklyPlannerClientPage() {
                 </div>
             </div>
         </CardHeader>
-        <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2">
+        <CardContent className="flex-1 overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2 h-full">
                 {weekDays.map(day => (
                     <DayColumn
                         key={day.toISOString()}

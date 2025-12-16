@@ -66,7 +66,6 @@ export function WorkdayClientPage() {
         <TodayAtAGlance
           currentEnergy={currentEnergy}
           onEnergyChange={updateEnergy}
-          isTimerActive={isTimerActive}
         />
       </div>
 

@@ -4,17 +4,16 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Battery, BatteryMedium, BatteryLow, Sparkles } from 'lucide-react';
-import { YouTubePlayer } from '@/components/dashboard/youtube-player';
+import { MusicControls } from '@/components/music/music-controls';
 import type { EnergyLevel } from '@/lib/types';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 
 interface TodayAtAGlanceProps {
   currentEnergy: EnergyLevel | null;
   onEnergyChange: (energy: EnergyLevel) => void;
-  isTimerActive: boolean;
 }
 
-export function TodayAtAGlance({ currentEnergy, onEnergyChange, isTimerActive }: TodayAtAGlanceProps) {
+export function TodayAtAGlance({ currentEnergy, onEnergyChange }: TodayAtAGlanceProps) {
   const { latestMomentum } = useDashboardData();
 
   const energyOptions = [
@@ -92,8 +91,8 @@ export function TodayAtAGlance({ currentEnergy, onEnergyChange, isTimerActive }:
         )}
 
         {/* Music Player */}
-        <div className="flex-1">
-          <YouTubePlayer isTimerActive={isTimerActive} currentEnergy={currentEnergy} compact={true} />
+        <div>
+          <MusicControls />
         </div>
       </CardContent>
     </Card>
