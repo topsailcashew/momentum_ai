@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
+import type { EnergyLevel } from '@/lib/types';
 
 declare global {
   interface Window {
@@ -23,7 +24,7 @@ declare global {
 
 interface YouTubePlayerProps {
   isTimerActive: boolean;
-  currentEnergy?: string | null;
+  currentEnergy?: EnergyLevel | null;
   compact?: boolean;
 }
 
@@ -106,6 +107,31 @@ export function YouTubePlayer({ isTimerActive, currentEnergy, compact = false }:
       setSelectedGenre(saved);
     }
   }, []);
+
+  // Automatic music selection based on energy level
+  React.useEffect(() => {
+    if (!currentEnergy) return;
+
+    // Find genre matching current energy level
+    const matchingGenre = MUSIC_GENRES.find(genre => genre.energyLevel === currentEnergy);
+
+    if (matchingGenre && matchingGenre.id !== selectedGenre) {
+      // Auto-select matching genre
+      setSelectedGenre(matchingGenre.id);
+      localStorage.setItem('musicGenre', matchingGenre.id);
+
+      // Reload player with new playlist
+      if (player) {
+        setIsPlayerReady(false);
+        try {
+          player.destroy();
+        } catch (error) {
+          console.error('Error destroying player:', error);
+        }
+        setPlayer(null);
+      }
+    }
+  }, [currentEnergy, selectedGenre, player]);
 
   // Get current genre data
   const currentGenre = MUSIC_GENRES.find((g) => g.id === selectedGenre);
@@ -288,6 +314,138 @@ export function YouTubePlayer({ isTimerActive, currentEnergy, compact = false }:
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  if (compact) {
+    return (
+      <Card className="h-full flex flex-col">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Music className="h-4 w-4" />
+              {currentGenre?.name || 'Music'}
+            </CardTitle>
+            <Dialog open={showSettings} onOpenChange={setShowSettings}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <Settings className="h-3.5 w-3.5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Select Music Genre</DialogTitle>
+                  <DialogDescription>
+                    Music is automatically selected based on your energy level.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-3">
+                  {MUSIC_GENRES.map((genre) => (
+                    <Button
+                      key={genre.id}
+                      variant={selectedGenre === genre.id ? 'default' : 'outline'}
+                      onClick={() => handleSelectGenre(genre.id)}
+                      className="h-auto flex-col items-start p-4 text-left"
+                    >
+                      <span className="font-semibold">{genre.name}</span>
+                      <span className="text-xs text-muted-foreground mt-1 font-normal">
+                        {genre.description}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col gap-2">
+          {/* Hidden YouTube player for audio */}
+          <div id="youtube-player" className="hidden" />
+
+          {selectedGenre ? (
+            <>
+              {/* Compact playback controls */}
+              <div className="flex items-center justify-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handlePrevious}
+                  disabled={!isPlayerReady}
+                  className="h-8 w-8"
+                >
+                  <SkipBack className="h-3.5 w-3.5" />
+                </Button>
+
+                <Button
+                  variant="default"
+                  size="icon"
+                  onClick={togglePlayPause}
+                  disabled={!isPlayerReady}
+                  className="h-9 w-9"
+                >
+                  {isPlaying ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleNext}
+                  disabled={!isPlayerReady}
+                  className="h-8 w-8"
+                >
+                  <SkipForward className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+
+              {/* Compact progress */}
+              <div className="space-y-1">
+                <Slider
+                  value={[currentTime]}
+                  max={duration || 100}
+                  step={1}
+                  onValueChange={handleSeek}
+                  className="w-full"
+                />
+                <p className="text-[10px] text-muted-foreground text-center">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </p>
+              </div>
+
+              {/* Compact volume control */}
+              <div className="flex items-center gap-1.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleMute}
+                  className="h-7 w-7 flex-shrink-0"
+                >
+                  {isMuted || volume === 0 ? (
+                    <VolumeX className="h-3.5 w-3.5" />
+                  ) : (
+                    <Volume2 className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+                <Slider
+                  value={[isMuted ? 0 : volume]}
+                  max={100}
+                  step={1}
+                  onValueChange={handleVolumeChange}
+                  className="flex-1"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+              <Music className="h-8 w-8 mb-2 opacity-20" />
+              <p className="text-xs">No music selected</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
@@ -312,7 +470,7 @@ export function YouTubePlayer({ isTimerActive, currentEnergy, compact = false }:
                 <DialogHeader>
                   <DialogTitle>Select Music Genre</DialogTitle>
                   <DialogDescription>
-                    Choose a music genre to play when your Pomodoro timer is running.
+                    Music is automatically selected based on your energy level, but you can manually override it here.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid grid-cols-2 gap-3">
