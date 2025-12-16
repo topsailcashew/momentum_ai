@@ -1,13 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import { MomentumCard } from '@/components/dashboard/momentum-card';
 import { Pomodoro } from '@/components/dashboard/pomodoro';
 import { ProjectOverview } from '@/components/dashboard/project-overview';
 import { WorkdayTasksCard } from '@/components/workday/workday-tasks-card';
-import { YouTubePlayer } from '@/components/dashboard/youtube-player';
 import { EnergyCheckModal } from '@/components/workday/energy-check-modal';
-import { EnergyBatteryIcon } from '@/components/workday/energy-battery-icon';
+import { TodayAtAGlance } from '@/components/workday/today-at-a-glance';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
@@ -16,7 +14,6 @@ import { PomodoroContext } from '@/components/dashboard/pomodoro-provider';
 import { MorningPlanModal } from '@/components/workday/morning-plan-modal';
 import { useMorningPlan } from '@/hooks/use-morning-plan';
 import type { Task, EnergyLevel } from '@/lib/types';
-import { Card } from '@/components/ui/card';
 
 export function WorkdayClientPage() {
   const { user, isUserLoading: userLoading } = useUser();
@@ -63,20 +60,25 @@ export function WorkdayClientPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Top Row: Momentum+Energy, Pomodoro, Music Player */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <MomentumCard currentEnergy={currentEnergy} />
+      {/* Top Row: Pomodoro + Today at a Glance */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <Pomodoro />
-        <YouTubePlayer isTimerActive={isTimerActive} currentEnergy={currentEnergy} compact={true} />
+        <TodayAtAGlance
+          currentEnergy={currentEnergy}
+          onEnergyChange={updateEnergy}
+          isTimerActive={isTimerActive}
+        />
       </div>
 
-      {/* Main Content: Workday Tasks */}
-      <div>
-        <WorkdayTasksCard onTaskCompleted={requestEnergyCheck} />
+      {/* Main Content: Workday Tasks (70%) | Projects Overview (30%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+        <div className="lg:col-span-7">
+          <WorkdayTasksCard onTaskCompleted={requestEnergyCheck} />
+        </div>
+        <div className="lg:col-span-3">
+          <ProjectOverview />
+        </div>
       </div>
-
-      {/* Projects Overview */}
-      <ProjectOverview />
 
       <MorningPlanModal open={shouldShow} onOpenChange={setShouldShow} />
 
