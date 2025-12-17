@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTransition } from 'react';
 import Link from 'next/link';
 import { Folder, ArrowRight, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,15 +9,77 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Project, Task } from '@/lib/types';
 import { Progress } from '@/components/ui/progress';
 import { ProjectDialog } from './project-dialog';
+import { TaskFormDialog } from './task-form-dialog';
 import { cn, getProjectProgress } from '@/lib/utils';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
+import { useUser, useFirestore } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { updateTask, deleteTask, markTaskAsComplete } from '@/lib/data-firestore';
+import { onClientWrite } from '@/app/actions';
 
 export function ProjectOverview() {
-  const { projects, tasks } = useDashboardData();
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { projects, tasks, categories, setTasks } = useDashboardData();
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
+  const [editingTask, setEditingTask] = React.useState<Task | null>(null);
+  const [showTaskDialog, setShowTaskDialog] = React.useState(false);
 
   const getProjectTasks = (projectId: string) => {
     return tasks.filter(t => t.projectId === projectId);
+  };
+
+  const handleTaskToggle = (taskId: string, completed: boolean) => {
+    if (!user || !firestore) return;
+    startTransition(async () => {
+      try {
+        await markTaskAsComplete(firestore, user.uid, taskId, completed);
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed, completedAt: completed ? new Date().toISOString() : undefined } : t));
+        toast({ title: completed ? 'Task completed!' : 'Task reopened' });
+        await onClientWrite();
+      } catch (error) {
+        toast({ variant: 'destructive', title: 'Failed to update task' });
+      }
+    });
+  };
+
+  const handleTaskEdit = (task: Task) => {
+    setEditingTask(task);
+    setShowTaskDialog(true);
+  };
+
+  const handleTaskDelete = (taskId: string) => {
+    if (!user || !firestore) return;
+    startTransition(async () => {
+      try {
+        await deleteTask(firestore, user.uid, taskId);
+        setTasks(prev => prev.filter(t => t.id !== taskId));
+        toast({ title: 'Task deleted' });
+        await onClientWrite();
+      } catch (error) {
+        toast({ variant: 'destructive', title: 'Failed to delete task' });
+      }
+    });
+  };
+
+  const handleTaskSave = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'> | Partial<Omit<Task, 'id' | 'userId'>>) => {
+    if (!user || !firestore) return;
+    startTransition(async () => {
+      try {
+        if (editingTask) {
+          await updateTask(firestore, user.uid, editingTask.id, taskData);
+          setTasks(prev => prev.map(t => t.id === editingTask.id ? { ...t, ...taskData } : t));
+          toast({ title: 'Task updated!' });
+        }
+        setShowTaskDialog(false);
+        setEditingTask(null);
+        await onClientWrite();
+      } catch (error) {
+        toast({ variant: 'destructive', title: 'Failed to save task' });
+      }
+    });
   };
 
   return (
@@ -83,8 +146,20 @@ export function ProjectOverview() {
           tasks={getProjectTasks(selectedProject.id)}
           open={!!selectedProject}
           onOpenChange={(isOpen) => !isOpen && setSelectedProject(null)}
+          onTaskToggle={handleTaskToggle}
+          onTaskEdit={handleTaskEdit}
+          onTaskDelete={handleTaskDelete}
         />
       )}
+      <TaskFormDialog
+        categories={categories}
+        projects={projects}
+        onSave={handleTaskSave}
+        isPending={isPending}
+        open={showTaskDialog}
+        onOpenChange={setShowTaskDialog}
+        editingTask={editingTask || undefined}
+      />
     </>
   );
 }
