@@ -26,7 +26,7 @@ import { getProjectProgress } from '@/lib/utils';
 import { useUser, useFirestore } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
-import { addProject, updateProject, deleteProject, updateTask, deleteTask, markTaskAsComplete } from '@/lib/data-firestore';
+import { addProject, updateProject, deleteProject, updateTask, deleteTask } from '@/lib/data-firestore';
 import { onClientWrite } from '@/app/actions';
 
 const projectFormSchema = z.object({
@@ -100,11 +100,16 @@ export function ProjectClientPage() {
     if (!user || !firestore) return;
     startTransition(async () => {
       try {
-        await markTaskAsComplete(firestore, user.uid, taskId, completed);
-        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed, completedAt: completed ? new Date().toISOString() : undefined } : t));
+        const updates = {
+          completed,
+          completedAt: completed ? new Date().toISOString() : undefined
+        };
+        await updateTask(firestore, user.uid, taskId, updates);
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t));
         toast({ title: completed ? 'Task completed!' : 'Task reopened' });
         await onClientWrite();
       } catch (error) {
+        console.error('Task toggle error:', error);
         toast({ variant: 'destructive', title: 'Failed to update task' });
       }
     });

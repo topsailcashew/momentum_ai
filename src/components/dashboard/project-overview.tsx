@@ -14,7 +14,7 @@ import { cn, getProjectProgress } from '@/lib/utils';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useUser, useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { updateTask, deleteTask, markTaskAsComplete } from '@/lib/data-firestore';
+import { updateTask, deleteTask } from '@/lib/data-firestore';
 import { onClientWrite } from '@/app/actions';
 
 export function ProjectOverview() {
@@ -35,11 +35,16 @@ export function ProjectOverview() {
     if (!user || !firestore) return;
     startTransition(async () => {
       try {
-        await markTaskAsComplete(firestore, user.uid, taskId, completed);
-        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed, completedAt: completed ? new Date().toISOString() : undefined } : t));
+        const updates = {
+          completed,
+          completedAt: completed ? new Date().toISOString() : undefined
+        };
+        await updateTask(firestore, user.uid, taskId, updates);
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t));
         toast({ title: completed ? 'Task completed!' : 'Task reopened' });
         await onClientWrite();
       } catch (error) {
+        console.error('Task toggle error:', error);
         toast({ variant: 'destructive', title: 'Failed to update task' });
       }
     });
