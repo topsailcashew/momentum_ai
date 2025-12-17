@@ -10,7 +10,7 @@ import type { Task } from '@/lib/types';
 import { TaskFormDialog } from '@/components/dashboard/task-form-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, ChevronLeft, ChevronRight, Brain } from 'lucide-react';
+import { PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
@@ -110,16 +110,10 @@ export function WeeklyPlannerClientPage() {
                         </Button>
                     </div>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                    <Button variant="outline" className="w-full sm:w-auto" onClick={() => setShowBrainDumpDialog(true)}>
-                        <Brain className="mr-2 h-4 w-4" />
-                        Brain Dump
-                    </Button>
-                    <Button className="w-full sm:w-auto" onClick={() => setShowTaskDialog(true)}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Task
-                    </Button>
-                </div>
+                <Button className="w-full sm:w-auto" onClick={() => setShowTaskDialog(true)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Task
+                </Button>
             </div>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden">
