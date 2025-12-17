@@ -10,17 +10,27 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import type { Project, Task } from '@/lib/types';
-import { Folder } from 'lucide-react';
+import { Folder, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ProjectDialogProps {
   project: Project;
   tasks: Task[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onTaskToggle: (taskId: string, completed: boolean) => void;
+  onTaskEdit: (task: Task) => void;
+  onTaskDelete: (taskId: string) => void;
 }
 
-export function ProjectDialog({ project, tasks, open, onOpenChange }: ProjectDialogProps) {
+export function ProjectDialog({ project, tasks, open, onOpenChange, onTaskToggle, onTaskEdit, onTaskDelete }: ProjectDialogProps) {
   const completedTasks = tasks.filter(t => t.completed);
   const openTasks = tasks.filter(t => !t.completed);
 
@@ -43,9 +53,42 @@ export function ProjectDialog({ project, tasks, open, onOpenChange }: ProjectDia
                 <h3 className="mb-2 text-sm font-semibold">Open Tasks</h3>
                 <div className="space-y-2">
                   {openTasks.map(task => (
-                    <div key={task.id} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
-                      <Checkbox id={`task-overview-${task.id}`} checked={false} disabled />
-                      <label htmlFor={`task-overview-${task.id}`} className="text-sm font-medium">{task.name}</label>
+                    <div key={task.id} className="flex items-center gap-2 p-2 rounded-md bg-secondary/50 group">
+                      <Checkbox
+                        id={`task-overview-${task.id}`}
+                        checked={false}
+                        onCheckedChange={(checked) => onTaskToggle(task.id, checked as boolean)}
+                      />
+                      <label
+                        htmlFor={`task-overview-${task.id}`}
+                        className="text-sm font-medium flex-1 cursor-pointer"
+                      >
+                        {task.name}
+                      </label>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onTaskEdit(task)}>
+                            <Edit className="mr-2 h-3.5 w-3.5" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onTaskDelete(task.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-3.5 w-3.5" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   ))}
                 </div>
@@ -56,14 +99,42 @@ export function ProjectDialog({ project, tasks, open, onOpenChange }: ProjectDia
                 <h3 className="mb-2 text-sm font-semibold">Completed Tasks</h3>
                 <div className="space-y-2">
                   {completedTasks.map(task => (
-                    <div key={task.id} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
-                      <Checkbox id={`task-overview-${task.id}`} checked={true} disabled />
-                       <label
+                    <div key={task.id} className="flex items-center gap-2 p-2 rounded-md bg-secondary/50 group">
+                      <Checkbox
+                        id={`task-overview-${task.id}`}
+                        checked={true}
+                        onCheckedChange={(checked) => onTaskToggle(task.id, checked as boolean)}
+                      />
+                      <label
                         htmlFor={`task-overview-${task.id}`}
-                        className="text-sm font-medium text-muted-foreground line-through"
+                        className="text-sm font-medium text-muted-foreground line-through flex-1 cursor-pointer"
                       >
                         {task.name}
                       </label>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onTaskEdit(task)}>
+                            <Edit className="mr-2 h-3.5 w-3.5" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onTaskDelete(task.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-3.5 w-3.5" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   ))}
                 </div>

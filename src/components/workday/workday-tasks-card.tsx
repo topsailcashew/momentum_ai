@@ -53,7 +53,11 @@ type WorkdayTaskWithDetails = Task & {
   timeSpentMs?: number;
 };
 
-export function WorkdayTasksCard() {
+interface WorkdayTasksCardProps {
+  onTaskCompleted?: () => void;
+}
+
+export function WorkdayTasksCard({ onTaskCompleted }: WorkdayTasksCardProps = {}) {
   const { user } = useUser();
   const firestore = useFirestore();
   const { tasks: allTasks, recurringTasks, categories, projects, todayEnergy, setTasks: setAllTasks, setRecurringTasks } = useDashboardData();
@@ -85,6 +89,8 @@ export function WorkdayTasksCard() {
         setFocusedTask(null);
         setIsTimerActive(false);
       }
+      // Trigger energy check after task completion
+      onTaskCompleted?.();
     },
     calculateMomentumScore: true,
   });
@@ -200,6 +206,8 @@ export function WorkdayTasksCard() {
               setFocusedTask(null);
               setIsTimerActive(false);
             }
+            // Trigger energy check after task completion
+            onTaskCompleted?.();
           } else {
             await onClientWrite();
           }
@@ -291,25 +299,14 @@ export function WorkdayTasksCard() {
                 {format(new Date(), 'EEEE, MMMM d, yyyy')} • {workdayTasksWithDetails.length} tasks
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddDialog(true)}
-                disabled={isPending}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Tasks
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => setShowEndDayDialog(true)}
-                disabled={isPending || workdayTasksWithDetails.length === 0}
-              >
-                End Day
-              </Button>
-            </div>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setShowEndDayDialog(true)}
+              disabled={isPending || workdayTasksWithDetails.length === 0}
+            >
+              End Day
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

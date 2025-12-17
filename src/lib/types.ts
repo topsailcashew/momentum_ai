@@ -126,7 +126,9 @@ export interface DailyReport {
   currentFocusedTaskId?: string; // NEW: Currently focused task
   currentFocusedTaskType?: 'regular' | 'recurring'; // NEW
   focusStartedAt?: string; // NEW: ISO - when current focus began
-  energyLevel?: EnergyLevel; // NEW: Set in morning modal
+  currentEnergyLevel?: EnergyLevel; // Current energy level
+  energyHistory?: Array<{ level: EnergyLevel; timestamp: string }>; // Energy level changes throughout the day
+  lastEnergyCheck?: string; // ISO timestamp of last energy check
   dailyGoalsText?: string; // NEW: User's written goals from morning modal
 }
 

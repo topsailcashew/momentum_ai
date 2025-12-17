@@ -17,31 +17,20 @@ interface DayColumnProps {
 
 export function DayColumn({ day, tasks, onAddTaskClick }: DayColumnProps) {
   return (
-    <div className={cn("rounded-lg p-2 flex flex-col", isToday(day) ? 'bg-primary/10' : 'bg-secondary/50')}>
+    <div className={cn("rounded-lg p-2 flex flex-col h-full", isToday(day) ? 'bg-primary/10' : 'bg-secondary/50')}>
       <div className="flex justify-between items-center mb-2">
         <h3 className={cn("font-semibold text-sm", isToday(day) && "text-primary")}>
           {format(day, 'eee')}
         </h3>
         <span className="text-xs text-muted-foreground">{format(day, 'd')}</span>
       </div>
-      <ScrollArea className="flex-grow h-64">
+      <ScrollArea className="flex-grow">
         <div className="space-y-2 pr-2">
             {tasks.map(task => (
                 <TaskCard key={task.id} task={task} />
             ))}
         </div>
       </ScrollArea>
-      <div className="mt-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start text-xs"
-          onClick={() => onAddTaskClick(day)}
-        >
-          <Plus className="mr-1 h-3 w-3" />
-          Add Task
-        </Button>
-      </div>
     </div>
   );
 }

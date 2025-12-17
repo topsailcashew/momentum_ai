@@ -40,6 +40,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LoadingScreen } from './loading-screen';
 import { DashboardDataProvider } from '@/hooks/use-dashboard-data';
 import { TeamProvider } from '@/hooks/use-team';
+import { GlobalMusicPlayer } from '@/components/music/global-music-player';
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -106,6 +107,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <GlobalMusicPlayer />
       <Sidebar>
         <SidebarRail />
         <SidebarHeader className="pt-6">

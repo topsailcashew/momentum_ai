@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Folder, Trash2, Edit, Loader2 } from 'lucide-react';
+import { Folder, Trash2, Edit, Loader2, MoreVertical } from 'lucide-react';
 import {
   ResponsiveModal,
   ResponsiveModalContent,
@@ -40,6 +40,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import type { Project, Task } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const projectFormSchema = z.object({
   name: z.string().min(2, 'Project name must be at least 2 characters.'),
@@ -55,11 +61,14 @@ interface ProjectDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
   onDelete: (projectId: string) => void;
   onUpdate: (projectId: string, data: Partial<Project>) => void;
+  onTaskToggle: (taskId: string, completed: boolean) => void;
+  onTaskEdit: (task: Task) => void;
+  onTaskDelete: (taskId: string) => void;
   isPending: boolean;
   userId: string;
 }
 
-export function ProjectDetailsDialog({ project, tasks, open, onOpenChange, onDelete, onUpdate, isPending }: ProjectDetailsDialogProps) {
+export function ProjectDetailsDialog({ project, tasks, open, onOpenChange, onDelete, onUpdate, onTaskToggle, onTaskEdit, onTaskDelete, isPending }: ProjectDetailsDialogProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const { ministries } = useDashboardData();
 
@@ -195,9 +204,42 @@ export function ProjectDetailsDialog({ project, tasks, open, onOpenChange, onDel
                   <h3 className="mb-2 text-sm font-semibold">Open Tasks</h3>
                   <div className="space-y-2">
                     {openTasks.map(task => (
-                      <div key={task.id} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
-                        <Checkbox id={`task-detail-${task.id}`} checked={false} disabled />
-                        <label htmlFor={`task-detail-${task.id}`} className="text-sm font-medium">{task.name}</label>
+                      <div key={task.id} className="flex items-center gap-2 p-2 rounded-md bg-secondary/50 group">
+                        <Checkbox
+                          id={`task-detail-${task.id}`}
+                          checked={false}
+                          onCheckedChange={(checked) => onTaskToggle(task.id, checked as boolean)}
+                        />
+                        <label
+                          htmlFor={`task-detail-${task.id}`}
+                          className="text-sm font-medium flex-1 cursor-pointer"
+                        >
+                          {task.name}
+                        </label>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <MoreVertical className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onTaskEdit(task)}>
+                              <Edit className="mr-2 h-3.5 w-3.5" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => onTaskDelete(task.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-3.5 w-3.5" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     ))}
                   </div>
@@ -208,14 +250,42 @@ export function ProjectDetailsDialog({ project, tasks, open, onOpenChange, onDel
                   <h3 className="mb-2 text-sm font-semibold">Completed Tasks</h3>
                   <div className="space-y-2">
                     {completedTasks.map(task => (
-                      <div key={task.id} className="flex items-center gap-3 p-2 rounded-md bg-secondary/50">
-                        <Checkbox id={`task-detail-${task.id}`} checked={true} disabled />
+                      <div key={task.id} className="flex items-center gap-2 p-2 rounded-md bg-secondary/50 group">
+                        <Checkbox
+                          id={`task-detail-${task.id}`}
+                          checked={true}
+                          onCheckedChange={(checked) => onTaskToggle(task.id, checked as boolean)}
+                        />
                         <label
                           htmlFor={`task-detail-${task.id}`}
-                          className="text-sm font-medium text-muted-foreground line-through"
+                          className="text-sm font-medium text-muted-foreground line-through flex-1 cursor-pointer"
                         >
                           {task.name}
                         </label>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <MoreVertical className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onTaskEdit(task)}>
+                              <Edit className="mr-2 h-3.5 w-3.5" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => onTaskDelete(task.id)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-3.5 w-3.5" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     ))}
                   </div>

@@ -17,15 +17,16 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import type { Project } from '@/lib/types';
+import type { Project, Task } from '@/lib/types';
 import { RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { ProjectDetailsDialog } from '@/components/projects/project-details-dialog';
+import { TaskFormDialog } from '@/components/dashboard/task-form-dialog';
 import { getProjectProgress } from '@/lib/utils';
 import { useUser, useFirestore } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
-import { addProject, updateProject, deleteProject } from '@/lib/data-firestore';
+import { addProject, updateProject, deleteProject, updateTask, deleteTask } from '@/lib/data-firestore';
 import { onClientWrite } from '@/app/actions';
 
 const projectFormSchema = z.object({
@@ -37,10 +38,12 @@ type ProjectFormValues = z.infer<typeof projectFormSchema>;
 export function ProjectClientPage() {
   const { user, isUserLoading: userLoading } = useUser();
   const firestore = useFirestore();
-  const { projects: initialProjects, tasks, loading: dataLoading, setProjects: setAllProjects } = useDashboardData();
+  const { projects: initialProjects, tasks, categories, loading: dataLoading, setProjects: setAllProjects, setTasks } = useDashboardData();
 
   const [isPending, startTransition] = useTransition();
   const [selectedProject, setSelectedProject] = React.useState<Project | null>(null);
+  const [editingTask, setEditingTask] = React.useState<Task | null>(null);
+  const [showTaskDialog, setShowTaskDialog] = React.useState(false);
   const { toast } = useToast();
 
   const form = useForm<ProjectFormValues>({
@@ -91,6 +94,63 @@ export function ProjectClientPage() {
 
   const getProjectTasks = (projectId: string) => {
     return tasks.filter(t => t.projectId === projectId);
+  };
+
+  const handleTaskToggle = (taskId: string, completed: boolean) => {
+    if (!user || !firestore) return;
+    startTransition(async () => {
+      try {
+        const updates = {
+          completed,
+          completedAt: completed ? new Date().toISOString() : undefined
+        };
+        await updateTask(firestore, user.uid, taskId, updates);
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t));
+        toast({ title: completed ? 'Task completed!' : 'Task reopened' });
+        await onClientWrite();
+      } catch (error) {
+        console.error('Task toggle error:', error);
+        toast({ variant: 'destructive', title: 'Failed to update task' });
+      }
+    });
+  };
+
+  const handleTaskEdit = (task: Task) => {
+    setEditingTask(task);
+    setShowTaskDialog(true);
+  };
+
+  const handleTaskDelete = (taskId: string) => {
+    if (!user || !firestore) return;
+    startTransition(async () => {
+      try {
+        await deleteTask(firestore, user.uid, taskId);
+        setTasks(prev => prev.filter(t => t.id !== taskId));
+        toast({ title: 'Task deleted' });
+        await onClientWrite();
+      } catch (error) {
+        toast({ variant: 'destructive', title: 'Failed to delete task' });
+      }
+    });
+  };
+
+  const handleTaskSave = (taskData: Omit<Task, 'id' | 'completed' | 'completedAt' | 'createdAt' | 'userId'> | Partial<Omit<Task, 'id' | 'userId'>>) => {
+    if (!user || !firestore) return;
+    startTransition(async () => {
+      try {
+        if (editingTask) {
+          // Update existing task
+          await updateTask(firestore, user.uid, editingTask.id, taskData);
+          setTasks(prev => prev.map(t => t.id === editingTask.id ? { ...t, ...taskData } : t));
+          toast({ title: 'Task updated!' });
+        }
+        setShowTaskDialog(false);
+        setEditingTask(null);
+        await onClientWrite();
+      } catch (error) {
+        toast({ variant: 'destructive', title: 'Failed to save task' });
+      }
+    });
   };
 
   if (userLoading || dataLoading || !user) {
@@ -224,10 +284,22 @@ export function ProjectClientPage() {
           onOpenChange={(isOpen) => !isOpen && setSelectedProject(null)}
           onUpdate={handleUpdateProject}
           onDelete={handleDeleteProject}
+          onTaskToggle={handleTaskToggle}
+          onTaskEdit={handleTaskEdit}
+          onTaskDelete={handleTaskDelete}
           isPending={isPending}
           userId={user.uid}
         />
       )}
+      <TaskFormDialog
+        categories={categories}
+        projects={initialProjects}
+        onSave={handleTaskSave}
+        isPending={isPending}
+        open={showTaskDialog}
+        onOpenChange={setShowTaskDialog}
+        editingTask={editingTask || undefined}
+      />
     </>
   );
 }

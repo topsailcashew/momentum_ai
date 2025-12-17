@@ -5,6 +5,7 @@ import { useTransition } from 'react';
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, parseISO, addWeeks, subWeeks } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DayColumn } from '@/components/weekly-planner/day-column';
+import { BrainDumpDialog } from '@/components/weekly-planner/brain-dump-dialog';
 import type { Task } from '@/lib/types';
 import { TaskFormDialog } from '@/components/dashboard/task-form-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +25,7 @@ export function WeeklyPlannerClientPage() {
   const [currentDate, setCurrentDate] = React.useState(new Date());
   const [isPending, startTransition] = useTransition();
   const [showTaskDialog, setShowTaskDialog] = React.useState(false);
+  const [showBrainDumpDialog, setShowBrainDumpDialog] = React.useState(false);
   const [selectedDeadline, setSelectedDeadline] = React.useState<Date | null>(null);
   const { toast } = useToast();
 
@@ -72,7 +74,11 @@ export function WeeklyPlannerClientPage() {
       setSelectedDeadline(null);
     }
   };
-  
+
+  const handleBrainDumpTasksCreated = (createdTasks: Task[]) => {
+    setTasks(prevTasks => [...prevTasks, ...createdTasks]);
+  };
+
   const goToPreviousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
   const goToNextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
   const goToToday = () => setCurrentDate(new Date());
@@ -82,7 +88,7 @@ export function WeeklyPlannerClientPage() {
   }
 
   return (
-    <Card>
+    <Card className="h-[calc(100vh-8rem)] flex flex-col">
         <CardHeader>
             <div className="flex flex-col gap-3">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -110,8 +116,8 @@ export function WeeklyPlannerClientPage() {
                 </Button>
             </div>
         </CardHeader>
-        <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2">
+        <CardContent className="flex-1 overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2 h-full">
                 {weekDays.map(day => (
                     <DayColumn
                         key={day.toISOString()}
@@ -131,6 +137,14 @@ export function WeeklyPlannerClientPage() {
             open={showTaskDialog}
             onOpenChange={handleDialogOpenChange}
             defaultDeadline={selectedDeadline}
+        />
+
+        <BrainDumpDialog
+            open={showBrainDumpDialog}
+            onOpenChange={setShowBrainDumpDialog}
+            onTasksCreated={handleBrainDumpTasksCreated}
+            projects={projects}
+            currentWeekStart={currentDate}
         />
     </Card>
   );

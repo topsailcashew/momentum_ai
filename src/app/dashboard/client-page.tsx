@@ -35,7 +35,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Bar, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Legend, BarChart as RechartsBarChart, PieChart as RechartsPieChart } from "recharts"
-import { FlowVisualizerCard } from '@/components/profile/flow-visualizer-card';
 
 const StatCard = ({ icon, title, value }: { icon: React.ElementType, title: string, value: string | number }) => {
     const Icon = icon;
@@ -437,9 +436,6 @@ export function DashboardClientPage() {
           </CardContent>
         </Card>
       </Tabs>
-
-      {/* Flow Visualizer */}
-      <FlowVisualizerCard />
 
       {/* Email Preview Dialog */}
       {selectedReport && emailBody && (
