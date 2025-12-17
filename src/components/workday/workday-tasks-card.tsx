@@ -299,25 +299,14 @@ export function WorkdayTasksCard({ onTaskCompleted }: WorkdayTasksCardProps = {}
                 {format(new Date(), 'EEEE, MMMM d, yyyy')} • {workdayTasksWithDetails.length} tasks
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddDialog(true)}
-                disabled={isPending}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Tasks
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => setShowEndDayDialog(true)}
-                disabled={isPending || workdayTasksWithDetails.length === 0}
-              >
-                End Day
-              </Button>
-            </div>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setShowEndDayDialog(true)}
+              disabled={isPending || workdayTasksWithDetails.length === 0}
+            >
+              End Day
+            </Button>
           </div>
         </CardHeader>
         <CardContent>

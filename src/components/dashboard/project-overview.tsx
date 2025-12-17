@@ -106,7 +106,7 @@ export function ProjectOverview() {
           <CardContent className="flex-1 overflow-auto">
               {projects.length > 0 ? (
                 <div className="space-y-3">
-                    {projects.slice(0, 5).map(project => {
+                    {projects.slice(0, 3).map(project => {
                         const progress = getProjectProgress(project.id, tasks);
                         return (
                            <div
@@ -123,7 +123,7 @@ export function ProjectOverview() {
                            </div>
                         )
                     })}
-                    {projects.length > 5 && (
+                    {projects.length > 3 && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -131,7 +131,7 @@ export function ProjectOverview() {
                         asChild
                       >
                         <Link href="/projects">
-                          View {projects.length - 5} more
+                          View {projects.length - 3} more
                           <ChevronRight className="ml-1 h-3 w-3" />
                         </Link>
                       </Button>
