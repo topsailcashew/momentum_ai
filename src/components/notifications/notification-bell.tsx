@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Bell, Check, X } from 'lucide-react';
+import { Bell, Check, X, BellOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -17,16 +17,19 @@ import { useRouter } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { useAudio } from '@/hooks/use-audio';
+import { useBrowserNotifications } from '@/hooks/use-browser-notifications';
 
 export function NotificationBell() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
   const { play } = useAudio();
+  const { showNotification, requestPermission, permission } = useBrowserNotifications();
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = React.useState(0);
   const [isOpen, setIsOpen] = React.useState(false);
   const prevUnreadCountRef = React.useRef<number>(0);
+  const prevNotificationsRef = React.useRef<Notification[]>([]);
 
   // Set up real-time listener for notifications
   React.useEffect(() => {
@@ -53,14 +56,42 @@ export function NotificationBell() {
     }
   }, [user, firestore, isUserLoading]);
 
-  // Play sound when new notification arrives
+  // Request notification permission on mount
   React.useEffect(() => {
-    // Only play sound if unread count increased (not on initial load or decrease)
-    if (prevUnreadCountRef.current > 0 && unreadCount > prevUnreadCountRef.current) {
-      play('notification');
+    if (permission === 'default') {
+      requestPermission();
     }
-    prevUnreadCountRef.current = unreadCount;
-  }, [unreadCount, play]);
+  }, [permission, requestPermission]);
+
+  // Play sound and show browser notification when new notification arrives
+  React.useEffect(() => {
+    // Find new notifications by comparing with previous state
+    const newNotifications = notifications.filter(
+      (notif) => !prevNotificationsRef.current.some((prev) => prev.id === notif.id)
+    );
+
+    // Only show notifications if this is not the initial load
+    if (prevNotificationsRef.current.length > 0 && newNotifications.length > 0) {
+      play('notification');
+
+      // Show browser notification for each new notification
+      newNotifications.forEach((notif) => {
+        showNotification({
+          title: notif.title,
+          body: notif.message,
+          tag: notif.id,
+          data: notif,
+          onClick: () => {
+            if (notif.actionUrl) {
+              router.push(notif.actionUrl);
+            }
+          },
+        });
+      });
+    }
+
+    prevNotificationsRef.current = notifications;
+  }, [notifications, play, showNotification, router]);
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!firestore || !user) return;
@@ -97,7 +128,12 @@ export function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">Notifications</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold">Notifications</h3>
+            {permission === 'denied' && (
+              <BellOff className="h-4 w-4 text-muted-foreground" title="Browser notifications blocked" />
+            )}
+          </div>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -109,6 +145,26 @@ export function NotificationBell() {
             </Button>
           )}
         </div>
+        {permission === 'denied' && (
+          <div className="px-4 py-2 bg-muted/50 text-xs text-muted-foreground border-b">
+            Browser notifications are blocked. Enable them in your browser settings to receive alerts.
+          </div>
+        )}
+        {permission === 'default' && (
+          <div className="px-4 py-2 bg-muted/50 border-b">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-muted-foreground">Enable browser notifications?</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={requestPermission}
+                className="text-xs h-7"
+              >
+                Enable
+              </Button>
+            </div>
+          </div>
+        )}
         <ScrollArea className="h-[400px]">
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
