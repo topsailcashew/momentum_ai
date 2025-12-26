@@ -7,87 +7,80 @@
 @layer base {
   :root {
     --radius: 1rem;
-    --background: 240 5% 96%;
-    /* Lighter gray for a softer look */
-    --foreground: 216 93% 14%;
-    /* Oxford Blue */
+
+    /* New Modern Color Palette */
+    --navy-dark: 210 60% 18%;        /* #132e49 */
+    --blue-bright: 222 96% 56%;      /* #2454f8 */
+    --orange-neon: 24 90% 59%;       /* #f48935 */
+    --peach-light: 25 96% 77%;       /* #fcbe8d */
+
+    /* Light Mode */
+    --background: 0 0% 98%;
+    --foreground: 210 60% 18%;       /* Navy dark */
     --card: 0 0% 100%;
-    /* White */
-    --card-foreground: 216 93% 14%;
-    /* Oxford Blue */
+    --card-foreground: 210 60% 18%;
     --popover: 0 0% 100%;
-    /* White */
-    --popover-foreground: 216 93% 14%;
-    /* Oxford Blue */
-    --primary: 23 90% 55%;
-    /* Pumpkin */
+    --popover-foreground: 210 60% 18%;
+    --primary: 24 90% 59%;           /* Orange neon */
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 5% 92%;
-    /* Slightly darker gray for secondary elements */
-    --secondary-foreground: 240 5% 20%;
-    --muted: 240 5% 94%;
-    --muted-foreground: 240 4% 46%;
-    --accent: 23 90% 55%;
-    /* Pumpkin */
+    --secondary: 222 96% 56%;        /* Blue bright */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 30% 96%;
+    --muted-foreground: 210 30% 46%;
+    --accent: 24 90% 59%;            /* Orange neon */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 88%;
-    --input: 240 5.9% 90%;
-    --ring: 23 90% 55%;
-    /* Pumpkin */
-    --chart-1: 23 90% 55%;
-    --chart-2: 23 90% 65%;
-    --chart-3: 23 90% 75%;
-    --chart-4: 23 90% 85%;
-    --chart-5: 23 90% 95%;
-    --sidebar-background: 216 93% 10%;
-    /* Dark blue for sidebar */
+    --border: 210 30% 88%;
+    --input: 210 30% 92%;
+    --ring: 24 90% 59%;              /* Orange neon */
+
+    /* Chart colors using new palette */
+    --chart-1: 24 90% 59%;           /* Orange */
+    --chart-2: 222 96% 56%;          /* Blue */
+    --chart-3: 25 96% 77%;           /* Peach */
+    --chart-4: 210 60% 18%;          /* Navy */
+    --chart-5: 210 30% 88%;          /* Light gray */
+
+    /* Sidebar */
+    --sidebar-background: 210 60% 18%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 23 90% 55%;
+    --sidebar-primary: 24 90% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 216 93% 20%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 216 93% 20%;
-    --sidebar-ring: 23 90% 55%;
-    --glow: drop-shadow(0 0 10px hsl(var(--primary)));
-    --shadow: 0 10px 30px -15px hsl(var(--primary) / 0.2);
+    --sidebar-accent: 222 96% 56%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 210 40% 25%;
+    --sidebar-ring: 24 90% 59%;
   }
 
   .dark {
-    --background: 216 93% 14%;
-    /* Oxford Blue */
+    --background: 210 60% 8%;        /* Even darker navy */
     --foreground: 0 0% 95%;
-    /* White Smoke */
-    --card: 216 93% 14%;
-    /* Oxford Blue */
+    --card: 210 60% 12%;             /* Dark navy card */
     --card-foreground: 0 0% 95%;
-    --popover: 216 93% 14%;
+    --popover: 210 60% 12%;
     --popover-foreground: 0 0% 95%;
-    --primary: 23 90% 55%;
-    /* Pumpkin */
+    --primary: 24 90% 59%;           /* Orange neon */
     --primary-foreground: 0 0% 100%;
-    --secondary: 216 93% 20%;
+    --secondary: 222 96% 56%;        /* Blue bright */
     --secondary-foreground: 0 0% 100%;
-    --muted: 216 93% 17%;
+    --muted: 210 50% 15%;
     --muted-foreground: 0 0% 70%;
-    --accent: 23 90% 55%;
-    /* Pumpkin */
+    --accent: 24 90% 59%;            /* Orange neon */
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 216 93% 20%;
-    --input: 216 93% 20%;
-    --ring: 23 90% 55%;
-    /* Pumpkin */
-    --sidebar-background: 216 93% 10% / 0.7;
+    --border: 210 40% 20%;
+    --input: 210 40% 18%;
+    --ring: 24 90% 59%;
+    --sidebar-background: 210 60% 10%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 23 90% 55%;
+    --sidebar-primary: 24 90% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 216 93% 20%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 216 93% 20%;
-    --sidebar-ring: 23 90% 55%;
+    --sidebar-accent: 222 96% 56%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 210 40% 15%;
+    --sidebar-ring: 24 90% 59%;
   }
 }
 
@@ -132,6 +125,80 @@
 
   .animate-slide-up {
     animation: slideUp 0.3s ease-out;
+  }
+
+  /* Neon Glow Effects */
+  .neon-text {
+    text-shadow:
+      0 0 10px rgba(244, 137, 53, 0.8),
+      0 0 20px rgba(244, 137, 53, 0.6),
+      0 0 30px rgba(244, 137, 53, 0.4);
+  }
+
+  .neon-text-blue {
+    text-shadow:
+      0 0 10px rgba(36, 84, 248, 0.8),
+      0 0 20px rgba(36, 84, 248, 0.6),
+      0 0 30px rgba(36, 84, 248, 0.4);
+  }
+
+  .neon-border {
+    box-shadow:
+      0 0 5px rgba(244, 137, 53, 0.5),
+      0 0 10px rgba(244, 137, 53, 0.3),
+      inset 0 0 10px rgba(244, 137, 53, 0.1);
+  }
+
+  .neon-border-blue {
+    box-shadow:
+      0 0 5px rgba(36, 84, 248, 0.5),
+      0 0 10px rgba(36, 84, 248, 0.3),
+      inset 0 0 10px rgba(36, 84, 248, 0.1);
+  }
+
+  .neon-card {
+    background: linear-gradient(135deg, rgba(244, 137, 53, 0.05), transparent);
+    border: 1px solid rgba(244, 137, 53, 0.3);
+    box-shadow:
+      0 0 20px rgba(244, 137, 53, 0.2),
+      0 0 40px rgba(244, 137, 53, 0.1);
+  }
+
+  .neon-button {
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 0 10px rgba(244, 137, 53, 0.5),
+      0 0 20px rgba(244, 137, 53, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .neon-button:hover {
+    box-shadow:
+      0 0 15px rgba(244, 137, 53, 0.7),
+      0 0 30px rgba(244, 137, 53, 0.5),
+      0 0 45px rgba(244, 137, 53, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .neon-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    transition: left 0.5s;
+  }
+
+  .neon-button:hover::before {
+    left: 100%;
   }
 }
 

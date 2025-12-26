@@ -62,15 +62,18 @@ export function FocusModeView({
               isFocusing ? "bg-primary/30 animate-pulse" : "bg-muted/30"
             )} />
             <Target className={cn(
-              "relative h-20 w-20",
-              isFocusing ? "text-primary" : "text-muted-foreground"
+              "relative h-20 w-20 transition-all",
+              isFocusing ? "text-primary animate-glow-pulse" : "text-muted-foreground"
             )} />
           </div>
         </div>
 
         {/* Task Name */}
         <div className="space-y-3">
-          <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
+          <h1 className={cn(
+            "text-5xl md:text-6xl font-bold tracking-tight transition-all",
+            isFocusing && "neon-text"
+          )}>
             {focusedTask.name}
           </h1>
           {focusedTask.details && (
@@ -89,7 +92,10 @@ export function FocusModeView({
                 {completedSubtasks}/{totalSubtasks} subtasks
               </span>
             </div>
-            <Progress value={progressPercent} className="h-3" />
+            <Progress value={progressPercent} className={cn(
+              "h-3",
+              progressPercent > 0 && "shadow-neon-sm"
+            )} />
 
             {/* Subtask List */}
             <div className="mt-6 space-y-2 text-left">
@@ -124,7 +130,10 @@ export function FocusModeView({
           <p className="text-muted-foreground text-lg">
             {isFocusing ? 'Focused for' : 'Total time'}
           </p>
-          <div className="text-8xl md:text-9xl font-mono font-bold text-primary tracking-tight">
+          <div className={cn(
+            "text-8xl md:text-9xl font-mono font-bold text-primary tracking-tight transition-all",
+            isFocusing && "neon-text"
+          )}>
             {formatTime(focusedTimeMs)}
           </div>
         </div>
@@ -135,7 +144,10 @@ export function FocusModeView({
             onClick={isFocusing ? onPauseFocus : onStartFocus}
             size="lg"
             variant={isFocusing ? 'secondary' : 'default'}
-            className="w-full sm:w-auto text-lg py-6 px-8"
+            className={cn(
+              "w-full sm:w-auto text-lg py-6 px-8",
+              !isFocusing && "neon-button"
+            )}
           >
             {isFocusing ? (
               <>

@@ -42,15 +42,27 @@ export function CurrentFocus({
     : 0;
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className={cn(
+      "h-full flex flex-col transition-all duration-300",
+      isFocusing && "neon-card"
+    )}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
-            <Target className="h-5 w-5" />
+          <CardTitle className={cn(
+            "text-lg sm:text-xl flex items-center gap-2",
+            isFocusing && "neon-text"
+          )}>
+            <Target className={cn(
+              "h-5 w-5 transition-all",
+              isFocusing && "animate-glow-pulse"
+            )} />
             Current Focus
           </CardTitle>
           {focusedTask && (
-            <Badge variant={getPriorityColor(focusedTask.autoCalculatedPriority) as any}>
+            <Badge
+              variant={getPriorityColor(focusedTask.autoCalculatedPriority) as any}
+              className="neon-border"
+            >
               {getPriorityLabel(focusedTask.autoCalculatedPriority)}
             </Badge>
           )}
@@ -100,7 +112,10 @@ export function CurrentFocus({
                     {completedSubtasks}/{totalSubtasks}
                   </span>
                 </div>
-                <Progress value={progressPercent} className="h-2" />
+                <Progress value={progressPercent} className={cn(
+                  "h-2",
+                  progressPercent > 0 && "shadow-neon-sm"
+                )} />
 
                 {/* Show subtask list */}
                 <div className="max-h-32 overflow-y-auto space-y-1 mt-3">
@@ -135,7 +150,10 @@ export function CurrentFocus({
               <p className="text-sm text-muted-foreground mb-1">
                 {isFocusing ? 'Focusing for' : 'Total focused time'}
               </p>
-              <div className="text-4xl sm:text-5xl font-mono font-bold text-primary">
+              <div className={cn(
+                "text-4xl sm:text-5xl font-mono font-bold text-primary transition-all",
+                isFocusing && "neon-text"
+              )}>
                 {formatTime(focusedTimeMs)}
               </div>
             </div>
@@ -147,7 +165,10 @@ export function CurrentFocus({
                   onClick={isFocusing ? onPauseFocus : onStartFocus}
                   size="lg"
                   variant={isFocusing ? 'secondary' : 'default'}
-                  className="flex-1"
+                  className={cn(
+                    "flex-1",
+                    !isFocusing && "neon-button"
+                  )}
                 >
                   {isFocusing ? (
                     <>
