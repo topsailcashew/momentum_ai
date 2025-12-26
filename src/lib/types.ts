@@ -5,6 +5,12 @@ export type EnergyLevel = 'Low' | 'Medium' | 'High';
 export type ProjectPriority = 'Low' | 'Medium' | 'High';
 export type EisenhowerMatrix = 'Urgent & Important' | 'Important & Not Urgent' | 'Urgent & Not Important' | 'Not Urgent & Not Important';
 
+export interface FocusSession {
+  startTime: string; // ISO timestamp
+  endTime?: string; // ISO timestamp when session ended
+  durationMs: number; // Duration of this focus session
+}
+
 export interface Task {
   id: string;
   userId: string;
@@ -41,6 +47,21 @@ export interface Task {
   waitingOn?: WaitingInfo;
 
   blockedTasks?: string[]; // Task IDs that are waiting on this one
+
+  // PRIORITY FOCUS SYSTEM - Subtasks
+  parentTaskId?: string; // If this is a subtask, reference to parent task
+  subtaskIds?: string[]; // If this is a parent task, IDs of its subtasks
+  isSubtask: boolean; // Quick check if this is a subtask
+  subtaskOrder?: number; // Order within parent's subtask list
+
+  // PRIORITY FOCUS SYSTEM - Priority Calculation
+  autoCalculatedPriority: number; // 0-100 score calculated from multiple factors
+  manualPriorityOverride?: number; // User can manually override priority (0-100)
+
+  // PRIORITY FOCUS SYSTEM - Enhanced Focus Tracking
+  currentFocusStartTime?: string; // ISO timestamp when current focus session started
+  focusSessions: FocusSession[]; // History of all focus sessions
+  lastBreakReminderAt?: string; // ISO timestamp of last break reminder
 }
 
 export interface Category {
