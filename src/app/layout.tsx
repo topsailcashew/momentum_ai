@@ -5,7 +5,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
-import { PomodoroProvider } from '@/components/dashboard/pomodoro-provider';
+import { FocusProvider } from '@/components/dashboard/focus-provider';
 import { FirebaseClientProvider } from '@/firebase';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppProvider } from '@/components/app-layout';
@@ -45,13 +45,13 @@ export default function RootLayout({
           <TooltipProvider>
             <FirebaseClientProvider>
               <AuthProvider>
-                <PomodoroProvider>
+                <FocusProvider>
                   <AppProvider>
                     <OfflineBanner />
                     <WelcomeDialog />
                     {children}
                   </AppProvider>
-                </PomodoroProvider>
+                </FocusProvider>
               </AuthProvider>
             </FirebaseClientProvider>
           </TooltipProvider>
